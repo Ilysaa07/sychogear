@@ -11,7 +11,8 @@
     "create-admin": "npx tsx scripts/create-admin.ts",
     "db:push": "npx prisma db push",
     "db:seed": "npx prisma db seed",
-    "db:generate": "npx prisma generate"
+    "db:generate": "npx prisma generate",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
