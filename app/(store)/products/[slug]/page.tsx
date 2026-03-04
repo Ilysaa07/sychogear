@@ -3,6 +3,7 @@ import { productRepository } from "@/repositories/product.repository";
 import ProductDetailClient from "@/components/store/ProductDetailClient";
 import ProductCard from "@/components/store/ProductCard";
 import type { Metadata } from "next";
+import type { ProductWithRelations } from "@/types";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -47,7 +48,7 @@ export default async function ProductDetailPage({ params }: Props) {
             You May Also Like
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-            {relatedProducts.map((p) => (
+            {relatedProducts.map((p: ProductWithRelations) => (
               <ProductCard key={p.id} product={p} />
             ))}
           </div>
