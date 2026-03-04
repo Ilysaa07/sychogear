@@ -6,10 +6,12 @@ import HeroSlider from "@/components/store/HeroSlider";
 import PromoModal from "@/components/store/PromoModal";
 import { prisma } from "@/lib/prisma";
 import type { Metadata } from "next";
+
+export const dynamic = "force-dynamic";
 import type { ProductWithRelations } from "@/types";
 
 export const metadata: Metadata = {
-  title: "Sychogear — Official Website Store",
+  title: "Sychogear - Official Website Store",
   description:
     "Explore the latest collection of premium streetwear. Hoodies, tees, jackets, and more. Designed for the bold.",
 };

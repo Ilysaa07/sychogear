@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
+import { uploadFileAction } from "@/app/actions/upload";
 import { HiOutlineSave, HiOutlinePhotograph, HiOutlineTrash, HiOutlineUpload } from "react-icons/hi";
 
 interface Settings {
@@ -114,19 +115,22 @@ export default function AdminSettingsPage() {
     formData.append("file", file);
 
     try {
-      const { data } = await axios.post("/api/upload", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      // Using Server Action instead of directly hitting /api/upload
+      // this bypasses typical route handler body size limits and uses the 100mb limit in next.config
+      const result = await uploadFileAction(formData);
 
-      if (data.success && data.url) {
+      if (result.success && result.url) {
         setSettings((prev) => ({
           ...prev,
-          heroImages: [...prev.heroImages, data.url],
+          heroImages: [...prev.heroImages, result.url],
         }));
-        toast.success("Image uploaded!");
+        toast.success("File uploaded!");
+      } else {
+        toast.error(result.error || "Failed to upload file");
       }
-    } catch {
-      toast.error("Failed to upload image");
+    } catch (error) {
+      console.error("Upload handler error:", error);
+      toast.error("Failed to upload file");
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = ""; // Reset input
@@ -394,8 +398,13 @@ export default function AdminSettingsPage() {
                   const fd = new FormData();
                   fd.append("file", file);
                   try {
-                    const { data } = await axios.post("/api/upload", fd);
-                    if (data.url) setSettings({ ...settings, promoImage: data.url });
+                    const result = await uploadFileAction(fd);
+                    if (result.success && result.url) {
+                      setSettings({ ...settings, promoImage: result.url });
+                      toast.success("Promo image uploaded!");
+                    } else {
+                      toast.error(result.error || "Upload failed");
+                    }
                   } catch {
                     toast.error("Upload failed");
                   } finally {

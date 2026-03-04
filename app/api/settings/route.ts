@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { revalidatePath } from "next/cache";
+
+export const dynamic = "force-dynamic";
 
 const ALLOWED_KEYS = [
   "heroImages",
@@ -57,6 +60,10 @@ export async function PUT(req: Request) {
         create: { key, value: String(value) },
       });
     }
+
+    // Revalidate home page and store pages to reflect settings changes immediately
+    revalidatePath("/");
+    revalidatePath("/(store)", "layout");
 
     return NextResponse.json({ success: true });
   } catch (error) {

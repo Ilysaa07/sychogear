@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { uploadFileAction } from "@/app/actions/upload";
 import { formatCurrency } from "@/lib/utils";
 import type { ProductWithRelations } from "@/types";
 import toast from "react-hot-toast";
@@ -203,17 +204,17 @@ export default function AdminProductsPage() {
     formDataObj.append("file", file);
 
     try {
-      const { data } = await axios.post("/api/upload", formDataObj, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const result = await uploadFileAction(formDataObj);
 
-      if (data.success && data.url) {
+      if (result.success && result.url) {
         setFormData((prev) => {
           const newImages = [...prev.images];
-          newImages[index].url = data.url;
+          newImages[index].url = result.url as string;
           return { ...prev, images: newImages };
         });
         toast.success("Image uploaded!");
+      } else {
+        toast.error(result.error || "Failed to upload image");
       }
     } catch {
       toast.error("Failed to upload image");
