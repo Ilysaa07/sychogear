@@ -49,14 +49,14 @@ export const orderRepository = {
     return prisma.order.findUnique({ where: { id }, include: orderInclude });
   },
 
-  async findByOrderNumber(orderNumber: string) {
-    return prisma.order.findUnique({ where: { orderNumber }, include: orderInclude });
+  async findByInvoiceNumber(invoiceNumber: string) {
+    return prisma.order.findUnique({ where: { invoiceNumber }, include: orderInclude });
   },
 
-  async findByEmailAndOrderNumber(email: string, orderNumber: string) {
+  async findByEmailAndInvoiceNumber(email: string, invoiceNumber: string) {
     return prisma.order.findFirst({
       where: {
-        orderNumber,
+        invoiceNumber,
         customer: { email },
       },
       include: orderInclude,
@@ -64,28 +64,47 @@ export const orderRepository = {
   },
 
   async create(data: {
-    orderNumber: string;
+    invoiceNumber: string;
+    customerName: string;
+    customerEmail: string;
     customerId: string;
     subtotal: number;
+    taxPpn: number;
+    taxPph23: number;
+    totalDiscount: number;
     discount: number;
+    uniqueCode: number;
+    totalWithCode: number;
     total: number;
     couponId?: string;
+    expiredAt: Date;
     items: Array<{
       productId: string;
       variantId: string;
       quantity: number;
       price: number;
       size: string;
+      ppnAmount: number;
+      pph23Amount: number;
+      discountAmount: number;
     }>;
   }) {
     return prisma.order.create({
       data: {
-        orderNumber: data.orderNumber,
+        invoiceNumber: data.invoiceNumber,
+        customerName: data.customerName,
+        customerEmail: data.customerEmail,
         customerId: data.customerId,
         subtotal: data.subtotal,
+        taxPpn: data.taxPpn,
+        taxPph23: data.taxPph23,
+        totalDiscount: data.totalDiscount,
         discount: data.discount,
+        uniqueCode: data.uniqueCode,
+        totalWithCode: data.totalWithCode,
         total: data.total,
         couponId: data.couponId,
+        expiredAt: data.expiredAt,
         items: {
           create: data.items,
         },

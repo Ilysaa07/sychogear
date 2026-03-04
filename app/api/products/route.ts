@@ -57,6 +57,10 @@ export async function POST(request: Request) {
         featured: body.featured || false,
         isNew: body.isNew || false,
         isActive: body.isActive ?? true,
+        ppnRate: body.ppnRate || 0,
+        pph23Rate: body.pph23Rate || 0,
+        discountRate: body.discountRate || 0,
+        showTaxDetails: body.showTaxDetails || false,
         images: {
           create: (body.images || []).map((img: { url: string; alt?: string }, i: number) => ({
             url: img.url,

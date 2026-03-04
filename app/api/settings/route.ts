@@ -8,6 +8,7 @@ const ALLOWED_KEYS = [
   "heroSubtitle",
   "heroTagline",
   "heroShowContent",
+  "heroShowButtons",
   "promoActive",
   "promoImage",
   "promoTitle",
@@ -19,7 +20,7 @@ const ALLOWED_KEYS = [
 // GET /api/settings — public
 export async function GET() {
   try {
-    const settings = await prisma.siteSettings.findMany();
+    const settings = await (prisma as any).siteSettings.findMany();
     const map: Record<string, string> = {};
     for (const s of settings) {
       map[s.key] = s.value;
@@ -50,7 +51,7 @@ export async function PUT(req: Request) {
     );
 
     for (const [key, value] of updates) {
-      await prisma.siteSettings.upsert({
+      await (prisma as any).siteSettings.upsert({
         where: { key },
         update: { value: String(value) },
         create: { key, value: String(value) },

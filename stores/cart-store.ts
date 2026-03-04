@@ -12,6 +12,7 @@ interface CartStore {
   clearCart: () => void;
   getTotal: () => number;
   getSubtotal: () => number;
+  getTotalTax: () => number;
   getItemCount: () => number;
 }
 
@@ -64,16 +65,30 @@ export const useCartStore = create<CartStore>()(
       clearCart: () => set({ items: [] }),
 
       getTotal: () => {
-        return get().items.reduce((sum, item) => {
-          const price = item.salePrice ?? item.price;
-          return sum + price * item.quantity;
-        }, 0);
+        return get().getSubtotal() + get().getTotalTax();
       },
-
+      
       getSubtotal: () => {
         return get().items.reduce((sum, item) => {
           const price = item.salePrice ?? item.price;
-          return sum + price * item.quantity;
+          const discountedPrice = item.discountRate > 0 
+            ? price * (1 - item.discountRate / 100) 
+            : price;
+          return sum + discountedPrice * item.quantity;
+        }, 0);
+      },
+
+      getTotalTax: () => {
+        return get().items.reduce((sum, item) => {
+          const price = item.salePrice ?? item.price;
+          const discountedPrice = item.discountRate > 0 
+            ? price * (1 - item.discountRate / 100) 
+            : price;
+          
+          const ppn = (discountedPrice * (item.ppnRate / 100));
+          const pph23 = (discountedPrice * (item.pph23Rate / 100));
+          
+          return sum + (ppn + pph23) * item.quantity;
         }, 0);
       },
 

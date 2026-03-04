@@ -7,9 +7,11 @@ interface UIStore {
   isDarkMode: boolean;
   isMobileMenuOpen: boolean;
   isCartDrawerOpen: boolean;
+  isAdminSidebarOpen: boolean;
   toggleDarkMode: () => void;
   setMobileMenuOpen: (open: boolean) => void;
   setCartDrawerOpen: (open: boolean) => void;
+  setAdminSidebarOpen: (open: boolean) => void;
 }
 
 export const useUIStore = create<UIStore>()(
@@ -18,6 +20,7 @@ export const useUIStore = create<UIStore>()(
       isDarkMode: true,
       isMobileMenuOpen: false,
       isCartDrawerOpen: false,
+      isAdminSidebarOpen: false,
 
       toggleDarkMode: () =>
         set((state) => ({ isDarkMode: !state.isDarkMode })),
@@ -27,6 +30,9 @@ export const useUIStore = create<UIStore>()(
 
       setCartDrawerOpen: (open: boolean) =>
         set({ isCartDrawerOpen: open }),
+      
+      setAdminSidebarOpen: (open: boolean) =>
+        set({ isAdminSidebarOpen: open }),
     }),
     {
       name: "sychogear-ui",

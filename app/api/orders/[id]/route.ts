@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { orderRepository } from "@/repositories/order.repository";
+import { paymentService } from "@/services/payment.service";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +29,7 @@ export async function PATCH(
     }
 
     const validStatuses = [
-      "PENDING",
+      "UNPAID",
       "PAID",
       "PROCESSING",
       "SHIPPED",
@@ -45,7 +46,17 @@ export async function PATCH(
       );
     }
 
-    const order = await orderRepository.updateStatus(id, body.status);
+    let order;
+    if (body.status === "PAID") {
+      const existingOrder = await orderRepository.findById(id);
+      if (!existingOrder) {
+        return NextResponse.json({ success: false, error: "Order not found" }, { status: 404 });
+      }
+      const result = await paymentService.confirmPayment(existingOrder.invoiceNumber);
+      order = result.order;
+    } else {
+      order = await orderRepository.updateStatus(id, body.status);
+    }
 
     return NextResponse.json({ success: true, data: order });
   } catch (error) {

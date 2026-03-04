@@ -27,6 +27,8 @@ export default function ProductDetailClient({ product }: Props) {
   const displayPrice = isOnSale
     ? product.flashSale!.salePrice
     : product.salePrice || product.price;
+  
+  const finalPrice = product.discountRate > 0 ? displayPrice * (1 - product.discountRate / 100) : displayPrice;
 
   const selectedVariantData = product.variants.find(
     (v) => v.id === selectedVariant
@@ -74,6 +76,9 @@ export default function ProductDetailClient({ product }: Props) {
       image: product.images[0]?.url || "",
       slug: product.slug,
       stock: selectedVariantData.stock,
+      ppnRate: product.ppnRate || 0,
+      pph23Rate: product.pph23Rate || 0,
+      discountRate: product.discountRate || 0,
     });
 
     toast.success("Ditambahkan ke keranjang!");
@@ -126,19 +131,27 @@ export default function ProductDetailClient({ product }: Props) {
           {product.name}
         </h1>
 
-        <div className="flex items-center gap-3 mb-8">
+        <div className="flex items-center gap-3 mb-2">
           <span className="text-2xl font-bold">
-            {formatCurrency(displayPrice)}
+            {formatCurrency(finalPrice)}
           </span>
-          {(isOnSale || product.salePrice) && (
+          {(isOnSale || product.salePrice || product.discountRate > 0) && (
             <span className="text-lg text-brand-500 line-through">
               {formatCurrency(product.price)}
             </span>
           )}
-          {isOnSale && (
-            <span className="badge bg-red-500/20 text-red-400 text-xs">SALE</span>
+          {(isOnSale || product.discountRate > 0) && (
+            <span className="badge bg-red-500/20 text-red-400 text-xs">
+              {isOnSale ? "FLASH SALE" : `${product.discountRate}% OFF`}
+            </span>
           )}
         </div>
+
+        {product.ppnRate > 0 && (
+          <p className="text-[10px] text-brand-500 mb-6 italic uppercase tracking-widest">
+            * Harga belum termasuk PPN {product.ppnRate}%
+          </p>
+        )}
 
         {/* Size Selector */}
         <div className="mb-8">

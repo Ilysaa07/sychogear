@@ -16,9 +16,9 @@ export async function POST(request: Request) {
       );
     }
 
-    const order = await orderRepository.findByEmailAndOrderNumber(
+    const order = await orderRepository.findByEmailAndInvoiceNumber(
       validation.data.email,
-      validation.data.orderNumber
+      validation.data.invoiceNumber
     );
 
     if (!order) {

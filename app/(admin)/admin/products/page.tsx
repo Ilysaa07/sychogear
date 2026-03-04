@@ -27,6 +27,10 @@ const EMPTY_FORM = {
   featured: false,
   isNew: false,
   isActive: true,
+  ppnRate: "0",
+  pph23Rate: "0",
+  discountRate: "0",
+  showTaxDetails: false,
 };
 
 export default function AdminProductsPage() {
@@ -94,6 +98,10 @@ export default function AdminProductsPage() {
       featured: product.featured,
       isNew: product.isNew,
       isActive: product.isActive,
+      ppnRate: String(product.ppnRate || 0),
+      pph23Rate: String(product.pph23Rate || 0),
+      discountRate: String(product.discountRate || 0),
+      showTaxDetails: product.showTaxDetails || false,
     });
     setShowForm(true);
   };
@@ -117,6 +125,10 @@ export default function AdminProductsPage() {
           stock: Number(v.stock),
         })),
         images: formData.images.filter((i) => i.url),
+        ppnRate: Number(formData.ppnRate),
+        pph23Rate: Number(formData.pph23Rate),
+        discountRate: Number(formData.discountRate),
+        showTaxDetails: formData.showTaxDetails,
       };
 
       if (editingId) {
@@ -214,7 +226,7 @@ export default function AdminProductsPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Products</h1>
           <p className="text-sm text-brand-500 mt-1">
@@ -223,7 +235,7 @@ export default function AdminProductsPage() {
         </div>
         <button
           onClick={openCreateForm}
-          className="btn-primary text-sm"
+          className="btn-primary text-sm self-start sm:self-auto"
         >
           <HiOutlinePlus className="w-4 h-4 mr-2" />
           Add Product
@@ -281,7 +293,7 @@ export default function AdminProductsPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs text-brand-400 uppercase tracking-wider mb-2">
                 Price (IDR)
@@ -307,6 +319,45 @@ export default function AdminProductsPage() {
                 }
                 className="input-field"
                 placeholder="249000"
+              />
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-xs text-brand-400 uppercase tracking-wider mb-2">
+                PPN (%)
+              </label>
+              <input
+                type="number"
+                value={formData.ppnRate}
+                onChange={(e) => setFormData({ ...formData, ppnRate: e.target.value })}
+                className="input-field"
+                placeholder="11"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-brand-400 uppercase tracking-wider mb-2">
+                PPH 23 (%)
+              </label>
+              <input
+                type="number"
+                value={formData.pph23Rate}
+                onChange={(e) => setFormData({ ...formData, pph23Rate: e.target.value })}
+                className="input-field"
+                placeholder="2"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-brand-400 uppercase tracking-wider mb-2">
+                Product Discount (%)
+              </label>
+              <input
+                type="number"
+                value={formData.discountRate}
+                onChange={(e) => setFormData({ ...formData, discountRate: e.target.value })}
+                className="input-field"
+                placeholder="10"
               />
             </div>
           </div>
@@ -465,39 +516,50 @@ export default function AdminProductsPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-6">
-            <label className="flex items-center gap-2 text-sm">
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
               <input
                 type="checkbox"
                 checked={formData.featured}
                 onChange={(e) =>
                   setFormData({ ...formData, featured: e.target.checked })
                 }
-                className="w-4 h-4"
+                className="w-4 h-4 rounded border-white/20 bg-brand-900 text-red-600 focus:ring-red-600 focus:ring-offset-brand-950"
               />
               Featured
             </label>
-            <label className="flex items-center gap-2 text-sm">
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
               <input
                 type="checkbox"
                 checked={formData.isNew}
                 onChange={(e) =>
                   setFormData({ ...formData, isNew: e.target.checked })
                 }
-                className="w-4 h-4"
+                className="w-4 h-4 rounded border-white/20 bg-brand-900 text-red-600 focus:ring-red-600 focus:ring-offset-brand-950"
               />
               New Arrival
             </label>
-            <label className="flex items-center gap-2 text-sm">
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
               <input
                 type="checkbox"
                 checked={formData.isActive}
                 onChange={(e) =>
                   setFormData({ ...formData, isActive: e.target.checked })
                 }
-                className="w-4 h-4"
+                className="w-4 h-4 rounded border-white/20 bg-brand-900 text-red-600 focus:ring-red-600 focus:ring-offset-brand-950"
               />
               Active
+            </label>
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <input
+                type="checkbox"
+                checked={formData.showTaxDetails}
+                onChange={(e) =>
+                  setFormData({ ...formData, showTaxDetails: e.target.checked })
+                }
+                className="w-4 h-4 rounded border-white/20 bg-brand-900 text-red-600 focus:ring-red-600 focus:ring-offset-brand-950"
+              />
+              Show Tax Details on Invoice
             </label>
           </div>
 

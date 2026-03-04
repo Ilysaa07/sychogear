@@ -63,7 +63,7 @@ export type NewsletterFormData = z.infer<typeof newsletterSchema>;
 // Order status check
 export const orderStatusSchema = z.object({
   email: z.string().email("Email tidak valid"),
-  orderNumber: z.string().min(1, "Masukkan nomor order"),
+  invoiceNumber: z.string().min(1, "Masukkan nomor order"),
 });
 
 export type OrderStatusFormData = z.infer<typeof orderStatusSchema>;

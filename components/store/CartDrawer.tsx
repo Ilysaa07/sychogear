@@ -9,7 +9,7 @@ import Link from "next/link";
 export default function CartDrawer() {
   const isOpen = useUIStore((s) => s.isCartDrawerOpen);
   const setOpen = useUIStore((s) => s.setCartDrawerOpen);
-  const { items, removeItem, updateQuantity, getTotal } = useCartStore();
+  const { items, removeItem, updateQuantity, getTotal, getSubtotal, getTotalTax } = useCartStore();
 
   if (!isOpen) return null;
 
@@ -72,7 +72,12 @@ export default function CartDrawer() {
                     </h4>
                     <p className="text-xs text-brand-500 mt-1">Size: {item.size}</p>
                     <p className="text-sm font-semibold text-white mt-1">
-                      {formatCurrency(item.salePrice ?? item.price)}
+                      {formatCurrency((item.salePrice ?? item.price) * (1 - item.discountRate / 100))}
+                      {item.discountRate > 0 && (
+                        <span className="text-[10px] text-brand-500 line-through ml-2">
+                          {formatCurrency(item.salePrice ?? item.price)}
+                        </span>
+                      )}
                     </p>
 
                     <div className="flex items-center justify-between mt-3">
@@ -122,9 +127,21 @@ export default function CartDrawer() {
         {/* Footer */}
         {items.length > 0 && (
           <div className="p-6 border-t border-white/5 space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-brand-400">Subtotal</span>
-              <span className="text-lg font-bold">{formatCurrency(getTotal())}</span>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-brand-400">Subtotal</span>
+                <span className="text-sm font-medium">{formatCurrency(getSubtotal())}</span>
+              </div>
+              {getTotalTax() > 0 && (
+                <div className="flex items-center justify-between text-xs text-brand-500">
+                  <span>Pajak (PPN/PPH 23)</span>
+                  <span>+{formatCurrency(getTotalTax())}</span>
+                </div>
+              )}
+              <div className="flex items-center justify-between pt-2 border-t border-white/5">
+                <span className="text-sm font-bold">Total</span>
+                <span className="text-lg font-bold text-white">{formatCurrency(getTotal())}</span>
+              </div>
             </div>
             <Link
               href="/checkout"
@@ -132,13 +149,6 @@ export default function CartDrawer() {
               className="btn-primary w-full text-center block"
             >
               Checkout
-            </Link>
-            <Link
-              href="/cart"
-              onClick={() => setOpen(false)}
-              className="btn-secondary w-full text-center block text-xs"
-            >
-              View Cart
             </Link>
           </div>
         )}

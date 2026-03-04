@@ -5,15 +5,21 @@ import type { DashboardStats } from "@/types";
 export const analyticsService = {
   async getDashboardStats(): Promise<DashboardStats> {
     const now = new Date();
-    const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
-
+    const currentMonth = now.getMonth();
+    
     const startOfMonth = new Date(currentYear, currentMonth, 1);
     const startOfPrevMonth = new Date(currentYear, currentMonth - 1, 1);
     const endOfPrevMonth = new Date(currentYear, currentMonth, 0, 23, 59, 59);
 
-    // Current month revenue
-    const currentRevenue = await prisma.order.aggregate({
+    // Lifetime Revenue (Sum of all PAID orders)
+    const lifetimeRevenue = await prisma.order.aggregate({
+      where: { status: "PAID" },
+      _sum: { total: true },
+    });
+
+    // Current month revenue (for growth calculation)
+    const currentMonthRevenue = await prisma.order.aggregate({
       where: {
         status: "PAID",
         createdAt: { gte: startOfMonth },
@@ -21,8 +27,8 @@ export const analyticsService = {
       _sum: { total: true },
     });
 
-    // Previous month revenue
-    const previousRevenue = await prisma.order.aggregate({
+    // Previous month revenue (for growth calculation)
+    const previousMonthRevenue = await prisma.order.aggregate({
       where: {
         status: "PAID",
         createdAt: { gte: startOfPrevMonth, lte: endOfPrevMonth },
@@ -30,38 +36,52 @@ export const analyticsService = {
       _sum: { total: true },
     });
 
-    const totalRevenue = currentRevenue._sum.total || 0;
-    const prevRevenue = previousRevenue._sum.total || 0;
+    const totalRevenue = lifetimeRevenue._sum.total || 0;
+    const currentMonthTotal = currentMonthRevenue._sum.total || 0;
+    const prevMonthTotal = previousMonthRevenue._sum.total || 0;
 
-    // Total orders
-    const [totalOrders, pendingOrders, paidOrders, totalCustomers] =
+    // Counts
+    const [totalOrders, unpaidOrders, paidOrders, totalCustomers] =
       await Promise.all([
         prisma.order.count(),
-        prisma.order.count({ where: { status: "PENDING" } }),
-        prisma.order.count({ where: { status: "PAID" } }),
+        prisma.order.count({ where: { status: "UNPAID" as any } }),
+        prisma.order.count({ where: { status: "PAID" as any } }),
         prisma.customer.count(),
       ]);
 
-    // Revenue by month (current year)
-    const monthlyRevenue = await prisma.order.groupBy({
-      by: ["createdAt"],
+    // Fetch ALL orders for current year for chart aggregation
+    const yearOrders = await prisma.order.findMany({
       where: {
-        status: "PAID",
         createdAt: {
           gte: new Date(currentYear, 0, 1),
           lt: new Date(currentYear + 1, 0, 1),
         },
       },
-      _sum: { total: true },
+      select: {
+        createdAt: true,
+        total: true,
+        status: true,
+      }
     });
 
-    // Aggregate by month
+    // Initialize maps for all 12 months
     const revenueMap = new Map<number, number>();
     const ordersMap = new Map<number, number>();
+    for (let i = 0; i < 12; i++) {
+      revenueMap.set(i, 0);
+      ordersMap.set(i, 0);
+    }
 
-    monthlyRevenue.forEach((item: { createdAt: Date, _sum: { total: number | null } }) => {
-      const month = new Date(item.createdAt).getMonth();
-      revenueMap.set(month, (revenueMap.get(month) || 0) + (item._sum.total || 0));
+    // Aggregate data
+    yearOrders.forEach((order) => {
+      const month = new Date(order.createdAt).getMonth();
+      
+      // Revenue chart only counts PAID orders
+      if (order.status === "PAID") {
+        revenueMap.set(month, (revenueMap.get(month) || 0) + order.total);
+      }
+      
+      // Orders chart counts ALL orders
       ordersMap.set(month, (ordersMap.get(month) || 0) + 1);
     });
 
@@ -77,10 +97,10 @@ export const analyticsService = {
 
     return {
       totalRevenue,
-      previousRevenue: prevRevenue,
-      revenueGrowth: calculatePercentageGrowth(totalRevenue, prevRevenue),
+      previousRevenue: prevMonthTotal, // Used for growth calc in frontend usually, but here we return for consistency
+      revenueGrowth: calculatePercentageGrowth(currentMonthTotal, prevMonthTotal),
       totalOrders,
-      pendingOrders,
+      unpaidOrders,
       paidOrders,
       totalCustomers,
       revenueByMonth,

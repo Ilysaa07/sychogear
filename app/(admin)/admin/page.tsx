@@ -66,7 +66,7 @@ export default function AdminDashboardPage() {
 
   const statCards = [
     {
-      label: "Revenue (This Month)",
+      label: "Total Revenue",
       value: formatCurrency(stats.totalRevenue),
       icon: HiOutlineCurrencyDollar,
       growth: stats.revenueGrowth,
@@ -77,8 +77,8 @@ export default function AdminDashboardPage() {
       icon: HiOutlineClipboardList,
     },
     {
-      label: "Pending Orders",
-      value: stats.pendingOrders.toString(),
+      label: "Unpaid Orders",
+      value: stats.unpaidOrders.toString(),
       icon: HiOutlineClock,
     },
     {

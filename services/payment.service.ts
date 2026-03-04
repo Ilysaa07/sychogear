@@ -3,9 +3,12 @@ import { orderRepository } from "@/repositories/order.repository";
 import { customerRepository } from "@/repositories/customer.repository";
 import { couponRepository } from "@/repositories/coupon.repository";
 import { prisma } from "@/lib/prisma";
-import { createInvoice } from "@/lib/xendit";
 import { generateOrderNumber } from "@/lib/utils";
+import { ManualTransferProvider } from "@/lib/paymentProvider";
+import { emailService } from "@/lib/emailService";
 import type { CartItem } from "@/types";
+
+const paymentProvider = new ManualTransferProvider();
 
 export const paymentService = {
   async createOrder(data: {
@@ -16,128 +19,197 @@ export const paymentService = {
     // Find or create customer
     const customer = await customerRepository.findOrCreate(data.customer);
 
-    // Calculate totals
+    // Calculate totals and taxes
     let subtotal = 0;
-    const orderItems = data.items.map((item) => {
+    let totalTaxPpn = 0;
+    let totalTaxPph23 = 0;
+    let totalProductDiscount = 0;
+
+    const itemsWithDetails = await Promise.all(data.items.map(async (item) => {
+      const product = await prisma.product.findUnique({
+        where: { id: item.productId },
+        select: { ppnRate: true, pph23Rate: true, discountRate: true } as any
+      });
+
       const price = item.salePrice ?? item.price;
-      subtotal += price * item.quantity;
+      const baseTotal = price * item.quantity;
+      
+      const ppnAmount = product ? (baseTotal * ((product as any).ppnRate / 100)) : 0;
+      const pph23Amount = product ? (baseTotal * ((product as any).pph23Rate / 100)) : 0;
+      const discountAmount = product ? (baseTotal * ((product as any).discountRate / 100)) : 0;
+
+      subtotal += baseTotal;
+      totalTaxPpn += ppnAmount;
+      totalTaxPph23 += pph23Amount;
+      totalProductDiscount += discountAmount;
+
       return {
         productId: item.productId,
         variantId: item.variantId,
         quantity: item.quantity,
         price,
         size: item.size,
+        ppnAmount,
+        pph23Amount,
+        discountAmount,
       };
-    });
+    }));
 
-    // Apply coupon
-    let discount = 0;
+    // Apply coupon (on subtotal after product discounts?)
+    // Usually coupons are applied to the total or subtotal. 
+    // Let's keep it on subtotal for now as before.
+    const subtotalAfterProductDiscount = subtotal - totalProductDiscount;
+    let couponDiscount = 0;
     let couponId: string | undefined;
 
     if (data.couponCode) {
       const couponResult = await couponRepository.validateCoupon(
         data.couponCode,
-        subtotal
+        subtotalAfterProductDiscount
       );
       if (couponResult.valid && couponResult.coupon) {
-        discount = couponResult.discount || 0;
+        couponDiscount = couponResult.discount || 0;
         couponId = couponResult.coupon.id;
         await couponRepository.incrementUsage(couponResult.coupon.id);
       }
     }
 
-    const total = subtotal - discount;
-    const orderNumber = generateOrderNumber();
+    const uniqueCode = Math.floor(100 + Math.random() * 900); // 3 digit code
+    
+    // total = subtotalAfterProductDiscount - couponDiscount + PPN + PPH23
+    const total = subtotalAfterProductDiscount - couponDiscount + totalTaxPpn + totalTaxPph23;
+    const totalWithCode = total + uniqueCode;
+    const invoiceNumber = generateOrderNumber().replace("SG-", "INV-");
+    
+    // Set expiry 15 minutes from now
+    const expiredAt = new Date();
+    expiredAt.setMinutes(expiredAt.getMinutes() + 15);
 
     // Create order
     const order = await orderRepository.create({
-      orderNumber,
+      invoiceNumber,
+      customerName: customer.name,
+      customerEmail: customer.email,
       customerId: customer.id,
       subtotal,
-      discount,
+      taxPpn: totalTaxPpn,
+      taxPph23: totalTaxPph23,
+      totalDiscount: totalProductDiscount,
+      discount: couponDiscount,
+      uniqueCode,
+      totalWithCode,
       total,
       couponId,
-      items: orderItems,
+      expiredAt,
+      items: itemsWithDetails,
     });
 
-    // Create Xendit invoice
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-    const invoice = await createInvoice({
-      externalId: order.orderNumber,
-      amount: total,
-      payerEmail: customer.email,
-      description: `Order ${order.orderNumber} - SYCHOGEAR`,
+    // Create payment via provider
+    const paymentResult = await paymentProvider.createPayment({
+      invoiceNumber,
+      amount: totalWithCode,
+      customerEmail: customer.email,
       customerName: customer.name,
-      customerPhone: customer.phone || undefined,
-      successRedirectUrl: `${appUrl}/payment/success?order=${order.orderNumber}`,
-      failureRedirectUrl: `${appUrl}/payment/failed?order=${order.orderNumber}`,
-      items: data.items.map((item) => ({
-        name: item.name,
-        quantity: item.quantity,
-        price: item.salePrice ?? item.price,
-      })),
     });
 
-    // Save payment record
+    // Save payment record (optional, kept for compatibility/history if needed)
     await prisma.payment.create({
       data: {
         orderId: order.id,
-        externalId: invoice.external_id,
-        invoiceUrl: invoice.invoice_url,
-        amount: total,
-        xenditId: invoice.id,
+        externalId: paymentResult.externalId,
+        invoiceUrl: `/order-success/${invoiceNumber}`,
+        amount: totalWithCode,
+        status: "PENDING", // PENDING in old payment model mapped to UNPAID in order model
       },
     });
+
+    // Send Invoice Email via Brevo
+    await emailService.sendInvoiceEmail({
+      to: customer.email,
+      customerName: customer.name,
+      invoiceNumber,
+      totalAmount: totalWithCode,
+      expiredAt,
+    }).catch(err => console.error("Failed sending email:", err));
+
+    // Send Admin Notification via Brevo
+    await emailService.sendAdminNotification({
+      invoiceNumber,
+      customerName: customer.name,
+      customerEmail: customer.email,
+      totalAmount: totalWithCode,
+      items: data.items.map(item => ({
+        name: item.name,
+        quantity: item.quantity,
+        size: item.size,
+        price: item.salePrice ?? item.price,
+      })),
+    }).catch(err => console.error("Failed sending admin notification:", err));
 
     return {
       order,
-      invoiceUrl: invoice.invoice_url,
-      orderNumber: order.orderNumber,
+      invoiceUrl: `/order-success/${invoiceNumber}`,
+      invoiceNumber,
     };
   },
 
-  async handleWebhook(data: {
-    external_id: string;
-    status: string;
-    payment_method: string;
-    paid_at: string;
-    id: string;
-  }) {
-    const payment = await prisma.payment.findUnique({
-      where: { externalId: data.external_id },
-      include: { order: { include: { items: true } } },
-    });
-
-    if (!payment) throw new Error("Payment not found");
-
-    const statusMap: Record<string, string> = {
-      PAID: "PAID",
-      EXPIRED: "EXPIRED",
-      FAILED: "FAILED",
-    };
-
-    const newStatus = statusMap[data.status] || payment.status;
-
-    // Update payment
-    await prisma.payment.update({
-      where: { id: payment.id },
-      data: {
-        status: newStatus as "PAID" | "EXPIRED" | "FAILED",
-        method: data.payment_method,
-        paidAt: data.paid_at ? new Date(data.paid_at) : null,
-      },
-    });
+  async confirmPayment(invoiceNumber: string) {
+    const order = await orderRepository.findByInvoiceNumber(invoiceNumber) as any;
+    if (!order) throw new Error("Order not found");
+    if (order.status !== "UNPAID") throw new Error("Order is not UNPAID");
 
     // Update order status
-    await orderRepository.updateStatus(payment.orderId, newStatus);
+    await orderRepository.updateStatus(order.id, "PAID");
 
-    // If paid, decrease stock
-    if (data.status === "PAID") {
-      for (const item of payment.order.items) {
-        await productRepository.decreaseStock(item.variantId, item.quantity);
-      }
+    // Decrease stock
+    for (const item of order.items) {
+      await productRepository.decreaseStock(item.variantId, item.quantity);
     }
 
-    return { success: true };
+    // Update payment record if exists
+    if (order.payment) {
+      await prisma.payment.update({
+        where: { id: order.payment.id },
+        data: {
+          status: "PAID",
+          paidAt: new Date(),
+        },
+      });
+    }
+
+    // Send confirmation email
+    await emailService.sendConfirmationEmail({
+      to: order.customerEmail,
+      customerName: order.customerName,
+      invoiceNumber: order.invoiceNumber,
+    }).catch(err => console.error("Failed sending email:", err));
+
+    return { success: true, order };
   },
+
+  async expireOrder(invoiceNumber: string) {
+    const order = await orderRepository.findByInvoiceNumber(invoiceNumber) as any;
+    if (!order) throw new Error("Order not found");
+    if (order.status !== "UNPAID") throw new Error("Order cannot be expired");
+
+    // Update order status
+    await orderRepository.updateStatus(order.id, "EXPIRED");
+
+    // Update payment record if exists
+    if (order.payment) {
+      await prisma.payment.update({
+        where: { id: order.payment.id },
+        data: { status: "EXPIRED" },
+      });
+    }
+
+    // Send expired email
+    await emailService.sendExpiredEmail({
+      to: order.customerEmail,
+      customerName: order.customerName,
+      invoiceNumber: order.invoiceNumber,
+    }).catch(err => console.error("Failed sending email:", err));
+
+    return { success: true, order };
+  }
 };

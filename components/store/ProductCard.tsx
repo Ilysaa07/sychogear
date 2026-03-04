@@ -13,7 +13,9 @@ export default function ProductCard({ product }: ProductCardProps) {
   const totalStock = product.variants.reduce((sum, v) => sum + v.stock, 0);
   const isOnSale = product.flashSale?.isActive && product.flashSale.salePrice;
   const displayPrice = isOnSale ? product.flashSale!.salePrice : product.salePrice || product.price;
-  const originalPrice = isOnSale || product.salePrice ? product.price : null;
+  const finalPrice = product.discountRate > 0 ? displayPrice * (1 - product.discountRate / 100) : displayPrice;
+  const originalPrice = (isOnSale || product.salePrice || product.discountRate > 0) ? product.price : null;
+  const hasMultiplePriceDeductions = product.discountRate > 0 && (isOnSale || product.salePrice);
 
   return (
     <Link href={`/products/${product.slug}`} className="group block">
@@ -50,7 +52,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           </h3>
           <div className="flex items-center gap-2">
             <span className="text-sm font-bold text-brand-300 group-hover:text-white transition-colors">
-              {formatCurrency(displayPrice)}
+              {formatCurrency(finalPrice)}
             </span>
             {originalPrice && (
               <span className="text-[10px] text-brand-600 line-through">

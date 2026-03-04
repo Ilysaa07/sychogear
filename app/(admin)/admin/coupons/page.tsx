@@ -138,14 +138,14 @@ export default function AdminCouponsPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Coupons</h1>
           <p className="text-sm text-brand-500 mt-1">
             {coupons.length} coupons total
           </p>
         </div>
-        <button onClick={openCreateForm} className="btn-primary text-sm">
+        <button onClick={openCreateForm} className="btn-primary text-sm self-start sm:self-auto">
           <HiOutlinePlus className="w-4 h-4 mr-2" />
           Add Coupon
         </button>
@@ -166,7 +166,7 @@ export default function AdminCouponsPage() {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs text-brand-400 uppercase tracking-wider mb-2">
                 Code

@@ -40,7 +40,7 @@ export async function POST(request: Request) {
       success: true,
       data: {
         invoiceUrl: result.invoiceUrl,
-        orderNumber: result.orderNumber,
+        invoiceNumber: result.invoiceNumber,
       },
     });
   } catch (error) {

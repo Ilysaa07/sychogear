@@ -11,6 +11,7 @@ interface Settings {
   heroSubtitle: string;
   heroTagline: string;
   heroShowContent: boolean;
+  heroShowButtons: boolean;
   promoActive: boolean;
   promoImage: string;
   promoTitle: string;
@@ -26,6 +27,7 @@ const defaultSettings: Settings = {
     "Premium streetwear designed for those who dare to stand out. Every piece tells a story. Make it yours.",
   heroTagline: "Streetwear Collection 2026",
   heroShowContent: true,
+  heroShowButtons: true,
   promoActive: false,
   promoImage: "",
   promoTitle: "LIMITED\nDROP",
@@ -63,6 +65,7 @@ export default function AdminSettingsPage() {
               data.data.heroSubtitle || defaultSettings.heroSubtitle,
             heroTagline: data.data.heroTagline || defaultSettings.heroTagline,
             heroShowContent: data.data.heroShowContent !== "false",
+            heroShowButtons: data.data.heroShowButtons !== "false",
             promoActive: data.data.promoActive === "true",
             promoImage: data.data.promoImage || defaultSettings.promoImage,
             promoTitle: data.data.promoTitle || defaultSettings.promoTitle,
@@ -87,6 +90,7 @@ export default function AdminSettingsPage() {
         ...settings,
         heroImages: JSON.stringify(settings.heroImages), // Serialize array to string
         heroShowContent: String(settings.heroShowContent),
+        heroShowButtons: String(settings.heroShowButtons),
         promoActive: String(settings.promoActive),
       };
       
@@ -160,9 +164,11 @@ export default function AdminSettingsPage() {
 
       {/* Hero Section Settings */}
       <div className="card p-6 space-y-8">
-        <div className="flex items-center gap-3 border-b border-white/5 pb-4">
-          <HiOutlinePhotograph className="w-5 h-5 text-red-500" />
-          <h2 className="text-lg font-semibold">Hero Section</h2>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 border-b border-white/5 pb-4">
+          <div className="flex items-center gap-3">
+            <HiOutlinePhotograph className="w-5 h-5 text-red-500" />
+            <h2 className="text-lg font-semibold">Hero Section</h2>
+          </div>
         </div>
 
         {/* Hero Images Upload & Gallery */}
@@ -259,6 +265,31 @@ export default function AdminSettingsPage() {
 
         <div className="h-px bg-white/5 w-full" />
 
+        {/* Hero Buttons Toggle */}
+        <div className="flex items-center justify-between">
+          <div>
+            <label className="block text-xs font-medium text-brand-400 uppercase tracking-wider mb-1">
+              Show Hero Buttons
+            </label>
+            <p className="text-sm text-brand-500 max-w-sm">
+              Toggle on to show "Shop Now" and "New Arrivals" buttons in the hero section.
+            </p>
+          </div>
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              className="sr-only peer"
+              checked={settings.heroShowButtons}
+              onChange={(e) =>
+                setSettings({ ...settings, heroShowButtons: e.target.checked })
+              }
+            />
+            <div className="w-11 h-6 bg-brand-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600" />
+          </label>
+        </div>
+
+        <div className="h-px bg-white/5 w-full" />
+
         {/* Hero Tagline */}
         <div>
           <label className="block text-xs font-medium text-brand-400 uppercase tracking-wider mb-2">
@@ -310,12 +341,12 @@ export default function AdminSettingsPage() {
 
       {/* Promo Banner Settings */}
       <div className="card p-6 space-y-8">
-        <div className="flex items-center justify-between border-b border-white/5 pb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-white/5 pb-4 gap-4">
           <div className="flex items-center gap-3">
             <HiOutlinePhotograph className="w-5 h-5 text-red-500" />
             <h2 className="text-lg font-semibold">Promo Banner</h2>
           </div>
-          <label className="flex items-center gap-2 cursor-pointer">
+          <label className="flex items-center gap-2 cursor-pointer self-start sm:self-auto">
             <span className="text-xs font-medium text-brand-400 uppercase tracking-wider">Enable Promo Pop-up</span>
             <input
               type="checkbox"

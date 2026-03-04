@@ -11,6 +11,7 @@
     "create-admin": "npx tsx scripts/create-admin.ts",
     "db:push": "npx prisma db push",
     "db:seed": "npx prisma db seed",
+    "db:setup-prod": "npx tsx scripts/setup-production.ts",
     "db:generate": "npx prisma generate",
     "postinstall": "prisma generate"
   },

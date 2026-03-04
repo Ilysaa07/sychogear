@@ -10,7 +10,7 @@ import Papa from "papaparse";
 
 const STATUS_FILTERS = [
   "ALL",
-  "PENDING",
+  "UNPAID",
   "PAID",
   "PROCESSING",
   "SHIPPED",
@@ -21,7 +21,7 @@ const STATUS_FILTERS = [
 ];
 
 const STATUS_OPTIONS = [
-  "PENDING",
+  "UNPAID",
   "PAID",
   "PROCESSING",
   "SHIPPED",
@@ -79,12 +79,18 @@ export default function AdminOrdersPage() {
 
   const exportCSV = () => {
     const csvData = orders.map((order) => ({
-      "Order Number": order.orderNumber,
+      "Invoice Number": order.invoiceNumber,
       Customer: order.customer.name,
       Email: order.customer.email,
       Phone: order.customer.phone || "-",
       Status: order.status,
-      Total: order.total,
+      Subtotal: order.subtotal,
+      "Product Discount": order.totalDiscount,
+      "Coupon Discount": order.discount,
+      PPN: order.taxPpn,
+      "PPH 23": order.taxPph23,
+      "Unique Code": order.uniqueCode,
+      Total: order.totalWithCode,
       "Payment Method": order.payment?.method || "-",
       "Paid At": order.payment?.paidAt
         ? new Date(order.payment.paidAt).toLocaleDateString()
@@ -105,14 +111,14 @@ export default function AdminOrdersPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Orders</h1>
           <p className="text-sm text-brand-500 mt-1">
             {orders.length} orders found
           </p>
         </div>
-        <button onClick={exportCSV} className="btn-secondary text-sm">
+        <button onClick={exportCSV} className="btn-secondary text-sm self-start sm:self-auto">
           <HiOutlineDownload className="w-4 h-4 mr-2" />
           Export CSV
         </button>
@@ -141,10 +147,10 @@ export default function AdminOrdersPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-white/5">
-                <th className="text-left text-xs text-brand-500 uppercase tracking-wider p-4">Order</th>
-                <th className="text-left text-xs text-brand-500 uppercase tracking-wider p-4">Customer</th>
-                <th className="text-left text-xs text-brand-500 uppercase tracking-wider p-4">Total</th>
-                <th className="text-left text-xs text-brand-500 uppercase tracking-wider p-4">Status</th>
+                <th className="text-left text-xs text-brand-500 uppercase tracking-wider p-4">Invoice</th>
+                <th className="p-4 font-semibold text-left">Customer</th>
+                <th className="p-4 font-semibold text-left">Total (Inc. Code)</th>
+                <th className="p-4 font-semibold text-left">Status</th>
                 <th className="text-left text-xs text-brand-500 uppercase tracking-wider p-4">Date</th>
                 <th className="text-right text-xs text-brand-500 uppercase tracking-wider p-4">Actions</th>
               </tr>
@@ -172,7 +178,7 @@ export default function AdminOrdersPage() {
                   >
                     <td className="p-4">
                       <p className="text-sm font-medium font-mono">
-                        {order.orderNumber}
+                        {order.invoiceNumber}
                       </p>
                     </td>
                     <td className="p-4">
@@ -180,7 +186,7 @@ export default function AdminOrdersPage() {
                       <p className="text-xs text-brand-500">{order.customer.email}</p>
                     </td>
                     <td className="p-4 text-sm font-medium">
-                      {formatCurrency(order.total)}
+                      {formatCurrency(order.totalWithCode)}
                     </td>
                     <td className="p-4">
                       <span className={`badge text-[10px] ${getStatusColor(order.status)}`}>
@@ -215,7 +221,7 @@ export default function AdminOrdersPage() {
           />
           <div className="fixed right-0 top-0 h-full w-full max-w-lg bg-brand-950 border-l border-white/5 z-50 overflow-y-auto p-6 fade-in">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-bold">{selectedOrder.orderNumber}</h3>
+              <h3 className="text-lg font-bold">{selectedOrder.invoiceNumber}</h3>
               <button
                 onClick={() => setSelectedOrder(null)}
                 className="text-brand-400 hover:text-white"
@@ -303,17 +309,41 @@ export default function AdminOrdersPage() {
                   <span className="text-brand-400">Subtotal</span>
                   <span>{formatCurrency(selectedOrder.subtotal)}</span>
                 </div>
+                {selectedOrder.totalDiscount > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-brand-400">Product Discount</span>
+                    <span className="text-green-400">
+                      -{formatCurrency(selectedOrder.totalDiscount)}
+                    </span>
+                  </div>
+                )}
                 {selectedOrder.discount > 0 && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-brand-400">Discount</span>
+                    <span className="text-brand-400">Coupon Discount</span>
                     <span className="text-green-400">
                       -{formatCurrency(selectedOrder.discount)}
                     </span>
                   </div>
                 )}
-                <div className="flex justify-between font-bold text-lg pt-2">
-                  <span>Total</span>
-                  <span>{formatCurrency(selectedOrder.total)}</span>
+                {selectedOrder.taxPpn > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-brand-400">PPN</span>
+                    <span>+{formatCurrency(selectedOrder.taxPpn)}</span>
+                  </div>
+                )}
+                {selectedOrder.taxPph23 > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-brand-400">PPH 23</span>
+                    <span>+{formatCurrency(selectedOrder.taxPph23)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between font-bold text-lg pt-2 border-t border-white/5">
+                  <span>Total Bayar</span>
+                  <span className="text-white">{formatCurrency(selectedOrder.totalWithCode)}</span>
+                </div>
+                <div className="flex justify-between text-[10px] text-brand-500 uppercase tracking-widest pt-1">
+                  <span>Kode Unik</span>
+                  <span>+{selectedOrder.uniqueCode}</span>
                 </div>
               </div>
 

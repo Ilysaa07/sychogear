@@ -9,6 +9,9 @@ export interface CartItem {
   image: string;
   slug: string;
   stock: number;
+  ppnRate: number;
+  pph23Rate: number;
+  discountRate: number;
 }
 
 export interface ProductWithRelations {
@@ -22,6 +25,10 @@ export interface ProductWithRelations {
   featured: boolean;
   isNew: boolean;
   isActive: boolean;
+  ppnRate: number;
+  pph23Rate: number;
+  discountRate: number;
+  showTaxDetails: boolean;
   createdAt: Date;
   updatedAt: Date;
   category: { id: string; name: string; slug: string };
@@ -38,14 +45,20 @@ export interface ProductWithRelations {
 
 export interface OrderWithRelations {
   id: string;
-  orderNumber: string;
+  invoiceNumber: string;
   customerId: string;
   subtotal: number;
+  taxPpn: number;
+  taxPph23: number;
+  totalDiscount: number;
   discount: number;
+  uniqueCode: number;
+  totalWithCode: number;
   total: number;
   status: string;
   notes: string | null;
   couponId: string | null;
+  expiredAt: Date;
   createdAt: Date;
   updatedAt: Date;
   customer: {
@@ -62,6 +75,9 @@ export interface OrderWithRelations {
     quantity: number;
     price: number;
     size: string;
+    ppnAmount: number;
+    pph23Amount: number;
+    discountAmount: number;
     product: {
       name: string;
       slug: string;
@@ -90,7 +106,7 @@ export interface DashboardStats {
   previousRevenue: number;
   revenueGrowth: number;
   totalOrders: number;
-  pendingOrders: number;
+  unpaidOrders: number;
   paidOrders: number;
   totalCustomers: number;
   revenueByMonth: Array<{ month: string; revenue: number }>;

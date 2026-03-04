@@ -72,15 +72,15 @@ export default function OrderStatusPage() {
             </div>
             <div>
               <label className="block text-xs text-brand-400 uppercase tracking-wider mb-2">
-                Order Number
+                Invoice Number
               </label>
               <input
-                {...register("orderNumber")}
+                {...register("invoiceNumber")}
                 className="input-field"
-                placeholder="SG-XXXXXX-XXXXXX"
+                placeholder="INV-YYYYMMDD-XXXX"
               />
-              {errors.orderNumber && (
-                <p className="text-red-400 text-xs mt-1">{errors.orderNumber.message}</p>
+              {errors.invoiceNumber && (
+                <p className="text-red-400 text-xs mt-1">{errors.invoiceNumber.message}</p>
               )}
             </div>
             <button type="submit" disabled={loading} className="btn-primary w-full">
@@ -97,7 +97,7 @@ export default function OrderStatusPage() {
               <div className="card p-6 fade-in">
                 <div className="flex items-center justify-between mb-6">
                   <div>
-                    <h3 className="font-bold text-lg">{order.orderNumber}</h3>
+                    <h3 className="font-bold text-lg">{order.invoiceNumber}</h3>
                     <p className="text-xs text-brand-500 mt-1">
                       {new Date(order.createdAt).toLocaleDateString("id-ID", {
                         year: "numeric",
@@ -141,7 +141,7 @@ export default function OrderStatusPage() {
                   </div>
                 </div>
 
-                {order.payment?.invoiceUrl && order.status === "PENDING" && (
+                {order.payment?.invoiceUrl && order.status === "UNPAID" && (
                   <a
                     href={order.payment.invoiceUrl}
                     target="_blank"

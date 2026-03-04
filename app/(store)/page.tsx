@@ -28,7 +28,7 @@ async function getHeroSettings() {
 
 async function getNewArrivals(): Promise<ProductWithRelations[]> {
   try {
-    return await productRepository.findNewArrivals(12);
+    return (await productRepository.findNewArrivals(12)) as any as ProductWithRelations[];
   } catch {
     return [];
   }
@@ -57,6 +57,7 @@ export default async function HomePage() {
   const titleParts = heroTitle.split("\n");
 
   const heroShowContent = heroSettings.heroShowContent !== "false";
+  const heroShowButtons = heroSettings.heroShowButtons !== "false";
 
   const promoSettings = {
     active: heroSettings.promoActive === "true",
@@ -116,22 +117,24 @@ export default async function HomePage() {
             <p className="text-brand-300 text-sm md:text-base max-w-lg mx-auto mb-10 fade-in leading-relaxed">
               {heroSubtitle}
             </p>
-
+            
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 fade-in">
-              <Link
-                href="/products"
-                className="inline-flex items-center justify-center px-10 py-4 bg-red-600 border border-red-600 text-white font-bold text-[10px] md:text-xs tracking-[0.2em] uppercase hover:bg-transparent hover:text-red-500 transition-all duration-300"
-              >
-                Shop Now
-              </Link>
-              <Link
-                href="/products?sort=latest"
-                className="inline-flex items-center justify-center px-10 py-4 border border-white/20 text-white font-bold text-[10px] md:text-xs tracking-[0.2em] uppercase hover:border-white hover:bg-white hover:text-black transition-all duration-300"
-              >
-                New Arrivals
-              </Link>
-            </div>
+            {heroShowButtons && (
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 fade-in">
+                <Link
+                  href="/products"
+                  className="inline-flex items-center justify-center px-10 py-4 bg-red-600 border border-red-600 text-white font-bold text-[10px] md:text-xs tracking-[0.2em] uppercase hover:bg-transparent hover:text-red-500 transition-all duration-300"
+                >
+                  Shop Now
+                </Link>
+                <Link
+                  href="/products?sort=latest"
+                  className="inline-flex items-center justify-center px-10 py-4 border border-white/20 text-white font-bold text-[10px] md:text-xs tracking-[0.2em] uppercase hover:border-white hover:bg-white hover:text-black transition-all duration-300"
+                >
+                  New Arrivals
+                </Link>
+              </div>
+            )}
           </div>
         )}
 
@@ -151,6 +154,20 @@ export default async function HomePage() {
         {newArrivals.length > 0 && (
           <section className="py-20 lg:py-32">
             <div className="container-main">
+              {/* Branded Section Header */}
+              <div className="mb-16 relative">
+                <div className="absolute -left-1 -top-10 md:-top-16 opacity-[0.03] text-[15vw] font-marker uppercase select-none tracking-tighter leading-none whitespace-nowrap pointer-events-none -z-10">
+                  LATEST
+                </div>
+                <p className="text-[10px] md:text-xs tracking-[0.4em] uppercase text-brand-500 mb-3 font-semibold">
+                  Fresh Drops
+                </p>
+                <h2 className="text-4xl md:text-6xl font-marker tracking-tighter uppercase leading-none text-white lg:text-7xl">
+                  New Arrivals
+                </h2>
+                <div className="w-12 h-1 bg-brand-500 mt-6 md:mt-8"></div>
+              </div>
+
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
                 {newArrivals.map((product) => (
                   <ProductCard key={product.id} product={product} />

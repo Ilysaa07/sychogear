@@ -14,7 +14,7 @@ import { HiOutlineShoppingBag } from "react-icons/hi";
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { items, getTotal, clearCart } = useCartStore();
+  const { items, getTotal, getSubtotal, getTotalTax, clearCart } = useCartStore();
   const [loading, setLoading] = useState(false);
   const [couponCode, setCouponCode] = useState("");
 
@@ -44,7 +44,7 @@ export default function CheckoutPage() {
   const onSubmit = async (formData: CheckoutFormData) => {
     setLoading(true);
     try {
-      const { data } = await axios.post("/api/payment/create-invoice", {
+      const { data } = await axios.post("/api/orders/create", {
         customer: formData,
         items,
         couponCode: couponCode || undefined,
@@ -52,8 +52,8 @@ export default function CheckoutPage() {
 
       if (data.success) {
         clearCart();
-        toast.success("Redirecting ke halaman pembayaran...");
-        window.location.href = data.data.invoiceUrl;
+        toast.success("Order berhasil dibuat. Redirecting...");
+        router.push(data.data.invoiceUrl);
       } else {
         toast.error(data.error || "Gagal membuat order");
       }
@@ -183,13 +183,23 @@ export default function CheckoutPage() {
                   </p>
                 </div>
                 <p className="text-sm font-medium whitespace-nowrap">
-                  {formatCurrency((item.salePrice ?? item.price) * item.quantity)}
+                  {formatCurrency(((item.salePrice ?? item.price) * (1 - item.discountRate / 100)) * item.quantity)}
                 </p>
               </div>
             ))}
           </div>
-          <div className="pt-4 border-t border-white/5">
-            <div className="flex justify-between text-lg font-bold">
+          <div className="pt-4 border-t border-white/5 space-y-2">
+            <div className="flex justify-between text-sm text-brand-400">
+              <span>Subtotal</span>
+              <span>{formatCurrency(getSubtotal())}</span>
+            </div>
+            {getTotalTax() > 0 && (
+              <div className="flex justify-between text-xs text-brand-500">
+                <span>Pajak (PPN/PPH 23)</span>
+                <span>+{formatCurrency(getTotalTax())}</span>
+              </div>
+            )}
+            <div className="flex justify-between text-lg font-bold pt-2 border-t border-white/5">
               <span>Total</span>
               <span>{formatCurrency(getTotal())}</span>
             </div>
