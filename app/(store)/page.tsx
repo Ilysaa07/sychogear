@@ -94,7 +94,7 @@ export default async function HomePage() {
 
             {/* Title */}
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-marker tracking-tighter mb-6 slide-up leading-[1.1] text-white">
-              {titleParts.map((part, i) =>
+              {titleParts.map((part: string, i: number) =>
                 i === 0 ? (
                   <span key={i}>
                     {part}
