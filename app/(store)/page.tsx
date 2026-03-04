@@ -6,6 +6,7 @@ import HeroSlider from "@/components/store/HeroSlider";
 import PromoModal from "@/components/store/PromoModal";
 import { prisma } from "@/lib/prisma";
 import type { Metadata } from "next";
+import type { ProductWithRelations } from "@/types";
 
 export const metadata: Metadata = {
   title: "Sychogear — Official Website Store",
@@ -25,7 +26,7 @@ async function getHeroSettings() {
 }
 
 
-async function getNewArrivals() {
+async function getNewArrivals(): Promise<ProductWithRelations[]> {
   try {
     return await productRepository.findNewArrivals(12);
   } catch {
