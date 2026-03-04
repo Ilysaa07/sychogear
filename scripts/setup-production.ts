@@ -49,6 +49,28 @@ async function main() {
   });
 
   console.log(`✅ Admin created: ${adminEmail}`);
+
+  // 3. Create mandatory categories
+  console.log("📂 Creating mandatory categories...");
+  const categories = [
+    { name: "T-shirt", slug: "t-shirt" },
+    { name: "Jackets", slug: "jackets" },
+    { name: "Shorts", slug: "shorts" },
+    { name: "Jersey", slug: "jersey" },
+    { name: "Hoodies", slug: "hoodies" },
+    { name: "Pants", slug: "pants" },
+    { name: "Accessories", slug: "accessories" },
+  ];
+
+  for (const cat of categories) {
+    await prisma.category.upsert({
+      where: { slug: cat.slug },
+      update: {},
+      create: cat,
+    });
+  }
+  console.log("✅ Categories initialized.");
+
   console.log("✨ Production setup completed successfully!");
 }
 
