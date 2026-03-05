@@ -1,0 +1,22 @@
+name: Expire Orders Cron
+
+on:
+  schedule:
+    # Runs every 5 minutes
+    - cron: '*/5 * * * *'
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  expire-orders:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call Expire Orders API
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          API_URL: ${{ secrets.NEXT_PUBLIC_APP_URL || 'https://sychogear.com' }}
+        run: |
+          curl -X GET "$API_URL/api/orders/expire" \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            -H "Content-Type: application/json" \
+            --fail || echo "API call failed but preventing workflow failure"
