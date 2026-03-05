@@ -20,7 +20,7 @@ export default function AdminLoginPage() {
     resolver: zodResolver(loginSchema),
   });
 
-  const onSubmit = async (data: LoginFormData) => {
+    const onSubmit = async (data: LoginFormData) => {
     setLoading(true);
     try {
       const result = await signIn("credentials", {
@@ -33,7 +33,7 @@ export default function AdminLoginPage() {
         toast.error("Email atau password salah");
       } else {
         toast.success("Login berhasil");
-        router.push("/admin");
+        window.location.href = "/admin"; // Force a hard reload to respect session changes
       }
     } catch {
       toast.error("Terjadi kesalahan");
