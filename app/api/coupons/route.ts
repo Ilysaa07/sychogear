@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { couponRepository } from "@/repositories/coupon.repository";
 import { auth } from "@/lib/auth";
 import { couponSchema } from "@/lib/validations";
+import { parseApiError } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -46,10 +47,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, data: coupon });
   } catch (error) {
-    console.error("Create coupon error:", error);
-    return NextResponse.json(
-      { success: false, error: "Gagal membuat kupon" },
-      { status: 500 }
-    );
+    const { message, status } = parseApiError(error, "Gagal membuat kupon");
+    return NextResponse.json({ success: false, error: message }, { status });
   }
 }

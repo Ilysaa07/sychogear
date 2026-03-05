@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { HiOutlineX, HiPlus, HiMinus, HiOutlineShoppingBag } from "react-icons/hi";
 import { useCartStore } from "@/stores/cart-store";
 import { useUIStore } from "@/stores/ui-store";
@@ -9,7 +10,14 @@ import Link from "next/link";
 export default function CartDrawer() {
   const isOpen = useUIStore((s) => s.isCartDrawerOpen);
   const setOpen = useUIStore((s) => s.setCartDrawerOpen);
-  const { items, removeItem, updateQuantity, getTotal, getSubtotal, getTotalTax } = useCartStore();
+  const { items, removeItem, updateQuantity, getTotal, getSubtotal, getTotalTax, syncItemPrices } = useCartStore();
+
+  // Bug #10 fix: sync cart prices with live server data every time drawer opens
+  useEffect(() => {
+    if (isOpen) {
+      syncItemPrices();
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 

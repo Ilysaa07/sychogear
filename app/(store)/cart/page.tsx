@@ -6,7 +6,7 @@ import Link from "next/link";
 import { HiMinus, HiPlus, HiOutlineTrash, HiOutlineShoppingBag } from "react-icons/hi";
 
 export default function CartPage() {
-  const { items, removeItem, updateQuantity, getTotal } = useCartStore();
+  const { items, removeItem, updateQuantity, getTotal, getSubtotal, getTotalTax } = useCartStore();
 
   if (items.length === 0) {
     return (
@@ -92,8 +92,14 @@ export default function CartPage() {
           <div className="space-y-3 mb-6">
             <div className="flex justify-between text-sm">
               <span className="text-brand-400">Subtotal</span>
-              <span>{formatCurrency(getTotal())}</span>
+              <span>{formatCurrency(getSubtotal())}</span>
             </div>
+            {getTotalTax() > 0 && (
+              <div className="flex justify-between text-sm">
+                <span className="text-brand-400">Pajak (PPN + PPH23)</span>
+                <span>{formatCurrency(getTotalTax())}</span>
+              </div>
+            )}
             <div className="flex justify-between text-sm">
               <span className="text-brand-400">Shipping</span>
               <span className="text-brand-500">Calculated at checkout</span>

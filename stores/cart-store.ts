@@ -14,6 +14,8 @@ interface CartStore {
   getSubtotal: () => number;
   getTotalTax: () => number;
   getItemCount: () => number;
+  // Bug #10 fix: refresh stale prices from server (call on cart open or checkout entry)
+  syncItemPrices: () => Promise<void>;
 }
 
 export const useCartStore = create<CartStore>()(
@@ -94,6 +96,47 @@ export const useCartStore = create<CartStore>()(
 
       getItemCount: () => {
         return get().items.reduce((sum, item) => sum + item.quantity, 0);
+      },
+
+      // Bug #10 fix: re-fetch live product data to clear stale flash sale prices
+      // and remove items that no longer exist or are out of stock.
+      syncItemPrices: async () => {
+        const items = get().items;
+        if (items.length === 0) return;
+        try {
+          const productIds = [...new Set(items.map((i) => i.productId))];
+          const results = await Promise.all(
+            productIds.map((id) =>
+              fetch(`/api/products/${id}`).then((r) => (r.ok ? r.json() : null))
+            )
+          );
+          const productMap = new Map(
+            results
+              .filter(Boolean)
+              .filter((r) => r?.success && r?.data)
+              .map((r) => [r.data.id, r.data])
+          );
+          set({
+            items: items
+              .map((item) => {
+                const product = productMap.get(item.productId);
+                if (!product) return item; // keep if can't fetch
+                const variant = product.variants?.find((v: { id: string }) => v.id === item.variantId);
+                return {
+                  ...item,
+                  price: product.price,
+                  salePrice: product.salePrice ?? undefined,
+                  stock: variant?.stock ?? item.stock,
+                  discountRate: product.discountRate ?? 0,
+                  ppnRate: product.ppnRate ?? 0,
+                  pph23Rate: product.pph23Rate ?? 0,
+                };
+              })
+              .filter((item) => item.stock > 0), // remove out-of-stock
+          });
+        } catch (err) {
+          console.warn("[Cart] Failed to sync item prices:", err);
+        }
       },
     }),
     {

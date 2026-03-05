@@ -25,6 +25,17 @@ export const paymentService = {
     let totalTaxPph23 = 0;
     let totalProductDiscount = 0;
 
+    // Bug #3 fix: validate stock before creating order
+    for (const item of data.items) {
+      const variant = await prisma.productVariant.findUnique({
+        where: { id: item.variantId },
+        select: { stock: true },
+      });
+      if (!variant || variant.stock < item.quantity) {
+        throw new Error(`Stok tidak mencukupi untuk produk ${item.name} (ukuran ${item.size})`);
+      }
+    }
+
     const itemsWithDetails = await Promise.all(data.items.map(async (item) => {
       const product = await prisma.product.findUnique({
         where: { id: item.productId },
@@ -32,13 +43,18 @@ export const paymentService = {
       });
 
       const price = item.salePrice ?? item.price;
-      const baseTotal = price * item.quantity;
-      
-      const ppnAmount = product ? (baseTotal * ((product as any).ppnRate / 100)) : 0;
-      const pph23Amount = product ? (baseTotal * ((product as any).pph23Rate / 100)) : 0;
-      const discountAmount = product ? (baseTotal * ((product as any).discountRate / 100)) : 0;
+      const discountRate = product ? (product as any).discountRate : 0;
 
-      subtotal += baseTotal;
+      // Bug #1 fix: tax must be calculated on discounted price, not original price
+      const discountedPrice = price * (1 - discountRate / 100);
+      const discountedTotal = discountedPrice * item.quantity;
+      const originalTotal = price * item.quantity;
+
+      const ppnAmount = product ? (discountedTotal * ((product as any).ppnRate / 100)) : 0;
+      const pph23Amount = product ? (discountedTotal * ((product as any).pph23Rate / 100)) : 0;
+      const discountAmount = originalTotal - discountedTotal;
+
+      subtotal += originalTotal;
       totalTaxPpn += ppnAmount;
       totalTaxPph23 += pph23Amount;
       totalProductDiscount += discountAmount;
@@ -63,14 +79,40 @@ export const paymentService = {
     let couponId: string | undefined;
 
     if (data.couponCode) {
-      const couponResult = await couponRepository.validateCoupon(
-        data.couponCode,
-        subtotalAfterProductDiscount
-      );
+      // Bug #2 fix: wrap validation + increment in a single DB transaction
+      // to prevent race conditions where two simultaneous checkouts both pass
+      // the usage limit check before either increments the counter.
+      const couponResult = await prisma.$transaction(async (tx) => {
+        const coupon = await tx.coupon.findUnique({ where: { code: data.couponCode } });
+        if (!coupon) return { valid: false as const, error: "Kupon tidak ditemukan" };
+        if (!coupon.isActive) return { valid: false as const, error: "Kupon tidak aktif" };
+        if (coupon.expiresAt && coupon.expiresAt < new Date())
+          return { valid: false as const, error: "Kupon sudah kadaluarsa" };
+        if (coupon.usageLimit && coupon.usageCount >= coupon.usageLimit)
+          return { valid: false as const, error: "Kupon sudah mencapai batas penggunaan" };
+        if (subtotalAfterProductDiscount < coupon.minPurchase)
+          return { valid: false as const, error: `Minimal pembelian Rp ${coupon.minPurchase.toLocaleString()}` };
+
+        let discount = 0;
+        if (coupon.discountType === "PERCENTAGE") {
+          discount = (subtotalAfterProductDiscount * coupon.discountValue) / 100;
+          if (coupon.maxDiscount) discount = Math.min(discount, coupon.maxDiscount);
+        } else {
+          discount = coupon.discountValue;
+        }
+
+        // Atomically increment usage count within the same transaction
+        await tx.coupon.update({
+          where: { id: coupon.id },
+          data: { usageCount: { increment: 1 } },
+        });
+
+        return { valid: true as const, coupon, discount };
+      });
+
       if (couponResult.valid && couponResult.coupon) {
         couponDiscount = couponResult.discount || 0;
         couponId = couponResult.coupon.id;
-        await couponRepository.incrementUsage(couponResult.coupon.id);
       }
     }
 

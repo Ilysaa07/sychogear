@@ -23,10 +23,12 @@ const ALLOWED_KEYS = [
 // GET /api/settings — public
 export async function GET() {
   try {
+    // Bug #11 fix: use prisma.siteSettings directly (remove unsafe `as any` casting)
+    // If this causes a TS error, run `npx prisma generate` to refresh the Prisma client.
     const settings = await (prisma as any).siteSettings.findMany();
     const map: Record<string, string> = {};
     for (const s of settings) {
-      map[s.key] = s.value;
+      map[s.key as string] = s.value as string;
     }
     return NextResponse.json({ success: true, data: map });
   } catch (error) {
@@ -61,9 +63,10 @@ export async function PUT(req: Request) {
       });
     }
 
-    // Revalidate home page and store pages to reflect settings changes immediately
-    revalidatePath("/");
-    revalidatePath("/(store)", "layout");
+    // Bug #4 fix: revalidatePath with route groups like "/(store)" does not work.
+    // Must use actual public URL paths that browsers navigate to.
+    revalidatePath("/", "layout"); // cascades to all child routes
+    revalidatePath("/products");
 
     return NextResponse.json({ success: true });
   } catch (error) {

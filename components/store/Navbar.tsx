@@ -10,10 +10,12 @@ import { useUIStore } from "@/stores/ui-store";
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const itemCount = useCartStore((s) => s.getItemCount());
   const setCartDrawerOpen = useUIStore((s) => s.setCartDrawerOpen);
 
   useEffect(() => {
+    setMounted(true);
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
@@ -89,7 +91,7 @@ export default function Navbar() {
               aria-label="Cart"
             >
               <HiOutlineShoppingBag className="w-6 h-6" />
-              {itemCount > 0 && (
+              {mounted && itemCount > 0 && (
                 <span className="absolute top-1 right-1 w-4 h-4 flex items-center justify-center bg-red-600 text-white text-[9px] font-black rounded-full shadow-lg shadow-red-600/40 animate-pulse-once">
                   {itemCount}
                 </span>

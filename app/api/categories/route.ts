@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+// Bug #5 fix: categories rarely change, use ISR cache (1 min) instead of force-dynamic
+export const revalidate = 60;
+
 export async function GET() {
   try {
     const categories = await prisma.category.findMany({

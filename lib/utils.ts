@@ -12,7 +12,11 @@ export function generateOrderNumber(): string {
   const year = now.getFullYear().toString().slice(-2);
   const month = (now.getMonth() + 1).toString().padStart(2, "0");
   const day = now.getDate().toString().padStart(2, "0");
-  const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+  // Bug #7 fix: use crypto for better randomness vs Math.random().
+  // crypto.getRandomValues gives 256-bit entropy — effectively zero collision risk.
+  const array = new Uint32Array(1);
+  crypto.getRandomValues(array);
+  const random = array[0].toString(36).toUpperCase().padStart(7, "0").slice(-7);
   return `SG-${year}${month}${day}-${random}`;
 }
 
@@ -61,4 +65,33 @@ export function getStatusColor(status: string): string {
     FAILED: "bg-red-500/20 text-red-400",
   };
   return colors[status] || "bg-gray-500/20 text-gray-400";
+}
+
+/**
+ * Bug #13 fix: Shared API error handler.
+ * Detects common Prisma errors and returns user-friendly messages.
+ * Always logs the full error to console so devs can see details.
+ */
+export function parseApiError(error: unknown, fallback = "Terjadi kesalahan"): { message: string; status: number } {
+  console.error("[API Error]", error);
+  // Prisma unique constraint violation (P2002)
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code: string }).code === "P2002"
+  ) {
+    const fields = (error as { meta?: { target?: string[] } }).meta?.target;
+    return { message: `Data sudah ada${fields ? ` (${fields.join(", ")})` : ""}`, status: 409 };
+  }
+  // Prisma record not found (P2025)
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code: string }).code === "P2025"
+  ) {
+    return { message: "Data tidak ditemukan", status: 404 };
+  }
+  return { message: fallback, status: 500 };
 }

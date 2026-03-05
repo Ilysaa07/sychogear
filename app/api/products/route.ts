@@ -3,9 +3,12 @@ import { productRepository } from "@/repositories/product.repository";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { createSlug } from "@/lib/utils";
+import { parseApiError } from "@/lib/utils";
 import type { NextRequest } from "next/server";
 
-export const dynamic = "force-dynamic";
+// Bug #5 fix: use 30-second ISR for read-heavy product listings instead of force-dynamic.
+// The POST handler (admin create) is always dynamic by nature (no caching applies to mutations).
+export const revalidate = 30;
 
 export async function GET(request: NextRequest) {
   try {
@@ -85,10 +88,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, data: product });
   } catch (error) {
-    console.error("Create product error:", error);
-    return NextResponse.json(
-      { success: false, error: "Gagal membuat produk" },
-      { status: 500 }
-    );
+    const { message, status } = parseApiError(error, "Gagal membuat produk");
+    return NextResponse.json({ success: false, error: message }, { status });
   }
 }

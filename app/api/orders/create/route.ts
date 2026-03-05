@@ -45,9 +45,14 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("Create invoice error:", error);
+    // Bug #6 fix: surface meaningful stock/coupon errors as 400 instead of generic 500
+    const isUserError = error instanceof Error && (
+      error.message.includes("Stok tidak mencukupi") ||
+      error.message.includes("Kupon")
+    );
     return NextResponse.json(
-      { success: false, error: "Gagal membuat invoice" },
-      { status: 500 }
+      { success: false, error: isUserError ? error.message : "Gagal membuat invoice" },
+      { status: isUserError ? 400 : 500 }
     );
   }
 }
