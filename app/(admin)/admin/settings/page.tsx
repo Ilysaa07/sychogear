@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
-import { uploadFileAction, deleteFileAction } from "@/app/actions/upload";
+import { uploadFileAction, deleteFileAction, getSignedUploadUrlAction } from "@/app/actions/upload";
 import { HiOutlineSave, HiOutlinePhotograph, HiOutlineTrash, HiOutlineUpload } from "react-icons/hi";
 
 interface Settings {
@@ -111,24 +111,40 @@ export default function AdminSettingsPage() {
     if (!file) return;
 
     setUploading(true);
-    const formData = new FormData();
-    formData.append("file", file);
-
+    
     try {
-      const result = await uploadFileAction(formData);
+      // 1. Get a Signed Upload URL from the server
+      const signResult = await getSignedUploadUrlAction(file.name, file.type);
+      
+      if (!signResult.success || !signResult.uploadUrl) {
+        throw new Error(signResult.error || "Failed to get upload permission");
+      }
 
-      if (result.success && result.url) {
+      // 2. Upload directly from the browser to Supabase Storage
+      const uploadResponse = await fetch(signResult.uploadUrl, {
+        method: "PUT",
+        headers: {
+          "Content-Type": file.type,
+        },
+        body: file
+      });
+
+      if (!uploadResponse.ok) {
+        const errorData = await uploadResponse.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to upload to storage");
+      }
+
+      // 3. Update the UI with the final public URL
+      if (signResult.publicUrl) {
         setSettings((prev) => ({
           ...prev,
-          heroImages: [...prev.heroImages, result.url as string],
+          heroImages: [...prev.heroImages, signResult.publicUrl as string],
         }));
-        toast.success("File uploaded!");
-      } else {
-        toast.error(result.error || "Failed to upload file");
+        toast.success("File uploaded successfully!");
       }
-    } catch (error) {
-      console.error("Upload handler error:", error);
-      toast.error("Failed to upload file");
+    } catch (error: any) {
+      console.error("Direct upload error:", error);
+      toast.error(error.message || "Failed to upload file");
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = ""; 
@@ -410,18 +426,31 @@ export default function AdminSettingsPage() {
                   const file = e.target.files?.[0];
                   if (!file) return;
                   setUploading(true);
-                  const fd = new FormData();
-                  fd.append("file", file);
+                  
                   try {
-                    const result = await uploadFileAction(fd);
-                    if (result.success && result.url) {
-                      setSettings({ ...settings, promoImage: result.url });
-                      toast.success("Promo image uploaded!");
-                    } else {
-                      toast.error(result.error || "Upload failed");
+                    const signResult = await getSignedUploadUrlAction(file.name, file.type);
+                    if (!signResult.success || !signResult.uploadUrl) {
+                      throw new Error(signResult.error || "Failed to get upload permission");
                     }
-                  } catch {
-                    toast.error("Upload failed");
+
+                    const uploadResponse = await fetch(signResult.uploadUrl, {
+                      method: "PUT",
+                      headers: {
+                        "Content-Type": file.type,
+                      },
+                      body: file
+                    });
+
+                    if (!uploadResponse.ok) {
+                      throw new Error("Failed to upload to storage");
+                    }
+
+                    if (signResult.publicUrl) {
+                      setSettings({ ...settings, promoImage: signResult.publicUrl });
+                      toast.success("Promo image uploaded!");
+                    }
+                  } catch (error: any) {
+                    toast.error(error.message || "Upload failed");
                   } finally {
                     setUploading(false);
                     e.target.value = "";

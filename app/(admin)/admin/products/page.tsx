@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { uploadFileAction } from "@/app/actions/upload";
+import { uploadFileAction, deleteFileAction, getSignedUploadUrlAction } from "@/app/actions/upload";
 import { formatCurrency } from "@/lib/utils";
 import type { ProductWithRelations } from "@/types";
 import toast from "react-hot-toast";
@@ -191,8 +191,18 @@ export default function AdminProductsPage() {
     });
   };
 
-  const removeImageField = (index: number) => {
+  const removeImageField = async (index: number) => {
     if (formData.images.length <= 1) return;
+    
+    const imageUrl = formData.images[index].url;
+    if (imageUrl) {
+      try {
+        await deleteFileAction(imageUrl);
+      } catch (e) {
+        console.error("Failed to delete image from storage:", e);
+      }
+    }
+
     setFormData({
       ...formData,
       images: formData.images.filter((_, i) => i !== index),
@@ -204,27 +214,42 @@ export default function AdminProductsPage() {
     if (!file) return;
 
     setUploadingImageIndices((prev) => [...prev, index]);
-    const formDataObj = new FormData();
-    formDataObj.append("file", file);
-
+    
     try {
-      const result = await uploadFileAction(formDataObj);
+      // 1. Get a Signed Upload URL from the server
+      const signResult = await getSignedUploadUrlAction(file.name, file.type);
+      
+      if (!signResult.success || !signResult.uploadUrl) {
+        throw new Error(signResult.error || "Failed to get upload permission");
+      }
 
-      if (result.success && result.url) {
+      // 2. Upload directly from the browser to Supabase Storage
+      const uploadResponse = await fetch(signResult.uploadUrl, {
+        method: "PUT",
+        headers: {
+          "Content-Type": file.type,
+        },
+        body: file
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error("Failed to upload to storage");
+      }
+
+      // 3. Update the UI with the final public URL
+      if (signResult.publicUrl) {
         setFormData((prev) => {
           const newImages = [...prev.images];
-          newImages[index].url = result.url as string;
+          newImages[index].url = signResult.publicUrl as string;
           return { ...prev, images: newImages };
         });
-        toast.success("Image uploaded!");
-      } else {
-        toast.error(result.error || "Failed to upload image");
+        toast.success("Image uploaded successfully!");
       }
-    } catch {
-      toast.error("Failed to upload image");
+    } catch (error: any) {
+      console.error("Product image direct upload error:", error);
+      toast.error(error.message || "Failed to upload image");
     } finally {
       setUploadingImageIndices((prev) => prev.filter((i) => i !== index));
-      // Reset the file input so the same file can be selected again if needed
       e.target.value = "";
     }
   };
