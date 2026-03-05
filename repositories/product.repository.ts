@@ -117,16 +117,22 @@ export const productRepository = {
   },
 
   async decreaseStock(variantId: string, quantity: number) {
-    // Bug #3 fix: atomic conditional decrement prevents stock going negative
-    // under concurrent confirmations. executeRaw returns the count of rows updated.
-    const updated = await prisma.$executeRaw`
-      UPDATE "ProductVariant"
-      SET stock = stock - ${quantity}
-      WHERE id = ${variantId} AND stock >= ${quantity}
-    `;
-    if (updated === 0) {
-      throw new Error(`Stok tidak mencukupi untuk varian ${variantId}`);
-    }
-    return updated;
+    // Bug #3 fix: atomic stock decrement using a Prisma $transaction.
+    // Avoids $executeRaw which is incompatible with the PrismaPg session-mode
+    // adapter (causes MaxClientsInSessionMode) and requires knowing exact DB
+    // table name casing (which differs from the Prisma model name).
+    return prisma.$transaction(async (tx) => {
+      const variant = await tx.productVariant.findUnique({
+        where: { id: variantId },
+        select: { stock: true },
+      });
+      if (!variant || variant.stock < quantity) {
+        throw new Error(`Stok tidak mencukupi untuk varian ${variantId}`);
+      }
+      return tx.productVariant.update({
+        where: { id: variantId },
+        data: { stock: { decrement: quantity } },
+      });
+    });
   },
 };

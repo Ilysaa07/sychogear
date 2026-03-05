@@ -16,6 +16,7 @@ import {
   HiOutlinePhotograph,
 } from "react-icons/hi";
 import Link from "next/link";
+import ConfirmModal from "@/components/admin/ConfirmModal";
 
 const EMPTY_FORM = {
   name: "",
@@ -40,6 +41,7 @@ export default function AdminProductsPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [deleteProductId, setDeleteProductId] = useState<string | null>(null);
   const [uploadingImageIndices, setUploadingImageIndices] = useState<number[]>([]);
   const [formData, setFormData] = useState({ ...EMPTY_FORM });
   const [categories, setCategories] = useState<
@@ -154,14 +156,16 @@ export default function AdminProductsPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Hapus produk ini?")) return;
+  const confirmDelete = async () => {
+    if (!deleteProductId) return;
     try {
-      await axios.delete(`/api/products/${id}`);
+      await axios.delete(`/api/products/${deleteProductId}`);
       toast.success("Product deleted");
       fetchProducts();
     } catch {
       toast.error("Failed to delete");
+    } finally {
+      setDeleteProductId(null);
     }
   };
 
@@ -697,7 +701,7 @@ export default function AdminProductsPage() {
                             <HiOutlinePencil className="w-4 h-4" />
                           </button>
                           <button
-                            onClick={() => handleDelete(product.id)}
+                            onClick={() => setDeleteProductId(product.id)}
                             className="p-2 text-brand-400 hover:text-red-400 transition-colors"
                             title="Delete"
                           >
@@ -713,6 +717,16 @@ export default function AdminProductsPage() {
           </table>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={!!deleteProductId}
+        onClose={() => setDeleteProductId(null)}
+        onConfirm={confirmDelete}
+        title="Delete Product"
+        message="Are you sure you want to permanently delete this product? All variants and sizes will be lost. This action cannot be undone."
+        confirmText="Delete Product"
+        isDestructive={true}
+      />
     </div>
   );
 }

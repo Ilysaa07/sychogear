@@ -10,6 +10,7 @@ import {
   HiOutlineTrash,
   HiOutlineX,
 } from "react-icons/hi";
+import ConfirmModal from "@/components/admin/ConfirmModal";
 
 interface Coupon {
   id: string;
@@ -42,6 +43,7 @@ export default function AdminCouponsPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [deleteCouponId, setDeleteCouponId] = useState<string | null>(null);
   const [formData, setFormData] = useState({ ...EMPTY_FORM });
 
   useEffect(() => {
@@ -125,14 +127,16 @@ export default function AdminCouponsPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Hapus kupon ini?")) return;
+  const confirmDelete = async () => {
+    if (!deleteCouponId) return;
     try {
-      await axios.delete(`/api/coupons/${id}`);
+      await axios.delete(`/api/coupons/${deleteCouponId}`);
       toast.success("Coupon deleted");
       fetchCoupons();
     } catch {
       toast.error("Failed to delete");
+    } finally {
+      setDeleteCouponId(null);
     }
   };
 
@@ -373,7 +377,7 @@ export default function AdminCouponsPage() {
                           <HiOutlinePencil className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => handleDelete(coupon.id)}
+                          onClick={() => setDeleteCouponId(coupon.id)}
                           className="p-2 text-brand-400 hover:text-red-400 transition-colors"
                           title="Delete"
                         >
@@ -388,6 +392,16 @@ export default function AdminCouponsPage() {
           </table>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={!!deleteCouponId}
+        onClose={() => setDeleteCouponId(null)}
+        onConfirm={confirmDelete}
+        title="Delete Coupon"
+        message="Are you sure you want to permanently delete this coupon? This action cannot be undone."
+        confirmText="Delete Coupon"
+        isDestructive={true}
+      />
     </div>
   );
 }

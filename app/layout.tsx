@@ -77,7 +77,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className={`antialiased ${inter.variable} ${hooliganFont.variable} font-sans`}>
+      <body className={`antialiased ${inter.variable} ${hooliganFont.variable} font-sans bg-brand-950 text-white min-h-screen relative overflow-x-hidden`}>
         <LenisProvider>
           {children}
           <Toaster

@@ -4,8 +4,9 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { formatCurrency, getStatusColor } from "@/lib/utils";
 import type { OrderWithRelations } from "@/types";
+import ConfirmModal from "@/components/admin/ConfirmModal";
 import toast from "react-hot-toast";
-import { HiOutlineDownload, HiOutlineEye } from "react-icons/hi";
+import { HiOutlineDownload, HiOutlineEye, HiOutlineTrash } from "react-icons/hi";
 import Papa from "papaparse";
 
 const STATUS_FILTERS = [
@@ -35,10 +36,32 @@ export default function AdminOrdersPage() {
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [selectedOrder, setSelectedOrder] = useState<OrderWithRelations | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteOrderId, setDeleteOrderId] = useState<string | null>(null);
+  const [forceUpdateConfig, setForceUpdateConfig] = useState<{ id: string; status: string } | null>(null);
+  const [editingCustomer, setEditingCustomer] = useState(false);
+  const [customerForm, setCustomerForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
+  });
 
   useEffect(() => {
     fetchOrders();
   }, [statusFilter]);
+
+  useEffect(() => {
+    if (selectedOrder) {
+      setCustomerForm({
+        name: selectedOrder.customer.name,
+        email: selectedOrder.customer.email,
+        phone: selectedOrder.customer.phone || "",
+        address: selectedOrder.customer.address || "",
+      });
+      setEditingCustomer(false);
+    }
+  }, [selectedOrder]);
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -53,25 +76,78 @@ export default function AdminOrdersPage() {
     }
   };
 
-  const handleUpdateStatus = async (orderId: string, newStatus: string) => {
+  const handleUpdateStatus = async (orderId: string, newStatus: string, force = false) => {
     setUpdatingStatus(true);
     try {
       const { data } = await axios.patch(`/api/orders/${orderId}`, {
         status: newStatus,
+        ...(force && { force: true }),
       });
       if (data.success) {
         toast.success(`Status updated to ${newStatus}`);
-        // Update selectedOrder in place
         if (selectedOrder && selectedOrder.id === orderId) {
           setSelectedOrder({ ...selectedOrder, status: newStatus });
         }
-        // Update orders list
         setOrders((prev) =>
           prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o))
         );
       }
-    } catch {
-      toast.error("Failed to update status");
+    } catch (err: any) {
+      const msg = err?.response?.data?.error || "Failed to update status";
+      // If order is already confirmed/expired, offer admin a force-override
+      if (err?.response?.status === 400 && msg.includes("sudah dikonfirmasi")) {
+        setForceUpdateConfig({ id: orderId, status: newStatus });
+        return;
+      }
+      toast.error(msg);
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
+
+  const confirmForceUpdate = async () => {
+    if (!forceUpdateConfig) return;
+    const config = forceUpdateConfig;
+    setForceUpdateConfig(null);
+    await handleUpdateStatus(config.id, config.status, true);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteOrderId) return;
+    setDeleting(true);
+    try {
+      const { data } = await axios.delete(`/api/orders/${deleteOrderId}`);
+      if (data.success) {
+        toast.success("Order deleted successfully");
+        setOrders((prev) => prev.filter((o) => o.id !== deleteOrderId));
+        if (selectedOrder?.id === deleteOrderId) {
+          setSelectedOrder(null);
+        }
+      }
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || "Failed to delete order");
+    } finally {
+      setDeleting(false);
+      setDeleteOrderId(null);
+    }
+  };
+
+  const handleUpdateCustomer = async () => {
+    if (!selectedOrder) return;
+    setUpdatingStatus(true);
+    try {
+      const { data } = await axios.patch(`/api/orders/${selectedOrder.id}`, {
+        customer: customerForm,
+      });
+      if (data.success) {
+        toast.success(`Customer details updated`);
+        const updatedOrder = { ...selectedOrder, customer: { ...selectedOrder.customer, ...customerForm } };
+        setSelectedOrder(updatedOrder);
+        setOrders((prev) => prev.map((o) => (o.id === selectedOrder.id ? updatedOrder : o)));
+        setEditingCustomer(false);
+      }
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || "Failed to update customer details");
     } finally {
       setUpdatingStatus(false);
     }
@@ -196,12 +272,21 @@ export default function AdminOrdersPage() {
                     <td className="p-4 text-sm text-brand-400">
                       {new Date(order.createdAt).toLocaleDateString("id-ID")}
                     </td>
-                    <td className="p-4 text-right">
+                    <td className="p-4 text-right space-x-2">
                       <button
                         onClick={() => setSelectedOrder(order)}
                         className="p-2 text-brand-400 hover:text-white transition-colors"
+                        title="View Details"
                       >
                         <HiOutlineEye className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => setDeleteOrderId(order.id)}
+                        disabled={deleting}
+                        className="p-2 text-red-500/70 hover:text-red-400 disabled:opacity-50 transition-colors"
+                        title="Delete Order"
+                      >
+                        <HiOutlineTrash className="w-4 h-4" />
                       </button>
                     </td>
                   </tr>
@@ -222,12 +307,21 @@ export default function AdminOrdersPage() {
           <div className="fixed right-0 top-0 h-full w-full max-w-lg bg-brand-950 border-l border-white/5 z-50 overflow-y-auto p-6 fade-in">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-bold">{selectedOrder.invoiceNumber}</h3>
-              <button
-                onClick={() => setSelectedOrder(null)}
-                className="text-brand-400 hover:text-white"
-              >
-                ✕
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => selectedOrder && setDeleteOrderId(selectedOrder.id)}
+                  disabled={deleting}
+                  className="px-3 py-1.5 text-xs font-medium text-red-400 border border-red-500/30 hover:bg-red-500/10 rounded disabled:opacity-50 transition-colors"
+                >
+                  {deleting ? "Deleting..." : "Delete Order"}
+                </button>
+                <button
+                  onClick={() => setSelectedOrder(null)}
+                  className="p-2 text-brand-400 hover:text-white"
+                >
+                  ✕
+                </button>
+              </div>
             </div>
 
             <div className="space-y-6">
@@ -265,15 +359,77 @@ export default function AdminOrdersPage() {
               </div>
 
               <div>
-                <h4 className="text-xs text-brand-500 uppercase tracking-wider mb-2">
-                  Customer
-                </h4>
-                <p className="text-sm">{selectedOrder.customer.name}</p>
-                <p className="text-xs text-brand-400">{selectedOrder.customer.email}</p>
-                <p className="text-xs text-brand-400">{selectedOrder.customer.phone}</p>
-                <p className="text-xs text-brand-400 mt-1">
-                  {selectedOrder.customer.address}
-                </p>
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="text-xs text-brand-500 uppercase tracking-wider">
+                    Customer
+                  </h4>
+                  {!editingCustomer ? (
+                    <button
+                      onClick={() => setEditingCustomer(true)}
+                      className="text-xs text-brand-400 hover:text-white"
+                    >
+                      Edit
+                    </button>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setEditingCustomer(false)}
+                        className="text-xs text-brand-500 hover:text-white"
+                        disabled={updatingStatus}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleUpdateCustomer}
+                        className="text-xs text-green-400 hover:text-green-300 font-medium"
+                        disabled={updatingStatus}
+                      >
+                        {updatingStatus ? "Saving..." : "Save"}
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {!editingCustomer ? (
+                  <>
+                    <p className="text-sm">{selectedOrder.customer.name}</p>
+                    <p className="text-xs text-brand-400">{selectedOrder.customer.email}</p>
+                    <p className="text-xs text-brand-400">{selectedOrder.customer.phone}</p>
+                    <p className="text-xs text-brand-400 mt-1">
+                      {selectedOrder.customer.address}
+                    </p>
+                  </>
+                ) : (
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      value={customerForm.name}
+                      onChange={(e) => setCustomerForm(prev => ({ ...prev, name: e.target.value }))}
+                      className="input-field text-sm w-full"
+                      placeholder="Name"
+                    />
+                    <input
+                      type="email"
+                      value={customerForm.email}
+                      onChange={(e) => setCustomerForm(prev => ({ ...prev, email: e.target.value }))}
+                      className="input-field text-sm w-full"
+                      placeholder="Email"
+                    />
+                    <input
+                      type="text"
+                      value={customerForm.phone}
+                      onChange={(e) => setCustomerForm(prev => ({ ...prev, phone: e.target.value }))}
+                      className="input-field text-sm w-full"
+                      placeholder="Phone"
+                    />
+                    <textarea
+                      value={customerForm.address}
+                      onChange={(e) => setCustomerForm(prev => ({ ...prev, address: e.target.value }))}
+                      className="input-field text-sm w-full min-h-[60px]"
+                      placeholder="Address"
+                    />
+                  </div>
+                )}
               </div>
 
               <div>
@@ -370,6 +526,27 @@ export default function AdminOrdersPage() {
           </div>
         </>
       )}
+
+      {/* Confirmation Modals */}
+      <ConfirmModal
+        isOpen={!!deleteOrderId}
+        onClose={() => setDeleteOrderId(null)}
+        onConfirm={confirmDelete}
+        title="Delete Order"
+        message="Are you sure you want to permanently delete this order? This action cannot be undone."
+        confirmText="Delete Order"
+        isDestructive={true}
+        isLoading={deleting}
+      />
+
+      <ConfirmModal
+        isOpen={!!forceUpdateConfig}
+        onClose={() => setForceUpdateConfig(null)}
+        onConfirm={confirmForceUpdate}
+        title="Force Update Status"
+        message={`⚠️ Order ini tidak dalam status UNPAID.\n\nPaksa konfirmasi tetap akan:\n• Set status → ${forceUpdateConfig?.status || 'PAID'}\n• Kurangi stok (jika belum berkurang)\n• Update payment record\n\nLanjutkan?`}
+        confirmText="Force Update"
+      />
     </div>
   );
 }

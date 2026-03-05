@@ -43,10 +43,15 @@ export default async function ProductDetailPage({ params }: Props) {
 
       {/* Related Products */}
       {relatedProducts.length > 0 && (
-        <section className="mt-20 pt-12 border-t border-white/5">
-          <h2 className="text-2xl font-bold tracking-tight mb-8">
-            You May Also Like
-          </h2>
+        <section className="mt-32 pt-16 border-t border-white/5">
+          <div className="mb-10 text-center">
+            <p className="text-[10px] tracking-[0.4em] uppercase text-brand-500 mb-2 font-medium">
+              Explore More
+            </p>
+            <h2 className="text-3xl md:text-5xl font-semibold uppercase tracking-[0.1em] text-white">
+              You May Also Like
+            </h2>
+          </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
             {relatedProducts.map((p: ProductWithRelations) => (
               <ProductCard key={p.id} product={p} />

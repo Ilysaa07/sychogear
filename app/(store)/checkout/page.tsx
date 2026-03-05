@@ -17,6 +17,11 @@ export default function CheckoutPage() {
   const { items, getTotal, getSubtotal, getTotalTax, clearCart } = useCartStore();
   const [loading, setLoading] = useState(false);
   const [couponCode, setCouponCode] = useState("");
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [validatingCoupon, setValidatingCoupon] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
+
+  const finalTotal = Math.max(0, getTotal() - discountAmount);
 
   const {
     register,
@@ -62,6 +67,34 @@ export default function CheckoutPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode) return;
+    setValidatingCoupon(true);
+    try {
+      const { data } = await axios.post("/api/coupons/validate", {
+        code: couponCode,
+        subtotal: getSubtotal(), // Coupon applies to product subtotal
+      });
+      if (data.success) {
+        setDiscountAmount(data.data.discountAmount);
+        setAppliedCoupon(data.data.code);
+        toast.success("Kupon berhasil digunakan!");
+      }
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || "Kupon tidak valid");
+      setDiscountAmount(0);
+      setAppliedCoupon(null);
+    } finally {
+      setValidatingCoupon(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setCouponCode("");
+    setDiscountAmount(0);
+    setAppliedCoupon(null);
   };
 
   return (
@@ -140,14 +173,41 @@ export default function CheckoutPage() {
               <div className="flex gap-3">
                 <input
                   value={couponCode}
-                  onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                  onChange={(e) => {
+                    setCouponCode(e.target.value.toUpperCase());
+                    if (appliedCoupon && e.target.value.toUpperCase() !== appliedCoupon) {
+                      setAppliedCoupon(null);
+                      setDiscountAmount(0);
+                    }
+                  }}
+                  disabled={!!appliedCoupon || validatingCoupon}
                   className="input-field flex-1"
                   placeholder="Enter coupon code"
                 />
-                <button type="button" className="btn-secondary text-xs whitespace-nowrap">
-                  Apply
-                </button>
+                {!appliedCoupon ? (
+                  <button 
+                    type="button" 
+                    onClick={handleApplyCoupon}
+                    disabled={!couponCode || validatingCoupon}
+                    className="btn-secondary text-xs whitespace-nowrap disabled:opacity-50"
+                  >
+                    {validatingCoupon ? "Validating..." : "Apply"}
+                  </button>
+                ) : (
+                  <button 
+                    type="button" 
+                    onClick={handleRemoveCoupon}
+                    className="btn-secondary text-xs whitespace-nowrap !border-red-500/30 !text-red-400 hover:!bg-red-500/10"
+                  >
+                    Remove
+                  </button>
+                )}
               </div>
+              {appliedCoupon && (
+                <p className="text-xs text-green-400 mt-2">
+                  ✓ Kupon digunakan. Diskon: {formatCurrency(discountAmount)}
+                </p>
+              )}
             </div>
 
             <button
@@ -155,7 +215,7 @@ export default function CheckoutPage() {
               disabled={loading}
               className="btn-primary w-full"
             >
-              {loading ? "Processing..." : `Pay ${formatCurrency(getTotal())}`}
+              {loading ? "Processing..." : `Pay ${formatCurrency(finalTotal)}`}
             </button>
           </form>
         </div>
@@ -193,6 +253,12 @@ export default function CheckoutPage() {
               <span>Subtotal</span>
               <span>{formatCurrency(getSubtotal())}</span>
             </div>
+            {discountAmount > 0 && (
+              <div className="flex justify-between text-sm text-green-400">
+                <span>Discount</span>
+                <span>-{formatCurrency(discountAmount)}</span>
+              </div>
+            )}
             {getTotalTax() > 0 && (
               <div className="flex justify-between text-xs text-brand-500">
                 <span>Pajak (PPN/PPH 23)</span>
@@ -201,7 +267,7 @@ export default function CheckoutPage() {
             )}
             <div className="flex justify-between text-lg font-bold pt-2 border-t border-white/5">
               <span>Total</span>
-              <span>{formatCurrency(getTotal())}</span>
+              <span>{formatCurrency(finalTotal)}</span>
             </div>
           </div>
         </div>

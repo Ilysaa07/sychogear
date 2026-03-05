@@ -18,44 +18,54 @@ export default function ProductCard({ product }: ProductCardProps) {
   const hasMultiplePriceDeductions = product.discountRate > 0 && (isOnSale || product.salePrice);
 
   return (
-    <Link href={`/products/${product.slug}`} className="group block">
-      <div className="card card-hover">
-        {/* Image */}
-        <div className="relative aspect-[3/4] overflow-hidden bg-brand-900">
-          <img
-            src={mainImage}
-            alt={product.name}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-          />
+    <Link href={`/products/${product.slug}`} className="group block h-full">
+      {/* Elegant & minimal container */}
+      <div className="relative h-full aspect-[4/5] sm:aspect-[3/4] overflow-hidden bg-brand-950 border border-white/5 group-hover:border-white/20 transition-all duration-700">
+        
+        {/* Main Image - Smooth, elegant scaling without harsh contrast */}
+        <img
+          src={mainImage}
+          alt={product.name}
+          className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-all duration-1000 group-hover:scale-110"
+        />
 
-          {/* Badges */}
-          <div className="absolute top-3 left-3 flex flex-col gap-2">
-            {product.isNew && (
-              <span className="badge bg-white text-black text-[10px]">NEW</span>
-            )}
-            {isOnSale && (
-              <span className="badge bg-red-500 text-white text-[10px]">SALE</span>
-            )}
-            {totalStock === 0 && (
-              <span className="badge bg-brand-800 text-brand-400 text-[10px]">SOLD OUT</span>
-            )}
-          </div>
+        {/* Elegant Dark Overlay Gradient - Very smooth transition */}
+        <div className="absolute inset-0 bg-gradient-to-t from-brand-950 via-brand-950/40 to-transparent opacity-90 transition-opacity duration-700" />
+        
+        {/* Subtle Ambient Hover Glow (from bottom instead of harsh line) */}
+        <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-red-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+
+        {/* Badges - Minimalist glassmorphism */}
+        <div className="absolute top-4 left-4 flex flex-col gap-2 z-10">
+          {product.isNew && (
+            <span className="backdrop-blur-md bg-white/10 border border-white/10 text-white text-[9px] font-medium px-2 py-1 uppercase tracking-[0.2em]">NEW</span>
+          )}
+          {isOnSale && (
+            <span className="backdrop-blur-md bg-red-600/20 border border-red-600/30 text-white text-[9px] font-medium px-2 py-1 uppercase tracking-[0.2em]">SALE</span>
+          )}
+          {totalStock === 0 && (
+            <span className="backdrop-blur-md bg-black/40 border border-white/10 text-brand-400 text-[9px] font-medium px-2 py-1 uppercase tracking-[0.2em]">SOLD OUT</span>
+          )}
         </div>
 
-        {/* Info */}
-        <div className="p-4">
-          <p className="text-[10px] text-brand-500 uppercase tracking-[0.2em] mb-1">
-            {product.category.name}
-          </p>
-          <h3 className="text-xs font-bold uppercase tracking-[0.1em] text-brand-400 group-hover:text-white transition-colors truncate mb-2">
+        {/* Floating Content - Clean, spaced out, high-end editorial feel */}
+        <div className="absolute bottom-0 left-0 right-0 p-6 z-10 flex flex-col justify-end transform translate-y-1 group-hover:translate-y-0 transition-transform duration-700">
+          <div className="overflow-hidden mb-1">
+            <p className="text-[9px] text-brand-400 font-medium uppercase tracking-[0.4em] transform translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out">
+              {product.category.name}
+            </p>
+          </div>
+          
+          <h3 className="text-sm md:text-base font-semibold uppercase tracking-[0.1em] text-white line-clamp-2 mb-3">
             {product.name}
           </h3>
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-bold text-brand-300 group-hover:text-white transition-colors">
+          
+          <div className="flex items-center gap-3 mt-auto">
+            <span className="text-sm md:text-base text-white font-medium tracking-widest">
               {formatCurrency(finalPrice)}
             </span>
             {originalPrice && (
-              <span className="text-[10px] text-brand-600 line-through">
+              <span className="text-[10px] text-brand-500 line-through">
                 {formatCurrency(originalPrice)}
               </span>
             )}

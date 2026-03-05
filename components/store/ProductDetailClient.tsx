@@ -87,10 +87,10 @@ export default function ProductDetailClient({ product }: Props) {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
-      {/* Images */}
+      {/* Images - Stealth Minimalist Look */}
       <div className="space-y-4">
         <div 
-          className="aspect-[3/4] bg-brand-900 overflow-hidden cursor-crosshair relative group"
+          className="aspect-[4/5] sm:aspect-[3/4] overflow-hidden cursor-crosshair relative group bg-brand-950 border border-white/5"
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
         >
@@ -107,8 +107,8 @@ export default function ProductDetailClient({ product }: Props) {
               <button
                 key={img.id}
                 onClick={() => setSelectedImage(i)}
-                className={`aspect-square bg-brand-900 overflow-hidden border-2 transition-colors ${
-                  selectedImage === i ? "border-white" : "border-transparent"
+                className={`aspect-square bg-brand-950 overflow-hidden border border-white/5 transition-all duration-300 ${
+                  selectedImage === i ? "opacity-100 ring-1 ring-white/30" : "opacity-40 hover:opacity-100"
                 }`}
               >
                 <img
@@ -123,25 +123,25 @@ export default function ProductDetailClient({ product }: Props) {
       </div>
 
       {/* Info */}
-      <div className="flex flex-col">
-        <p className="text-xs tracking-[0.3em] uppercase text-brand-500 mb-2">
+      <div className="flex flex-col py-4">
+        <p className="text-[10px] tracking-[0.4em] uppercase text-brand-400 mb-3 font-medium">
           {product.category.name}
         </p>
-        <h1 className="text-3xl md:text-5xl font-bold uppercase tracking-widest mb-4">
+        <h1 className="text-3xl md:text-5xl lg:text-6xl font-semibold uppercase tracking-[0.1em] mb-6 leading-tight text-white drop-shadow-sm">
           {product.name}
         </h1>
 
-        <div className="flex items-center gap-3 mb-2">
-          <span className="text-2xl font-bold">
+        <div className="flex flex-wrap items-center gap-4 mb-3">
+          <span className="text-2xl md:text-3xl font-medium tracking-widest text-white">
             {formatCurrency(finalPrice)}
           </span>
           {(isOnSale || product.salePrice || product.discountRate > 0) && (
-            <span className="text-lg text-brand-500 line-through">
+            <span className="text-base text-brand-500 line-through tracking-wider">
               {formatCurrency(product.price)}
             </span>
           )}
           {(isOnSale || product.discountRate > 0) && (
-            <span className="badge bg-red-500/20 text-red-400 text-xs">
+            <span className="backdrop-blur-md bg-red-600/20 border border-red-600/30 text-white text-[10px] font-medium px-2.5 py-1 uppercase tracking-[0.2em]">
               {isOnSale ? "FLASH SALE" : `${product.discountRate}% OFF`}
             </span>
           )}
@@ -154,8 +154,8 @@ export default function ProductDetailClient({ product }: Props) {
         )}
 
         {/* Size Selector */}
-        <div className="mb-8">
-          <p className="text-xs tracking-wider uppercase text-brand-400 mb-3">
+        <div className="mb-10">
+          <p className="text-[10px] tracking-[0.3em] uppercase text-brand-500 mb-4 font-semibold">
             Select Size
           </p>
           <div className="flex flex-wrap gap-2">
@@ -164,17 +164,17 @@ export default function ProductDetailClient({ product }: Props) {
                 key={variant.id}
                 onClick={() => setSelectedVariant(variant.id)}
                 disabled={variant.stock === 0}
-                className={`relative px-4 py-2.5 text-sm font-medium border transition-all ${
+                className={`relative px-5 py-3 text-sm font-medium transition-all duration-300 ${
                   selectedVariant === variant.id
-                    ? "border-white bg-white text-black"
+                    ? "bg-white text-black border border-white"
                     : variant.stock === 0
-                    ? "border-white/5 text-brand-700 cursor-not-allowed line-through"
-                    : "border-white/10 text-brand-300 hover:border-white/30"
+                    ? "bg-black/20 border border-white/5 text-brand-800 cursor-not-allowed line-through"
+                    : "bg-brand-950 border border-white/10 text-brand-300 hover:border-white/30 hover:text-white"
                 }`}
               >
                 {variant.size}
                 {selectedVariant === variant.id && (
-                  <HiCheck className="absolute -top-1 -right-1 w-4 h-4 bg-white text-black rounded-full" />
+                  <HiCheck className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-black text-white border border-white rounded-full p-0.5 shadow-sm" />
                 )}
               </button>
             ))}
@@ -189,8 +189,8 @@ export default function ProductDetailClient({ product }: Props) {
         </div>
 
         {/* Quantity */}
-        <div className="mb-8">
-          <p className="text-xs tracking-wider uppercase text-brand-400 mb-3">
+        <div className="mb-12">
+          <p className="text-[10px] tracking-[0.3em] uppercase text-brand-500 mb-4 font-semibold">
             Quantity
           </p>
           <div className="inline-flex items-center border border-white/10">
@@ -216,25 +216,25 @@ export default function ProductDetailClient({ product }: Props) {
           </div>
         </div>
 
-        {/* Add to Cart */}
+        {/* Add to Cart - Bold "Drop" Button */}
         <button
           onClick={handleAddToCart}
           disabled={!selectedVariant || !inStock}
-          className="btn-primary w-full mb-4"
+          className="w-full py-5 px-8 bg-white text-black font-bold text-[11px] md:text-sm tracking-[0.3em] uppercase transition-all duration-300 hover:bg-black hover:text-white hover:border-white border border-transparent disabled:opacity-50 disabled:cursor-not-allowed mb-6 shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-none"
         >
           {!selectedVariant
-            ? "Select a Size"
+            ? "SELECT A SIZE"
             : !inStock
-            ? "Sold Out"
-            : "Add to Cart"}
+            ? "SOLD OUT"
+            : "ADD TO CART"}
         </button>
 
         {/* Description */}
-        <div className="mt-8 pt-8 border-t border-white/5">
-          <h3 className="text-xs tracking-wider uppercase text-brand-400 mb-3">
+        <div className="mt-4 pt-8 border-t border-white/5">
+          <h3 className="text-[10px] tracking-[0.3em] uppercase text-brand-500 mb-4 font-semibold">
             Description
           </h3>
-          <p className="text-sm text-brand-300 leading-relaxed whitespace-pre-line">
+          <p className="text-sm text-brand-300 leading-relaxed font-light whitespace-pre-line tracking-wide">
             {product.description}
           </p>
         </div>

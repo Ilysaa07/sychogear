@@ -51,12 +51,12 @@ export default function CartDrawer() {
           {items.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center">
               <HiOutlineShoppingBag className="w-16 h-16 text-brand-700 mb-4" />
-              <p className="text-brand-400 text-sm mb-6">Keranjang kamu masih kosong</p>
+              <p className="text-brand-400 text-sm mb-6">Your cart is empty</p>
               <button
                 onClick={() => setOpen(false)}
                 className="btn-secondary text-xs"
               >
-                Mulai Belanja
+                Start Shopping
               </button>
             </div>
           ) : (

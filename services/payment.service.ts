@@ -110,7 +110,11 @@ export const paymentService = {
         return { valid: true as const, coupon, discount };
       });
 
-      if (couponResult.valid && couponResult.coupon) {
+      if (!couponResult.valid) {
+        throw new Error(couponResult.error || "Kupon tidak valid");
+      }
+
+      if (couponResult.coupon) {
         couponDiscount = couponResult.discount || 0;
         couponId = couponResult.coupon.id;
       }
@@ -200,33 +204,51 @@ export const paymentService = {
     if (!order) throw new Error("Order not found");
     if (order.status !== "UNPAID") throw new Error("Order is not UNPAID");
 
-    // Update order status
-    await orderRepository.updateStatus(order.id, "PAID");
-
-    // Decrease stock
-    for (const item of order.items) {
-      await productRepository.decreaseStock(item.variantId, item.quantity);
-    }
-
-    // Update payment record if exists
-    if (order.payment) {
-      await prisma.payment.update({
-        where: { id: order.payment.id },
-        data: {
-          status: "PAID",
-          paidAt: new Date(),
-        },
+    // All DB writes are wrapped in a single transaction.
+    // If any step fails (e.g. stock runs out mid-loop), everything rolls back
+    // and the order stays UNPAID — no partial state possible.
+    const updatedOrder = await prisma.$transaction(async (tx) => {
+      // 1. Update order status to PAID
+      const paid = await tx.order.update({
+        where: { id: order.id },
+        data: { status: "PAID" },
       });
-    }
 
-    // Send confirmation email
+      // 2. Atomically decrement stock for each item
+      for (const item of order.items) {
+        const variant = await tx.productVariant.findUnique({
+          where: { id: item.variantId },
+          select: { stock: true },
+        });
+        if (!variant || variant.stock < item.quantity) {
+          throw new Error(`Stok tidak mencukupi untuk varian ${item.variantId}`);
+        }
+        await tx.productVariant.update({
+          where: { id: item.variantId },
+          data: { stock: { decrement: item.quantity } },
+        });
+      }
+
+      // 3. Update payment record if exists
+      if (order.payment) {
+        await tx.payment.update({
+          where: { id: order.payment.id },
+          data: { status: "PAID", paidAt: new Date() },
+        });
+      }
+
+      return paid;
+    });
+
+    // Send confirmation email after transaction commits (outside tx so email
+    // failure doesn't roll back the whole payment confirmation)
     await emailService.sendConfirmationEmail({
       to: order.customerEmail,
       customerName: order.customerName,
       invoiceNumber: order.invoiceNumber,
-    }).catch(err => console.error("Failed sending email:", err));
+    }).catch(err => console.error("Failed sending confirmation email:", err));
 
-    return { success: true, order };
+    return { success: true, order: updatedOrder };
   },
 
   async expireOrder(invoiceNumber: string) {
