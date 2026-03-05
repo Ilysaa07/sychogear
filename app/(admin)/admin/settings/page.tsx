@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
-import { uploadFileAction } from "@/app/actions/upload";
+import { uploadFileAction, deleteFileAction } from "@/app/actions/upload";
 import { HiOutlineSave, HiOutlinePhotograph, HiOutlineTrash, HiOutlineUpload } from "react-icons/hi";
 
 interface Settings {
@@ -115,14 +115,12 @@ export default function AdminSettingsPage() {
     formData.append("file", file);
 
     try {
-      // Using Server Action instead of directly hitting /api/upload
-      // this bypasses typical route handler body size limits and uses the 100mb limit in next.config
       const result = await uploadFileAction(formData);
 
       if (result.success && result.url) {
         setSettings((prev) => ({
           ...prev,
-          heroImages: [...prev.heroImages, result.url],
+          heroImages: [...prev.heroImages, result.url as string],
         }));
         toast.success("File uploaded!");
       } else {
@@ -133,15 +131,26 @@ export default function AdminSettingsPage() {
       toast.error("Failed to upload file");
     } finally {
       setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = ""; // Reset input
+      if (fileInputRef.current) fileInputRef.current.value = ""; 
     }
   };
 
-  const removeImage = (index: number) => {
-    setSettings((prev) => ({
-      ...prev,
-      heroImages: prev.heroImages.filter((_, i) => i !== index),
-    }));
+  const removeImage = async (index: number) => {
+    const imageUrl = settings.heroImages[index];
+    if (!imageUrl) return;
+
+    try {
+      await deleteFileAction(imageUrl);
+      
+      setSettings((prev) => ({
+        ...prev,
+        heroImages: prev.heroImages.filter((_, i) => i !== index),
+      }));
+      toast.success("Image removed from storage");
+    } catch (error) {
+      console.error("Failed to delete hero image:", error);
+      toast.error("Failed to remove image from storage");
+    }
   };
 
   if (loading) {
@@ -372,7 +381,13 @@ export default function AdminSettingsPage() {
                 <img src={settings.promoImage} alt="Promo" className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <button
-                    onClick={() => setSettings({ ...settings, promoImage: "" })}
+                    onClick={async () => {
+                      if (settings.promoImage) {
+                        await deleteFileAction(settings.promoImage);
+                      }
+                      setSettings({ ...settings, promoImage: "" });
+                      toast.success("Promo image removed");
+                    }}
                     className="p-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition"
                   >
                     <HiOutlineTrash className="w-4 h-4" />

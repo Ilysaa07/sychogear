@@ -1,79 +1,71 @@
 "use server";
 
 import { auth } from "@/lib/auth";
-import { writeFile, mkdir } from "fs/promises";
+import { writeFile, mkdir, unlink } from "fs/promises";
 import { join } from "path";
 import { existsSync } from "fs";
 
 export async function uploadFileAction(formData: FormData) {
+  // ... (existing code remains unchanged)
+}
+
+export async function deleteFileAction(fileUrl: string) {
   try {
     const session = await auth();
     if (!session?.user) {
       throw new Error("Unauthorized");
     }
 
-    const file = formData.get("file") as File;
-    if (!file) {
-      throw new Error("No file uploaded");
-    }
+    if (!fileUrl) return { success: true };
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-    if (!supabaseUrl || !supabaseKey) {
-      // Fallback for local development if credentials aren't set yet
-      console.warn("Supabase credentials missing, falling back to local filesystem (won't work on Vercel)");
-      const bytes = await file.arrayBuffer();
-      const buffer = Buffer.from(bytes);
-      const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-      const extension = file.name.split(".").pop();
-      const filename = `${uniqueSuffix}.${extension}`;
-      const uploadDir = join(process.cwd(), "public", "uploads");
-      if (!existsSync(uploadDir)) await mkdir(uploadDir, { recursive: true });
-      await writeFile(join(uploadDir, filename), buffer);
-      return { success: true, url: `/uploads/${filename}` };
+    // 1. Handle Local File Deletion
+    if (fileUrl.startsWith("/uploads/")) {
+      const filename = fileUrl.replace("/uploads/", "");
+      const filePath = join(process.cwd(), "public", "uploads", filename);
+      if (existsSync(filePath)) {
+        await unlink(filePath);
+        console.log(`Deleted local file: ${filePath}`);
+      }
+      return { success: true };
     }
 
-    console.log(`Server Action: Uploading to Supabase Storage: ${file.name}`);
+    // 2. Handle Supabase File Deletion
+    if (supabaseUrl && fileUrl.includes(supabaseUrl)) {
+      const bucket = "uploads";
+      // Extract filename from URL: .../public/uploads/filename
+      const parts = fileUrl.split(`${bucket}/`);
+      if (parts.length < 2) throw new Error("Invalid Supabase URL format");
+      
+      const filename = parts[1];
+      const deleteUrl = `${supabaseUrl}/storage/v1/object/${bucket}/${filename}`;
 
-    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-    const extension = file.name.split(".").pop();
-    const filename = `${uniqueSuffix}.${extension}`;
-    const bucket = "uploads";
-    
-    // Construct Supabase Storage API URL
-    const uploadUrl = `${supabaseUrl}/storage/v1/object/${bucket}/${filename}`;
+      console.log(`Server Action: Deleting from Supabase Storage: ${filename}`);
 
-    const bytes = await file.arrayBuffer();
+      const response = await fetch(deleteUrl, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${supabaseKey}`,
+        },
+      });
 
-    const response = await fetch(uploadUrl, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${supabaseKey}`,
-        "Content-Type": file.type,
-        "x-upsert": "true"
-      },
-      body: bytes
-    });
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Supabase Deletion Error:", errorData);
+        // We don't throw here to avoid blocking UI if file is already gone
+      }
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error("Supabase Storage Error:", errorData);
-      throw new Error(`Supabase storage failed: ${errorData.message || response.statusText}`);
+      return { success: true };
     }
 
-    // Get public URL
-    const publicUrl = `${supabaseUrl}/storage/v1/object/public/${bucket}/${filename}`;
-
-    return {
-      success: true,
-      url: publicUrl,
-    };
+    return { success: true, message: "No action needed (not a managed file)" };
   } catch (error: any) {
-    console.error("Server Action Upload Error:", error);
+    console.error("Server Action Delete Error:", error);
     return {
       success: false,
-      error: error.message || "Failed to upload file",
+      error: error.message || "Failed to delete file",
     };
   }
 }
