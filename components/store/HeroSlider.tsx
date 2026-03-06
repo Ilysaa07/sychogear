@@ -39,6 +39,7 @@ export default function HeroSlider({ images }: { images: string[] }) {
               loop
               muted
               playsInline
+              poster={images.find(i => !isVideo(i)) || ""}
               className="object-cover object-center w-full h-full"
             />
           ) : (
@@ -48,7 +49,8 @@ export default function HeroSlider({ images }: { images: string[] }) {
               fill
               className="object-cover object-center"
               priority={i === 0}
-              quality={90}
+              quality={85}
+              sizes="100vw"
             />
           )}
         </div>

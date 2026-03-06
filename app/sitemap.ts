@@ -1,7 +1,27 @@
 import { MetadataRoute } from "next";
+import { prisma } from "@/lib/prisma";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+
+  let products: any[] = [];
+  try {
+    products = await prisma.product.findMany({
+      select: {
+        slug: true,
+        updatedAt: true,
+      },
+    });
+  } catch (error) {
+    console.error("Sitemap generation error:", error);
+  }
+
+  const productEntries: MetadataRoute.Sitemap = products.map((product) => ({
+    url: `${baseUrl}/products/${product.slug}`,
+    lastModified: product.updatedAt,
+    changeFrequency: "weekly",
+    priority: 0.7,
+  }));
 
   return [
     {
@@ -16,17 +36,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "daily",
       priority: 0.9,
     },
+    ...productEntries,
     {
       url: `${baseUrl}/cart`,
       lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 0.5,
+      changeFrequency: "monthly",
+      priority: 0.3,
     },
     {
       url: `${baseUrl}/order-status`,
       lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 0.5,
+      changeFrequency: "monthly",
+      priority: 0.3,
     },
   ];
 }

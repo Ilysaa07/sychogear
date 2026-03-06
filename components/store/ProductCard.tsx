@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { formatCurrency } from "@/lib/utils";
 import type { ProductWithRelations } from "@/types";
 
@@ -22,11 +23,13 @@ export default function ProductCard({ product }: ProductCardProps) {
       {/* Elegant & minimal container */}
       <div className="relative h-full aspect-[4/5] sm:aspect-[3/4] overflow-hidden bg-brand-950 border border-white/5 group-hover:border-white/20 transition-all duration-700">
         
-        {/* Main Image - Smooth, elegant scaling without harsh contrast */}
-        <img
+        {/* Main Image - Optimized with next/image */}
+        <Image
           src={mainImage}
           alt={product.name}
-          className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-all duration-1000 group-hover:scale-110"
+          fill
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+          className="object-cover opacity-90 group-hover:opacity-100 transition-all duration-1000 group-hover:scale-110"
         />
 
         {/* Elegant Dark Overlay Gradient - Very smooth transition */}

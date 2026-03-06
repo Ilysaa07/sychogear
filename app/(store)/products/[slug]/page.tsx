@@ -12,15 +12,31 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const product = await productRepository.findBySlug(slug);
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://sychogear.com";
+  
   if (!product) return { title: "Product Not Found" };
+
+  const productUrl = `${baseUrl}/products/${slug}`;
+  const imageUrl = product.images[0]?.url || `${baseUrl}/images/og-image.jpg`;
 
   return {
     title: product.name,
     description: product.description.slice(0, 160),
+    alternates: {
+      canonical: productUrl,
+    },
     openGraph: {
+      title: `${product.name} | SYCHOGEAR`,
+      description: product.description.slice(0, 160),
+      url: productUrl,
+      images: [{ url: imageUrl }],
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
       title: product.name,
       description: product.description.slice(0, 160),
-      images: product.images[0]?.url ? [product.images[0].url] : [],
+      images: [imageUrl],
     },
   };
 }
@@ -31,6 +47,30 @@ export default async function ProductDetailPage({ params }: Props) {
 
   if (!product) notFound();
 
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://sychogear.com";
+  
+  const productJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": product.name,
+    "image": product.images.map(img => img.url),
+    "description": product.description,
+    "sku": product.id,
+    "brand": {
+      "@type": "Brand",
+      "name": "SYCHOGEAR"
+    },
+    "offers": {
+      "@type": "Offer",
+      "url": `${baseUrl}/products/${product.slug}`,
+      "priceCurrency": "IDR",
+      "price": product.salePrice || product.price,
+      "availability": product.variants.some(v => v.stock > 0) 
+        ? "https://schema.org/InStock" 
+        : "https://schema.org/OutOfStock",
+    }
+  };
+
   const relatedProducts = await productRepository.findRelated(
     product.categoryId,
     product.id,
@@ -39,6 +79,10 @@ export default async function ProductDetailPage({ params }: Props) {
 
   return (
     <div className="container-main pt-32 pb-12">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+      />
       <ProductDetailClient product={product} />
 
       {/* Related Products */}

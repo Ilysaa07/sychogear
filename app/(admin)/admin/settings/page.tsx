@@ -4,7 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { uploadFileAction, deleteFileAction, getSignedUploadUrlAction } from "@/app/actions/upload";
-import { HiOutlineSave, HiOutlinePhotograph, HiOutlineTrash, HiOutlineUpload } from "react-icons/hi";
+import { useFFmpeg } from "@/hooks/use-ffmpeg";
+import { HiOutlineSave, HiOutlinePhotograph, HiOutlineTrash, HiOutlineUpload, HiOutlineRefresh } from "react-icons/hi";
 
 interface Settings {
   heroImages: string[];
@@ -42,6 +43,7 @@ export default function AdminSettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const { convertToWebM, converting: isConverting } = useFFmpeg();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -107,12 +109,24 @@ export default function AdminSettingsPage() {
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    let file = e.target.files?.[0];
     if (!file) return;
 
     setUploading(true);
     
     try {
+      // Automatic Video Conversion if it's a video and not already webm
+      if (file.type.startsWith("video/") && file.type !== "video/webm") {
+        toast.loading("Converting video to WebM for better performance...", { id: "conv" });
+        try {
+          file = await convertToWebM(file);
+          toast.success("Video converted successfully!", { id: "conv" });
+        } catch (err) {
+          console.error("Conversion failed, uploading original:", err);
+          toast.error("Conversion failed, uploading original file.", { id: "conv" });
+        }
+      }
+
       // 1. Get a Signed Upload URL from the server
       const signResult = await getSignedUploadUrlAction(file.name, file.type);
       
@@ -245,12 +259,16 @@ export default function AdminSettingsPage() {
             {settings.heroImages.length < 5 && (
               <button
                 onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
+                disabled={uploading || isConverting}
                 className="relative aspect-video rounded-lg border-2 border-dashed border-white/10 hover:border-red-500/50 hover:bg-red-500/5 transition-all flex flex-col items-center justify-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <HiOutlineUpload className="w-6 h-6 text-brand-500 group-hover:text-red-400 transition-colors" />
+                {isConverting ? (
+                  <HiOutlineRefresh className="w-6 h-6 text-red-500 animate-spin" />
+                ) : (
+                  <HiOutlineUpload className="w-6 h-6 text-brand-500 group-hover:text-red-400 transition-colors" />
+                )}
                 <span className="text-xs text-brand-400 font-medium group-hover:text-white transition-colors">
-                  {uploading ? "Uploading..." : "Add Image"}
+                  {isConverting ? "Converting..." : uploading ? "Uploading..." : "Add Image/Video"}
                 </span>
               </button>
             )}
