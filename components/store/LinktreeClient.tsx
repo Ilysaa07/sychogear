@@ -18,11 +18,6 @@ const links = [
     description: "Belanja via Shopee.",
   },
   {
-    title: "TOKOPEDIA",
-    url: "https://tokopedia.com/sychogear", // Update when known
-    description: "Belanja via Tokopedia.",
-  },
-  {
     title: "INSTAGRAM",
     url: "https://www.instagram.com/sychogear",
   },
@@ -32,7 +27,7 @@ const links = [
   },
   {
     title: "CUSTOMER SERVICE (WA)",
-    url: "https://wa.me/6281234567890", // Update with actual number
+    url: "https://wa.me/6283190138549", // Update with actual number
   },
 ];
 

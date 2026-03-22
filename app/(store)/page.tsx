@@ -181,7 +181,7 @@ export default async function HomePage() {
                   href="/products"
                   className="inline-flex items-center justify-center px-10 py-5 bg-transparent border border-white/20 text-white font-bold text-[10px] md:text-xs tracking-[0.2em] uppercase hover:bg-white hover:text-black hover:border-white transition-all duration-300 group"
                 >
-                  Lihat Semua Produk
+                  View All Products
                   <span className="ml-3 transform group-hover:translate-x-1 transition-transform">
                     →
                   </span>

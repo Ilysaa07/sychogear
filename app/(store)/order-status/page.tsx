@@ -43,17 +43,21 @@ export default function OrderStatusPage() {
   };
 
   return (
-    <div className="container-main py-12">
-      <div className="max-w-2xl mx-auto">
-        <div className="text-center mb-12">
-          <p className="text-xs tracking-[0.3em] uppercase text-brand-500 mb-2">
-            Track Your Package
-          </p>
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
-            Order Status
-          </h1>
+    <div className="container-main pt-32 pb-12">
+      <div className="mb-16 relative flex flex-col items-center text-center">
+        <div className="absolute left-1/2 -translate-x-1/2 -top-10 md:-top-16 opacity-[0.03] text-[15vw] font-marker uppercase select-none tracking-tighter leading-none whitespace-nowrap pointer-events-none -z-10">
+          Order Status
         </div>
+        <p className="text-[10px] md:text-xs tracking-[0.4em] uppercase text-brand-500 mb-3 font-semibold">
+          Track Your Package
+        </p>
+        <h1 className="text-4xl md:text-6xl font-marker tracking-tighter uppercase leading-none text-white lg:text-7xl">
+          Order Status
+        </h1>
+        <div className="w-12 h-1 bg-brand-500 mt-6 md:mt-8 mx-auto"></div>
+      </div>
 
+      <div className="max-w-2xl mx-auto">
         <form onSubmit={handleSubmit(onSubmit)} className="card p-6 mb-8">
           <div className="space-y-4">
             <div>
@@ -64,7 +68,7 @@ export default function OrderStatusPage() {
                 {...register("email")}
                 type="email"
                 className="input-field"
-                placeholder="Email yang digunakan saat checkout"
+                placeholder="Email used at checkout"
               />
               {errors.email && (
                 <p className="text-red-400 text-xs mt-1">{errors.email.message}</p>
