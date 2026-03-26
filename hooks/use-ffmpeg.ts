@@ -1,28 +1,34 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { FFmpeg } from "@ffmpeg/ffmpeg";
-import { fetchFile, toBlobURL } from "@ffmpeg/util";
 
 export function useFFmpeg() {
   const [loaded, setLoaded] = useState(false);
   const [converting, setConverting] = useState(false);
-  const ffmpegRef = useRef(new FFmpeg());
+  const ffmpegRef = useRef<any>(null);
 
   const load = async () => {
+    if (!ffmpegRef.current) {
+      const { FFmpeg } = await import("@ffmpeg/ffmpeg");
+      ffmpegRef.current = new FFmpeg();
+    }
+    const { toBlobURL } = await import("@ffmpeg/util");
+
     const baseURL = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd";
     const ffmpeg = ffmpegRef.current;
     
     // Bind progress
-    ffmpeg.on("log", ({ message }) => {
+    ffmpeg.on("log", ({ message }: { message: string }) => {
       console.log(message);
     });
 
     try {
-      await ffmpeg.load({
-        coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
-        wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, "application/wasm"),
-      });
+      if (!ffmpeg.loaded) {
+        await ffmpeg.load({
+          coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
+          wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, "application/wasm"),
+        });
+      }
       setLoaded(true);
       return true;
     } catch (error) {
@@ -36,6 +42,8 @@ export function useFFmpeg() {
       const isLoaded = await load();
       if (!isLoaded) throw new Error("FFmpeg failed to load");
     }
+
+    const { fetchFile } = await import("@ffmpeg/util");
 
     setConverting(true);
     const ffmpeg = ffmpegRef.current;
