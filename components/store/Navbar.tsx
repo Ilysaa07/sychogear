@@ -58,7 +58,7 @@ export default function Navbar() {
           <Link href="/" className="absolute left-1/2 -translate-x-1/2 flex items-center group">
             <div className="relative group">
               <Image
-                src="/images/logo-sychogear.png"
+                src="/images/logo-sychogear.webp"
                 alt="SYCHOGEAR"
                 width={400}
                 height={100}

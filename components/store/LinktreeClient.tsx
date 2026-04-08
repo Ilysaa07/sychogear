@@ -3,131 +3,190 @@
 import Image from "next/image";
 import Link from "next/link";
 import { HiOutlineArrowRight } from "react-icons/hi";
+import HeroSlider from "@/components/store/HeroSlider";
 
-// Placeholder links
 const links = [
   {
     title: "OFFICIAL WEBSTORE",
     url: "/",
-    description: "Shop the latest collections.",
+    description: "Belanja Koleksi Lengkap Sychogear",
     primary: true,
+    image: "/images/logo-sychogear.webp",
   },
   {
     title: "SHOPEE",
-    url: "https://shopee.co.id/sychogear", // Update when known
-    description: "Belanja via Shopee.",
+    url: "https://shopee.co.id/sychogear",
+    description: "Promo & Gratis Ongkir",
+    image: "/images/shopee.webp",
   },
   {
     title: "INSTAGRAM",
     url: "https://www.instagram.com/sychogear",
+    description: "Katalog & Update Terbaru",
+    image: "/images/instagram.webp",
   },
   {
     title: "TIKTOK",
     url: "https://www.tiktok.com/@sychogear",
+    description: "Video Produk & Behind The Scenes",
+    image: "/images/tiktok.webp",
   },
   {
-    title: "CUSTOMER SERVICE (WA)",
-    url: "https://wa.me/6283190138549", // Update with actual number
+    title: "WHATSAPP",
+    url: "https://wa.me/6283190138549",
+    description: "Customer Service & Pemesanan Manual",
+    image: "/images/whatsapp.webp",
   },
 ];
 
-export default function LinktreeClient() {
+export default function LinktreeClient({ heroImages = [] }: { heroImages?: string[] }) {
   return (
-    <div className="min-h-screen bg-brand-950 flex flex-col relative overflow-hidden font-sans selection:bg-white selection:text-black">
-      {/* Background Ambience */}
-      <div className="absolute inset-0 z-0 pointer-events-none">
+    <div className="min-h-screen bg-[#050505]/80 backdrop-blur-md flex flex-col relative overflow-hidden font-sans selection:bg-red-600 selection:text-white">
+      {/* Optimized Background Ambience */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
         
-        {/* Subtle red glow at top */}
-        <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[80vw] h-[80vw] max-w-[600px] max-h-[600px] bg-red-600/10 blur-[100px] rounded-full" />
+        {/* Synchronized Home Background */}
+        {heroImages.length > 0 && (
+          <div className="absolute inset-0 opacity-40">
+            <HeroSlider images={heroImages} />
+          </div>
+        )}
+
+        {/* Global Dark Gradient Overlay to ensure text readability */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#050505]/90 via-[#050505]/60 to-[#050505]" />
+
+        {/* CSS Radial Gradient instead of heavy blur */}
+        <div 
+          className="absolute top-0 left-0 right-0 h-[800px] opacity-30 mix-blend-screen" 
+          style={{ background: 'radial-gradient(circle at 50% -20%, rgba(220, 38, 38, 0.4) 0%, transparent 60%)' }} 
+        />
         
         {/* Massive Brand Watermark */}
-        <div className="absolute top-10 md:top-20 left-1/2 -translate-x-1/2 w-full flex justify-center opacity-60">
-          <h2 className="text-[30vw] md:text-[15vw] leading-none font-marker text-white/5 tracking-tighter cursor-default select-none uppercase whitespace-nowrap">
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[150%] md:w-full flex justify-center opacity-[0.02]">
+          <h2 className="text-[25vw] md:text-[15vw] leading-none font-marker text-white tracking-tighter cursor-default select-none uppercase whitespace-nowrap">
             SYCHOGEAR
           </h2>
         </div>
-        
-        {/* Noise overlay */}
-        <div 
-          className="absolute inset-0 opacity-[0.03]" 
-          style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}
-        />
-        
-        {/* Grid lines */}
-        <div 
-          className="absolute inset-0 opacity-[0.015]"
-          style={{ backgroundImage: `linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)`, backgroundSize: '40px 40px' }}
-        />
       </div>
 
       {/* Main Content Area */}
-      <main className="relative z-10 flex-1 flex flex-col items-center w-full max-w-md mx-auto px-6 py-16 custom-scrollbar">
+      <main className="relative z-10 flex-1 flex flex-col items-center w-full max-w-md mx-auto px-5 py-12 md:py-16">
         
-        {/* Header Section */}
-        <header className="flex flex-col items-center mb-12 fade-in">
+        {/* Header Section - No animation delay for instant FCP/LCP */}
+        <header className="flex flex-col items-center mb-10 w-full">
           <div className="relative group mb-6">
-            <div className="absolute inset-0 bg-red-600/20 blur-2xl rounded-full scale-110 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-            <div className="w-24 h-24 rounded-full border border-white/10 bg-black flex items-center justify-center p-3 relative overflow-hidden">
-               <Image
-                src="/images/logo-sychogear.png"
+            {/* Glowing ring effect using simple box-shadow instead of blur for performance */}
+            <div className="absolute -inset-2 bg-gradient-to-tr from-red-600/20 to-transparent rounded-full opacity-50 group-hover:opacity-100 transition-opacity duration-700 shadow-[0_0_40px_rgba(220,38,38,0.2)]" />
+            <div className="w-24 h-24 rounded-full border border-white/10 bg-[#0a0a0a] flex items-center justify-center p-4 relative overflow-hidden shadow-2xl">
+              <Image
+                src="/images/logo-sychogear.webp"
                 alt="SYCHOGEAR"
-                width={100}
-                height={100}
-                className="w-full h-auto brightness-200 contrast-200"
+                width={120}
+                height={120}
+                className="w-full h-auto brightness-200 contrast-200 drop-shadow-md"
                 priority
+                sizes="120px"
               />
             </div>
           </div>
           
-          <h1 className="text-xl font-bold tracking-[0.3em] uppercase text-white mb-2 text-center">
+          <h1 className="text-2xl font-black tracking-[0.3em] uppercase text-white mb-2 text-center drop-shadow-lg">
             SYCHOGEAR
           </h1>
-          <p className="text-[10px] tracking-[0.2em] uppercase text-brand-500 font-semibold mb-1 text-center">
+          <p className="text-[11px] tracking-[0.2em] uppercase text-brand-400 font-medium mb-1 text-center">
              Premium Fight Gear
-          </p>
-          <p className="text-[9px] tracking-widest uppercase text-brand-600 font-mono text-center">
-             Est. 2026 // VIOLENCE IS OUR AESTHETIC
           </p>
         </header>
 
         {/* Links Section */}
-        <div className="w-full space-y-4 fade-in" style={{ animationDelay: "100ms" }}>
+        <div className="w-full space-y-4">
           {links.map((link, i) => (
-            <Link
-              key={i}
-              href={link.url}
-              target={link.url.startsWith("/") ? "_self" : "_blank"}
-              rel={link.url.startsWith("/") ? "" : "noopener noreferrer"}
-              className={`group relative flex flex-col justify-center w-full p-5 border transition-all duration-300 slide-up ${
-                link.primary
-                  ? "bg-white text-black border-white hover:bg-black hover:text-white"
-                  : "bg-black/40 backdrop-blur-md border-white/10 text-white hover:bg-white hover:text-black hover:border-white"
-              }`}
-              style={{ animationDelay: `${200 + i * 100}ms` }}
+            <div 
+              key={i} 
+              className="animate-fade-in-up hover-scale-fast" 
+              style={{ animationDelay: `${i * 100}ms` }}
             >
-              <div className="flex items-center justify-between w-full">
-                <span className="font-bold text-xs sm:text-sm uppercase tracking-[0.2em]">
-                  {link.title}
-                </span>
-                <HiOutlineArrowRight className={`w-4 h-4 transition-transform duration-300 ${link.primary ? "group-hover:translate-x-1" : "-translate-x-2 opacity-0 group-hover:opacity-100 group-hover:translate-x-0"}`} />
-              </div>
-              {link.description && (
-                <span className={`text-[10px] mt-1.5 tracking-wide font-medium ${link.primary ? "text-gray-600 group-hover:text-gray-400" : "text-brand-500 group-hover:text-gray-600"} transition-colors`}>
-                  {link.description}
-                </span>
-              )}
-            </Link>
+              <Link
+                href={link.url}
+                target={link.url.startsWith("/") ? "_self" : "_blank"}
+                rel={link.url.startsWith("/") ? "" : "noopener noreferrer"}
+                className={`group relative flex items-center w-full p-4 rounded-xl overflow-hidden transition-all duration-300 ${
+                  link.primary
+                    ? "bg-white text-black border border-transparent shadow-[0_0_30px_rgba(255,255,255,0.15)] hover:shadow-[0_0_40px_rgba(255,255,255,0.3)]"
+                    : "bg-[#111111] border border-white/5 text-white hover:bg-[#1a1a1a] hover:border-white/20 shadow-lg hover:shadow-xl"
+                }`}
+              >
+                {/* Logo Area */}
+                <div className={`flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center overflow-hidden ${link.primary ? 'bg-black/5' : 'bg-black/50 border border-white/5'}`}>
+                  {link.image && (
+                    <div className="relative w-7 h-7">
+                      <Image
+                        src={link.image}
+                        alt={link.title}
+                        fill
+                        sizes="28px"
+                        priority={i === 0}
+                        className={`object-contain ${link.primary ? 'filter grayscale brightness-0' : 'filter transition-all duration-300'}`}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Text Area */}
+                <div className="flex-1 ml-4 flex flex-col justify-center">
+                  <span className="font-extrabold text-[13px] sm:text-sm uppercase tracking-[0.1em] leading-none mb-1.5">
+                    {link.title}
+                  </span>
+                  {link.description && (
+                    <span className={`text-[10px] sm:text-[11px] leading-snug ${link.primary ? "text-gray-600 font-bold" : "text-gray-400 font-medium"}`}>
+                      {link.description}
+                    </span>
+                  )}
+                </div>
+
+                {/* Arrow Icon */}
+                <div className="flex-shrink-0 ml-3">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${link.primary ? 'bg-black text-white group-hover:rotate-[-45deg]' : 'bg-white/5 text-white/50 group-hover:bg-white/10 group-hover:text-white group-hover:rotate-[-45deg]'}`}>
+                    <HiOutlineArrowRight className="w-4 h-4" />
+                  </div>
+                </div>
+              </Link>
+            </div>
           ))}
         </div>
         
         {/* Footer */}
-        <footer className="mt-auto pt-16 fade-in" style={{ animationDelay: "800ms" }}>
-          <p className="text-[8px] tracking-[0.3em] text-brand-700 uppercase font-mono">
+        <footer className="mt-16 w-full flex flex-col items-center animate-fade-in-up" style={{ animationDelay: "400ms" }}>
+          <div className="w-12 h-px bg-gradient-to-r from-transparent via-red-600/50 to-transparent mb-6" />
+          <p className="text-[9px] tracking-[0.4em] text-brand-600 uppercase font-bold text-center">
              VIOLENCE IS OUR AESTHETIC
           </p>
         </footer>
 
       </main>
+
+      {/* Optimized animations */}
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(15px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-up {
+          animation: fadeInUp 0.5s ease-out forwards;
+          opacity: 0;
+        }
+        .animate-fade-in-up:nth-child(1) { animation-delay: 0.1s; }
+        .hover-scale-fast {
+          transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .hover-scale-fast:hover {
+          transform: scale(1.02);
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .animate-fade-in-up { animation: none; opacity: 1; }
+          .hover-scale-fast:hover { transform: none; }
+        }
+      `}} />
     </div>
   );
 }

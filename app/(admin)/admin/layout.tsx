@@ -27,7 +27,7 @@ export default function AdminLayout({
               <HiMenuAlt2 className="w-6 h-6" />
             </button>
             <Image
-              src="/images/logo-sychogear.png"
+              src="/images/logo-sychogear.webp"
               alt="Logo"
               width={40}
               height={40}

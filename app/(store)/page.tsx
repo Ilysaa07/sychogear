@@ -80,12 +80,12 @@ export default async function HomePage() {
         {/* Background Slider */}
         <HeroSlider images={heroImages} />
 
-        {/* Dark overlay */}
-        <div className="absolute inset-0 bg-black/60 z-0" />
+        {/* Dark overlay removed */}
 
 
-        {/* Red accent overlays */}
-        <div className="absolute inset-0 bg-gradient-to-t from-brand-950 via-transparent to-transparent" />
+
+        {/* Red accent overlays removed */}
+
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-red-600 to-transparent" />
 
         {/* Content */}
@@ -150,7 +150,7 @@ export default async function HomePage() {
       </section>
 
       {/* Foreground Scrollable Content */}
-      <div className="mt-[100vh] relative z-10 bg-brand-950 sm:rounded-t-[2.5rem] shadow-[0_-20px_50px_rgba(0,0,0,0.8)] flex flex-col">
+      <div className="mt-[100vh] relative z-10 bg-brand-950 sm:rounded-t-[2.5rem] shadow-[0_-20px_50px_rgba(0,0,0,0.8)] flex flex-col min-h-screen">
         
         {/* Seamless Product Grid */}
         {newArrivals.length > 0 && (

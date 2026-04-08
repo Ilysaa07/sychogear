@@ -48,7 +48,7 @@ export default function AdminSidebar() {
         <div className="p-6 border-b border-white/5 flex items-center justify-between">
           <div>
             <Image
-              src="/images/logo-sychogear.png"
+              src="/images/logo-sychogear.webp"
               alt="Logo"
               width={100}
               height={100}

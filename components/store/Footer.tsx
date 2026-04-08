@@ -12,7 +12,7 @@ export default function Footer() {
         </h2>
         <div className="absolute inset-x-0 bottom-12 flex items-end justify-between px-4 sm:px-8">
            <Image
-            src="/images/logo-sychogear.png"
+            src="/images/logo-sychogear.webp"
             alt="SYCHOGEAR Logo"
             width={400}
             height={100}
