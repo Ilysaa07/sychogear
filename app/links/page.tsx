@@ -6,11 +6,11 @@ import { prisma } from "@/lib/prisma";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Official Links | SYCHOGEAR",
-  description: "Violence Is Our Aesthetic. Premium fight gear and streetwear. Connect with us on social media, shop the latest drops, and join the underground.",
+  title: "Official Links & Shopee Store | SYCHOGEAR",
+  description: "Explore SYCHOGEAR official links. Connect on WhatsApp, follow our Instagram & TikTok, and shop premium streetwear on our Shopee Mall.",
   openGraph: {
-    title: "Official Links | SYCHOGEAR",
-    description: "Premium streetwear and fight gear. Shop now.",
+    title: "Official Links & Shopee Store | SYCHOGEAR",
+    description: "Connect on WhatsApp, follow our social media, and shop premium streetwear on our Shopee Mall.",
     images: ["/images/logo-sychogear.webp"], 
   },
 };
@@ -35,5 +35,64 @@ export default async function LinksPage() {
     heroImages = [];
   }
 
-  return <LinktreeClient heroImages={heroImages} />;
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "ProfilePage",
+        "@id": "https://sychogear.com/links/#profile",
+        "mainEntity": {
+          "@type": "Organization",
+          "@id": "https://sychogear.com/#organization",
+          "name": "SYCHOGEAR",
+          "url": "https://sychogear.com/",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://sychogear.com/images/logo-sychogear.png"
+          },
+          "sameAs": [
+            "https://instagram.com/sychogear",
+            "https://tiktok.com/@sychogear",
+            "https://youtube.com/@sychogear",
+            "https://shopee.co.id/sychogear"
+          ],
+          "contactPoint": {
+            "@type": "ContactPoint",
+            "contactType": "Customer Service",
+            // The actual WA number might be dynamic, so let's use the URL directly if they have a wa.me link
+            // We'll leave it generalized as a brand profile
+            "url": "https://sychogear.com/links",
+            "availableLanguage": ["id", "en"]
+          }
+        }
+      },
+      {
+        "@type": "ItemList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Sychogear Official Shopee Store",
+            "url": "https://shopee.co.id/sychogear"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "SYCHOGEAR Official Website",
+            "url": "https://sychogear.com"
+          }
+        ]
+      }
+    ]
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <LinktreeClient heroImages={heroImages} />
+    </>
+  );
 }

@@ -94,6 +94,7 @@ export default function Footer() {
                 { href: "/", label: "Home" },
                 { href: "/products", label: "Shop All" },
                 { href: "/order-status", label: "Track Order" },
+                { href: "/links", label: "Official Channels & Shopee" },
               ].map((link) => (
                 <li key={link.href}>
                   <Link

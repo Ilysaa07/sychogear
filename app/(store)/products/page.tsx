@@ -16,10 +16,37 @@ const SORT_OPTIONS = [
 import { Suspense } from "react";
 
 export default function ProductsPage() {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://sychogear.com";
+  
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": baseUrl
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Products",
+        "item": `${baseUrl}/products`
+      }
+    ]
+  };
+
   return (
-    <Suspense fallback={<div className="container-main py-12 flex justify-center"><div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin"></div></div>}>
-      <ProductsContent />
-    </Suspense>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <Suspense fallback={<div className="container-main py-12 flex justify-center"><div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin"></div></div>}>
+        <ProductsContent />
+      </Suspense>
+    </>
   );
 }
 
