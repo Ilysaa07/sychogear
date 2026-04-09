@@ -27,7 +27,7 @@ const links = [
   },
   {
     title: "TIKTOK",
-    url: "https://www.tiktok.com/@sychogear",
+    url: "https://www.tiktok.com/@sychogearofficial",
     description: "Video Produk & Behind The Scenes",
     image: "/images/tiktok.webp",
   },
