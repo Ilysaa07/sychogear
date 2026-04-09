@@ -6,34 +6,26 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://sychogear.com";
   
-  // Example implementation for Video Lookbook Sitemap 
-  // This helps indexing if you embed .mp4 or .mov files on your PDPs or Lookbook pages
   let products: any[] = [];
   try {
-    // Assuming for the future you might add a 'videoUrl' field to Product 
-    // or parse it from description/features. For now we pull basic items.
     products = await prisma.product.findMany({
       select: {
         slug: true,
         name: true,
         description: true,
-        images: true, // We will use the first image as the video thumbnail fallback
         updatedAt: true
       },
-      take: 10, // Limit to featured items that might have videos
+      take: 10, 
     });
   } catch (error) {
-    console.error("Sitemap videos generation error:", error);
+    console.error("Video sitemap generation error:", error);
   }
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
   ${products.map(product => {
-    // Simulate finding a video. If your schema adds raw video hosting, replace this logic.
-    // We only output a video tag if we pretend one exists, or leave it blank gracefully.
-    // For production readiness, let's assume NO video exists until you actually upload one.
-    // A placeholder structure:
+    // This remains a template for future video functionality
     return `<!-- 
     <url>
       <loc>${baseUrl}/products/${product.slug}</loc>

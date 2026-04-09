@@ -16,14 +16,14 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error("Sitemap images generation error:", error);
+    console.error("Image sitemap generation error:", error);
   }
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   ${products.map(product => {
-    let imagesArr: string[] = [];
+    let imagesArr: any[] = [];
     try {
       imagesArr = typeof product.images === 'string' ? JSON.parse(product.images) : product.images || [];
     } catch {
@@ -35,11 +35,14 @@ export async function GET() {
     return `
   <url>
     <loc>${baseUrl}/products/${product.slug}</loc>
-    ${imagesArr.map((imgUrl: string) => `
+    ${imagesArr.map((img: any) => {
+      const imgUrl = typeof img === 'string' ? img : img.url;
+      return `
     <image:image>
       <image:loc>${imgUrl.startsWith('http') ? imgUrl : `${baseUrl}${imgUrl}`}</image:loc>
       <image:title><![CDATA[${product.name}]]></image:title>
-    </image:image>`).join('')}
+    </image:image>`;
+    }).join('')}
   </url>`;
   }).join('')}
 </urlset>`;
