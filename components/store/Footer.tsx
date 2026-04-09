@@ -63,7 +63,7 @@ export default function Footer() {
               
               {/* TikTok */}
               <li>
-                <a href="https://www..com/@sychogearofficial" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-brand-400 hover:text-white transition-ctiktokolors group w-fit">
+                <a href="https://www.tiktok.com/@sychogearofficial" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-brand-400 hover:text-white transition-colors group w-fit">
                   <div className="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center group-hover:border-white/40 group-hover:bg-white group-hover:text-black transition-all">
                     <span className="sr-only">TikTok</span>
                     <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -73,6 +73,7 @@ export default function Footer() {
                   <span className="text-xs uppercase tracking-widest">@sychogearofficial</span>
                 </a>
               </li>
+
               <li>
                 <div className="flex items-center gap-3 text-brand-400 group w-fit">
                   <div className="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center p-2 group-hover:border-white/40 transition-colors">
@@ -94,7 +95,7 @@ export default function Footer() {
                 { href: "/", label: "Home" },
                 { href: "/products", label: "Shop All" },
                 { href: "/order-status", label: "Track Order" },
-                { href: "/links", label: "Official Channels & Shopee" },
+                { href: "/links", label: "Official Channels & Marketplaces" },
               ].map((link) => (
                 <li key={link.href}>
                   <Link

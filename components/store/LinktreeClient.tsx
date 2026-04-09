@@ -20,6 +20,12 @@ const links = [
     image: "/images/shopee.webp",
   },
   {
+    title: "TOKOPEDIA",
+    url: "https://tk.tokopedia.com/ZSHHSgote/",
+    description: "Official Store Tokopedia",
+    image: "/images/tokopedia.webp",
+  },
+  {
     title: "INSTAGRAM",
     url: "https://www.instagram.com/sychogear",
     description: "Katalog & Update Terbaru",
@@ -155,7 +161,7 @@ export default function LinktreeClient({ heroImages = [] }: { heroImages?: strin
           {/* Semantic SEO Enrichment - Hidden for users but visible to crawlers */}
           <div className="sr-only">
             <h2>SYCHOGEAR Official Hub</h2>
-            <p>Welcome to the official digital hub of SYCHOGEAR. Find our premium streetwear and fight gear collections on our official webstore or via our Shopee Mall store. Stay connected with the community on Instagram, TikTok, and YouTube for the latest drops and exclusive content. For manual orders and customer support, reach out directly to our WhatsApp care team.</p>
+            <p>Welcome to the official digital hub of SYCHOGEAR. Find our premium streetwear and fight gear collections on our official webstore or via our Shopee Mall & Tokopedia Official stores. Stay connected with the community on Instagram, TikTok, and YouTube for the latest drops and exclusive content. For manual orders and customer support, reach out directly to our WhatsApp care team.</p>
           </div>
 
           <p className="text-[9px] tracking-[0.4em] text-brand-600 uppercase font-bold text-center">
