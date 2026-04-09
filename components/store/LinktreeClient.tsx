@@ -60,13 +60,6 @@ export default function LinktreeClient({ heroImages = [] }: { heroImages?: strin
           className="absolute top-0 left-0 right-0 h-[800px] opacity-30 mix-blend-screen" 
           style={{ background: 'radial-gradient(circle at 50% -20%, rgba(220, 38, 38, 0.4) 0%, transparent 60%)' }} 
         />
-        
-        {/* Massive Brand Watermark */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[150%] md:w-full flex justify-center opacity-[0.02]">
-          <h2 className="text-[25vw] md:text-[15vw] leading-none font-marker text-white tracking-tighter cursor-default select-none uppercase whitespace-nowrap">
-            SYCHOGEAR
-          </h2>
-        </div>
       </div>
 
       {/* Main Content Area */}
