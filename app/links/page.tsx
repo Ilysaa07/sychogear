@@ -52,7 +52,7 @@ export default async function LinksPage() {
           },
           "sameAs": [
             "https://instagram.com/sychogear",
-            "https://tiktok.com/@sychogear",
+            "https://tiktok.com/@sychogearofficial",
             "https://youtube.com/@sychogear",
             "https://shopee.co.id/sychogear"
           ],
