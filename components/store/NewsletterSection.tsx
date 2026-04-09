@@ -21,8 +21,12 @@ export default function NewsletterSection() {
       } else {
         toast.error(data.error || "Gagal berlangganan");
       }
-    } catch {
-      toast.error("Gagal berlangganan");
+    } catch (error: any) {
+      if (axios.isAxiosError(error) && error.response?.data?.error) {
+        toast.error(error.response.data.error);
+      } else {
+        toast.error("Gagal berlangganan");
+      }
     } finally {
       setLoading(false);
     }
