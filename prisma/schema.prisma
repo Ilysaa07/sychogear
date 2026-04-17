@@ -95,29 +95,33 @@ model Customer {
 }
 
 model Order {
-  id            String      @id @default(cuid())
-  invoiceNumber String      @unique
-  customerName  String
-  customerEmail String
-  customerId    String
-  subtotal      Float
-  taxPpn        Float       @default(0)
-  taxPph23      Float       @default(0)
-  totalDiscount Float       @default(0)
-  discount      Float       @default(0) // Coupon discount
-  uniqueCode    Int
-  totalWithCode Float
-  total         Float
-  status        OrderStatus @default(UNPAID)
-  notes         String?
-  couponId      String?
-  expiredAt     DateTime
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  items         OrderItem[]
-  coupon        Coupon?     @relation(fields: [couponId], references: [id])
-  customer      Customer    @relation(fields: [customerId], references: [id])
-  payment       Payment?
+  id             String      @id @default(cuid())
+  invoiceNumber  String      @unique
+  customerName   String
+  customerEmail  String
+  customerId     String
+  subtotal       Float
+  taxPpn         Float       @default(0)
+  taxPph23       Float       @default(0)
+  totalDiscount  Float       @default(0)
+  discount       Float       @default(0) // Coupon discount
+  uniqueCode     Int
+  totalWithCode  Float
+  total          Float
+  status         OrderStatus @default(UNPAID)
+  notes          String?
+  couponId       String?
+  country        String      @default("ID")
+  paymentMethod  String      @default("MANUAL_TRANSFER")
+  shippingCost   Float       @default(0)
+  trackingNumber String?     // AWB/Resi Lion Parcel
+  expiredAt      DateTime
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  items          OrderItem[]
+  coupon         Coupon?     @relation(fields: [couponId], references: [id])
+  customer       Customer    @relation(fields: [customerId], references: [id])
+  payment        Payment?
 
   @@index([invoiceNumber])
   @@index([status])
@@ -144,18 +148,20 @@ model OrderItem {
 }
 
 model Payment {
-  id         String        @id @default(cuid())
-  orderId    String        @unique
-  externalId String        @unique
-  invoiceUrl String
-  amount     Float
-  status     PaymentStatus @default(PENDING)
-  method     String?
-  paidAt     DateTime?
-  xenditId   String?
-  createdAt  DateTime      @default(now())
-  updatedAt  DateTime      @updatedAt
-  order      Order         @relation(fields: [orderId], references: [id])
+  id             String        @id @default(cuid())
+  orderId        String        @unique
+  externalId     String        @unique
+  invoiceUrl     String
+  amount         Float
+  currency       String        @default("IDR")
+  currencyAmount Float?        // Amount in display currency (e.g. USD)
+  status         PaymentStatus @default(PENDING)
+  method         String?
+  paidAt         DateTime?
+  xenditId       String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  order          Order         @relation(fields: [orderId], references: [id])
 
   @@map("payments")
 }

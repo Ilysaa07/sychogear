@@ -1,11 +1,16 @@
 import { z } from "zod";
 
-// Checkout form validation
+// Checkout form validation — structured address fields for worldwide shipping
 export const checkoutSchema = z.object({
-  fullName: z.string().min(2, "Nama minimal 2 karakter"),
-  email: z.string().email("Email tidak valid"),
-  phone: z.string().min(10, "Nomor telepon minimal 10 digit"),
-  address: z.string().min(10, "Alamat minimal 10 karakter"),
+  fullName: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email("Invalid email address"),
+  phone: z.string().min(6, "Phone number must be at least 6 digits"),
+  country: z.string().min(2, "Please select a country"),
+  streetAddress: z.string().min(5, "Street address must be at least 5 characters"),
+  apartment: z.string().optional(),
+  city: z.string().min(2, "City must be at least 2 characters"),
+  stateProvince: z.string().min(2, "State / Province must be at least 2 characters"),
+  zipCode: z.string().min(2, "ZIP / Postal Code must be at least 2 characters"),
   couponCode: z.string().optional(),
 });
 

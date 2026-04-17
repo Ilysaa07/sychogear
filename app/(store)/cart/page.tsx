@@ -3,124 +3,366 @@
 import { useCartStore } from "@/stores/cart-store";
 import { formatCurrency } from "@/lib/utils";
 import Link from "next/link";
-import { HiMinus, HiPlus, HiOutlineTrash, HiOutlineShoppingBag } from "react-icons/hi";
+import { HiMinus, HiPlus, HiOutlineShoppingBag } from "react-icons/hi";
 
 export default function CartPage() {
-  const { items, removeItem, updateQuantity, getTotal, getSubtotal, getTotalTax } = useCartStore();
+  const { items, removeItem, updateQuantity, getTotal, getSubtotal, getTotalTax } =
+    useCartStore();
 
+  /* ── Empty state ────────────────────────────────────── */
   if (items.length === 0) {
     return (
-      <div className="container-main pt-40 pb-20 text-center">
-        <HiOutlineShoppingBag className="w-20 h-20 text-brand-700 mx-auto mb-6" />
-        <h1 className="text-2xl font-bold mb-4">Keranjang Kosong</h1>
-        <p className="text-brand-400 text-sm mb-8">
-          Belum ada produk di keranjang kamu.
+      <div
+        className="min-h-screen bg-void flex flex-col items-center justify-center text-center px-6"
+        style={{ paddingTop: "clamp(100px, 16vw, 160px)" }}
+      >
+        <HiOutlineShoppingBag className="w-10 h-10 text-fog mb-6" />
+        <h1
+          className="font-display text-salt mb-3"
+          style={{ fontSize: "clamp(32px, 5vw, 52px)", lineHeight: 0.95 }}
+        >
+          The archive is empty.
+        </h1>
+        <p
+          className="text-ash mb-10"
+          style={{
+            fontFamily: "var(--font-dm-mono), monospace",
+            fontSize: "0.8125rem",
+            letterSpacing: "0.05em",
+            maxWidth: "380px",
+            lineHeight: 1.7,
+          }}
+        >
+          Nothing selected yet. Browse the collection and add pieces to your
+          cart.
         </p>
-        <Link href="/products" className="btn-primary">
-          Mulai Belanja
+        <Link href="/products" className="btn-primary py-4 px-10">
+          Explore Archive ↗
         </Link>
       </div>
     );
   }
 
+  const subtotal = getSubtotal();
+  const tax = getTotalTax();
+  const total = getTotal();
+
   return (
-    <div className="container-main pt-32 pb-12">
-      <h1 className="text-3xl font-bold tracking-tight mb-10">Shopping Cart</h1>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-        {/* Items */}
-        <div className="lg:col-span-2 space-y-6">
-          {items.map((item) => (
-            <div
-              key={`${item.productId}-${item.variantId}`}
-              className="card p-4 flex gap-4"
+    <div
+      className="min-h-screen bg-void"
+      style={{ paddingTop: "clamp(100px, 16vw, 160px)" }}
+    >
+      <div
+        className="container-main"
+        style={{
+          paddingTop: "clamp(40px, 6vw, 60px)",
+          paddingBottom: "clamp(60px, 10vw, 120px)",
+        }}
+      >
+        {/* Page heading */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-12 pb-8 border-b border-ember">
+          <div>
+            <p className="label-eyebrow mb-3">Your selection</p>
+            <h1
+              className="font-display text-salt"
+              style={{ fontSize: "clamp(48px, 8vw, 88px)", lineHeight: 0.9 }}
             >
-              <div className="w-24 h-32 bg-brand-900 flex-shrink-0 overflow-hidden">
-                <img
-                  src={item.image || "/placeholder.svg"}
-                  alt={item.name}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-
-              <div className="flex-1">
-                <div className="flex items-start justify-between mb-2">
-                  <div>
-                    <h3 className="font-medium text-white">{item.name}</h3>
-                    <p className="text-xs text-brand-500 mt-1">Size: {item.size}</p>
-                  </div>
-                  <button
-                    onClick={() => removeItem(item.productId, item.variantId)}
-                    className="p-1 text-brand-500 hover:text-red-400 transition-colors"
-                  >
-                    <HiOutlineTrash className="w-4 h-4" />
-                  </button>
-                </div>
-
-                <div className="flex items-end justify-between mt-4">
-                  <div className="flex items-center border border-white/10">
-                    <button
-                      onClick={() =>
-                        updateQuantity(item.productId, item.variantId, item.quantity - 1)
-                      }
-                      className="p-2 text-brand-400 hover:text-white transition-colors"
-                    >
-                      <HiMinus className="w-3 h-3" />
-                    </button>
-                    <span className="px-4 text-sm font-medium">{item.quantity}</span>
-                    <button
-                      onClick={() =>
-                        updateQuantity(item.productId, item.variantId, item.quantity + 1)
-                      }
-                      className="p-2 text-brand-400 hover:text-white transition-colors"
-                    >
-                      <HiPlus className="w-3 h-3" />
-                    </button>
-                  </div>
-                  <p className="font-semibold">
-                    {formatCurrency((item.salePrice ?? item.price) * item.quantity)}
-                  </p>
-                </div>
-              </div>
-            </div>
-          ))}
+              Cart
+            </h1>
+          </div>
+          <p
+            className="text-ash flex-shrink-0"
+            style={{
+              fontFamily: "var(--font-dm-mono), monospace",
+              fontSize: "0.6875rem",
+              letterSpacing: "0.2em",
+              textTransform: "uppercase",
+            }}
+          >
+            {items.length} {items.length === 1 ? "piece" : "pieces"}
+          </p>
         </div>
 
-        {/* Summary */}
-        <div className="card p-6 h-fit sticky top-24">
-          <h3 className="text-lg font-bold mb-6">Order Summary</h3>
-          <div className="space-y-3 mb-6">
-            <div className="flex justify-between text-sm">
-              <span className="text-brand-400">Subtotal</span>
-              <span>{formatCurrency(getSubtotal())}</span>
-            </div>
-            {getTotalTax() > 0 && (
-              <div className="flex justify-between text-sm">
-                <span className="text-brand-400">Pajak (PPN + PPH23)</span>
-                <span>{formatCurrency(getTotalTax())}</span>
+        {/* Two-column layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+
+          {/* Items — spans 7 of 12 */}
+          <div className="lg:col-span-7 divide-y divide-ember">
+            {items.map((item) => {
+              const itemPrice =
+                (item.salePrice ?? item.price) *
+                (1 - (item.discountRate || 0) / 100);
+              const hasDiscount =
+                item.salePrice || (item.discountRate && item.discountRate > 0);
+
+              return (
+                <div
+                  key={`${item.productId}-${item.variantId}`}
+                  className="flex gap-5 py-7"
+                >
+                  {/* Thumbnail */}
+                  <div
+                    className="flex-shrink-0 overflow-hidden bg-dim"
+                    style={{ width: "88px", height: "112px" }}
+                  >
+                    <img
+                      src={item.image || "/placeholder.svg"}
+                      alt={item.name}
+                      className="w-full h-full object-cover"
+                      style={{ filter: "grayscale(15%) brightness(0.9)" }}
+                    />
+                  </div>
+
+                  {/* Info */}
+                  <div className="flex-1 min-w-0 flex flex-col justify-between">
+                    <div>
+                      <p
+                        className="text-salt"
+                        style={{
+                          fontFamily: "var(--font-syne), system-ui, sans-serif",
+                          fontWeight: 600,
+                          fontSize: "0.8125rem",
+                          letterSpacing: "0.08em",
+                          textTransform: "uppercase",
+                          lineHeight: 1.4,
+                        }}
+                      >
+                        {item.name}
+                      </p>
+                      <p
+                        className="text-ash mt-1.5"
+                        style={{
+                          fontFamily: "var(--font-dm-mono), monospace",
+                          fontSize: "0.6875rem",
+                          letterSpacing: "0.15em",
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        Size: {item.size}
+                      </p>
+                      <div className="flex items-baseline gap-2 mt-1.5">
+                        <span
+                          className="text-signal"
+                          style={{
+                            fontFamily: "var(--font-dm-mono), monospace",
+                            fontSize: "0.875rem",
+                          }}
+                        >
+                          {formatCurrency(itemPrice)}
+                        </span>
+                        {hasDiscount && (
+                          <span
+                            className="text-fog line-through"
+                            style={{
+                              fontFamily: "var(--font-dm-mono), monospace",
+                              fontSize: "0.6875rem",
+                            }}
+                          >
+                            {formatCurrency(item.price)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Controls */}
+                    <div className="flex items-center justify-between mt-4">
+                      {/* Qty */}
+                      <div className="flex items-center gap-4">
+                        <button
+                          onClick={() =>
+                            updateQuantity(
+                              item.productId,
+                              item.variantId,
+                              item.quantity - 1
+                            )
+                          }
+                          className="text-ash hover:text-salt transition-colors duration-150 w-5 h-5 flex items-center justify-center"
+                          aria-label="Decrease quantity"
+                        >
+                          <HiMinus className="w-3 h-3" />
+                        </button>
+                        <span
+                          className="text-salt"
+                          style={{
+                            fontFamily: "var(--font-dm-mono), monospace",
+                            fontSize: "0.8125rem",
+                            minWidth: "20px",
+                            textAlign: "center",
+                          }}
+                        >
+                          {item.quantity}
+                        </span>
+                        <button
+                          onClick={() =>
+                            updateQuantity(
+                              item.productId,
+                              item.variantId,
+                              item.quantity + 1
+                            )
+                          }
+                          className="text-ash hover:text-salt transition-colors duration-150 w-5 h-5 flex items-center justify-center"
+                          aria-label="Increase quantity"
+                        >
+                          <HiPlus className="w-3 h-3" />
+                        </button>
+                      </div>
+
+                      {/* Line total + remove */}
+                      <div className="flex items-center gap-4">
+                        <span
+                          className="text-pale"
+                          style={{
+                            fontFamily: "var(--font-dm-mono), monospace",
+                            fontSize: "0.8125rem",
+                          }}
+                        >
+                          {formatCurrency(itemPrice * item.quantity)}
+                        </span>
+                        <button
+                          onClick={() => removeItem(item.productId, item.variantId)}
+                          className="btn-link text-[10px]"
+                          style={{ color: "var(--fog)" }}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Order Summary — spans 5 of 12, sticky */}
+          <div
+            className="lg:col-span-5"
+            style={{ alignSelf: "start", position: "sticky", top: "120px" }}
+          >
+            <div
+              className="p-8"
+              style={{
+                background: "var(--abyss)",
+                border: "1px solid var(--ember)",
+              }}
+            >
+              <p className="label-syne text-salt mb-6">Order Summary</p>
+
+              {/* Totals — invoice style */}
+              <div className="space-y-3 mb-6">
+                <div className="flex items-center justify-between">
+                  <span
+                    className="text-ash"
+                    style={{
+                      fontFamily: "var(--font-dm-mono), monospace",
+                      fontSize: "0.75rem",
+                      letterSpacing: "0.1em",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    Subtotal
+                  </span>
+                  <span
+                    className="text-pale"
+                    style={{
+                      fontFamily: "var(--font-dm-mono), monospace",
+                      fontSize: "0.875rem",
+                    }}
+                  >
+                    {formatCurrency(subtotal)}
+                  </span>
+                </div>
+
+                {tax > 0 && (
+                  <div className="flex items-center justify-between">
+                    <span
+                      className="text-fog"
+                      style={{
+                        fontFamily: "var(--font-dm-mono), monospace",
+                        fontSize: "0.6875rem",
+                        letterSpacing: "0.08em",
+                      }}
+                    >
+                      Pajak (PPN/PPH 23)
+                    </span>
+                    <span
+                      className="text-fog"
+                      style={{
+                        fontFamily: "var(--font-dm-mono), monospace",
+                        fontSize: "0.6875rem",
+                      }}
+                    >
+                      +{formatCurrency(tax)}
+                    </span>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between">
+                  <span
+                    className="text-fog"
+                    style={{
+                      fontFamily: "var(--font-dm-mono), monospace",
+                      fontSize: "0.6875rem",
+                      letterSpacing: "0.08em",
+                    }}
+                  >
+                    Shipping
+                  </span>
+                  <span
+                    className="text-fog"
+                    style={{
+                      fontFamily: "var(--font-dm-mono), monospace",
+                      fontSize: "0.6875rem",
+                    }}
+                  >
+                    Calculated at checkout
+                  </span>
+                </div>
               </div>
-            )}
-            <div className="flex justify-between text-sm">
-              <span className="text-brand-400">Shipping</span>
-              <span className="text-brand-500">Calculated at checkout</span>
+
+              <div className="section-divider mb-6" />
+
+              <div className="flex items-center justify-between mb-8">
+                <span
+                  className="text-salt"
+                  style={{
+                    fontFamily: "var(--font-syne), system-ui, sans-serif",
+                    fontSize: "0.75rem",
+                    fontWeight: 600,
+                    letterSpacing: "0.2em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Total
+                </span>
+                <span
+                  className="text-signal"
+                  style={{
+                    fontFamily: "var(--font-dm-mono), monospace",
+                    fontSize: "1.25rem",
+                    fontWeight: 500,
+                  }}
+                >
+                  {formatCurrency(total)}
+                </span>
+              </div>
+
+              {/* CTA */}
+              <Link
+                href="/checkout"
+                className="btn-primary w-full text-center block py-4"
+                id="cart-to-checkout-btn"
+              >
+                Proceed to Checkout
+              </Link>
+
+              <Link
+                href="/products"
+                className="btn-link w-full justify-center mt-5"
+              >
+                ← Continue Shopping
+              </Link>
             </div>
           </div>
-          <div className="flex justify-between text-lg font-bold pt-4 border-t border-white/5">
-            <span>Total</span>
-            <span>{formatCurrency(getTotal())}</span>
-          </div>
-          <Link
-            href="/checkout"
-            className="btn-primary w-full text-center block mt-6"
-          >
-            Proceed to Checkout
-          </Link>
-          <Link
-            href="/products"
-            className="btn-secondary w-full text-center block mt-3 text-xs"
-          >
-            Continue Shopping
-          </Link>
         </div>
       </div>
     </div>

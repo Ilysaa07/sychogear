@@ -7,6 +7,24 @@ export function formatCurrency(amount: number): string {
   }).format(amount);
 }
 
+export function formatUSD(amount: number): string {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
+}
+
+export function getExchangeRate(): number {
+  return Number(process.env.IDR_TO_USD_RATE) || 16000;
+}
+
+export function convertIDRtoUSD(amountIDR: number, rate?: number): number {
+  const exchangeRate = rate || getExchangeRate();
+  return Math.round((amountIDR / exchangeRate) * 100) / 100;
+}
+
 export function generateOrderNumber(): string {
   const now = new Date();
   const year = now.getFullYear().toString().slice(-2);

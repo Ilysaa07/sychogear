@@ -7,25 +7,27 @@ import toast from "react-hot-toast";
 export default function NewsletterSection() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
+  const [sent, setSent] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) return;
+    if (!email || loading) return;
 
     setLoading(true);
     try {
       const { data } = await axios.post("/api/newsletter", { email });
       if (data.success) {
-        toast.success("Berhasil berlangganan newsletter!");
+        setSent(true);
         setEmail("");
+        toast.success("You're on the list.");
       } else {
-        toast.error(data.error || "Gagal berlangganan");
+        toast.error(data.error || "Something went wrong.");
       }
     } catch (error: any) {
       if (axios.isAxiosError(error) && error.response?.data?.error) {
         toast.error(error.response.data.error);
       } else {
-        toast.error("Gagal berlangganan");
+        toast.error("Could not subscribe. Try again.");
       }
     } finally {
       setLoading(false);
@@ -33,49 +35,130 @@ export default function NewsletterSection() {
   };
 
   return (
-    <section className="py-24 lg:py-32 bg-brand-950 border-t border-white/5 relative z-10 transition-colors">
-      <div className="container-main max-w-5xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-12 lg:gap-20">
-        
-        {/* Minimalist Heading Side */}
-        <div className="text-left w-full md:w-1/2">
-          <p className="text-[10px] tracking-[0.4em] font-bold uppercase text-brand-500 mb-6 slide-up">
-            [ UNLOCK ACCESS ]
-          </p>
-          <h2 className="text-5xl md:text-6xl lg:text-7xl font-marker tracking-tighter mb-4 slide-up text-white leading-none">
-            JOIN EARLY
-          </h2>
-          <p className="text-brand-400 text-xs md:text-sm max-w-sm slide-up leading-relaxed">
-            Gain immediate priority access to unreleased drops, limited events, and exclusive brand updates before the masses.
-          </p>
-        </div>
+    <section
+      id="newsletter"
+      className="relative bg-abyss border-t border-ember overflow-hidden"
+      style={{ padding: "clamp(80px, 12vw, 140px) 0" }}
+    >
+      <div className="container-main">
+        <div className="max-w-2xl">
 
-        {/* Stark Input Side */}
-        <div className="w-full md:w-1/2 slide-up">
-          <form
-            onSubmit={handleSubmit}
-            className="flex flex-col gap-6 w-full max-w-md ml-auto"
+          {/* Eyebrow */}
+          <p className="label-eyebrow mb-6">§ INNER CIRCLE</p>
+
+          {/* Heading */}
+          <h2
+            className="font-display text-salt mb-4 reveal"
+            style={{
+              fontSize: "clamp(40px, 6vw, 72px)",
+              lineHeight: 0.95,
+              letterSpacing: "0.02em",
+            }}
           >
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="YOUR EMAIL ADDRESS //"
-              className="w-full bg-transparent text-white placeholder-brand-700 pb-4 border-b border-white/20 focus:outline-none focus:border-white transition-colors text-xs md:text-sm tracking-widest uppercase font-semibold rounded-none"
-              required
-            />
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-white text-black hover:bg-black hover:text-white border border-transparent hover:border-white font-bold uppercase tracking-[0.2em] text-xs py-5 transition-all duration-300 flex items-center justify-center gap-3"
+            THE INNER CIRCLE.
+          </h2>
+
+          {/* Subtext */}
+          <p
+            className="reveal"
+            style={{
+              fontFamily: "var(--font-dm-mono), monospace",
+              fontSize: "0.8125rem",
+              color: "var(--ash)",
+              letterSpacing: "0.05em",
+              lineHeight: 1.8,
+              marginBottom: "clamp(32px, 5vw, 56px)",
+              maxWidth: "380px",
+            }}
+          >
+            Drop alerts. No noise.
+            <br />
+            We don&apos;t share intel.
+          </p>
+
+          {/* Form */}
+          {sent ? (
+            <div className="reveal is-visible">
+              <p
+                style={{
+                  fontFamily: "var(--font-dm-mono), monospace",
+                  fontSize: "0.8125rem",
+                  color: "var(--signal)",
+                  letterSpacing: "0.1em",
+                }}
+              >
+                ✓ intel received.
+              </p>
+            </div>
+          ) : (
+            <form
+              onSubmit={handleSubmit}
+              className="flex items-end gap-0 max-w-sm reveal"
+              style={{ borderBottom: "1px solid var(--ember)" }}
             >
-              {loading ? "PROCESSING..." : "SUBSCRIBE"}
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="hidden sm:block">
-                <path d="M1 11L11 1M11 1H3.5M11 1V8.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </button>
-          </form>
+              <div className="flex-1">
+                <label htmlFor="newsletter-email" className="sr-only">
+                  Email address
+                </label>
+                <input
+                  id="newsletter-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="your@email.com"
+                  required
+                  autoComplete="email"
+                  style={{
+                    width: "100%",
+                    padding: "0.75rem 0",
+                    background: "transparent",
+                    border: "none",
+                    color: "var(--salt)",
+                    fontFamily: "var(--font-dm-mono), monospace",
+                    fontSize: "0.8125rem",
+                    letterSpacing: "0.05em",
+                    outline: "none",
+                  }}
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={loading}
+                aria-label="Subscribe"
+                style={{
+                  background: "none",
+                  border: "none",
+                  padding: "0.75rem 0 0.75rem 1rem",
+                  color: loading ? "var(--fog)" : "var(--signal)",
+                  fontFamily: "var(--font-dm-mono), monospace",
+                  fontSize: "1rem",
+                  cursor: loading ? "not-allowed" : "pointer",
+                  transition: "color 200ms ease",
+                  lineHeight: 1,
+                }}
+              >
+                {loading ? "…" : "→"}
+              </button>
+            </form>
+          )}
+
         </div>
       </div>
+
+      {/* Subtle ambient glow — bottom right corner */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          right: "-10%",
+          bottom: "-20%",
+          width: "500px",
+          height: "500px",
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(200,169,110,0.05) 0%, transparent 70%)",
+          pointerEvents: "none",
+        }}
+      />
     </section>
   );
 }

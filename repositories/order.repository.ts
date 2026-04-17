@@ -77,6 +77,9 @@ export const orderRepository = {
     totalWithCode: number;
     total: number;
     couponId?: string;
+    country?: string;
+    paymentMethod?: string;
+    shippingCost?: number;
     expiredAt: Date;
     items: Array<{
       productId: string;
@@ -104,6 +107,9 @@ export const orderRepository = {
         totalWithCode: data.totalWithCode,
         total: data.total,
         couponId: data.couponId,
+        country: data.country || "ID",
+        paymentMethod: data.paymentMethod || "MANUAL_TRANSFER",
+        shippingCost: data.shippingCost || 0,
         expiredAt: data.expiredAt,
         items: {
           create: data.items,

@@ -20,20 +20,33 @@ export async function POST(request: Request) {
 
     if (!items || items.length === 0) {
       return NextResponse.json(
-        { success: false, error: "Keranjang kosong" },
+        { success: false, error: "Cart is empty" },
         { status: 400 }
       );
     }
+
+    // Build full address string from structured fields
+    const { streetAddress, apartment, city, stateProvince, zipCode } = validation.data;
+    const addressParts = [
+      streetAddress,
+      apartment || "",
+      city,
+      stateProvince,
+      zipCode,
+      validation.data.country,
+    ].filter(Boolean);
+    const fullAddress = addressParts.join(", ");
 
     const result = await paymentService.createOrder({
       customer: {
         name: validation.data.fullName,
         email: validation.data.email,
         phone: validation.data.phone,
-        address: validation.data.address,
+        address: fullAddress,
       },
       items,
       couponCode,
+      country: validation.data.country || "ID",
     });
 
     return NextResponse.json({
@@ -41,17 +54,18 @@ export async function POST(request: Request) {
       data: {
         invoiceUrl: result.invoiceUrl,
         invoiceNumber: result.invoiceNumber,
+        paymentMethod: result.paymentMethod,
       },
     });
   } catch (error) {
     console.error("Create invoice error:", error);
-    // Bug #6 fix: surface meaningful stock/coupon errors as 400 instead of generic 500
+    // Surface meaningful stock/coupon errors as 400 instead of generic 500
     const isUserError = error instanceof Error && (
       error.message.includes("Stok tidak mencukupi") ||
       error.message.includes("Kupon")
     );
     return NextResponse.json(
-      { success: false, error: isUserError ? error.message : "Gagal membuat invoice" },
+      { success: false, error: isUserError ? error.message : "Failed to create order" },
       { status: isUserError ? 400 : 500 }
     );
   }

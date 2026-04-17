@@ -21,12 +21,29 @@ export async function PATCH(
     const { id } = await params;
     const body = await request.json();
 
-    if (!body.status && !body.customer) {
+    if (!body.status && !body.customer && !body.trackingNumber) {
       return NextResponse.json(
-        { success: false, error: "Status or customer data is required" },
+        { success: false, error: "Status, customer data, or tracking number is required" },
         { status: 400 }
       );
     }
+
+    // Handle tracking number update (AWB / Resi)
+    if (body.trackingNumber !== undefined) {
+      const { prisma } = await import("@/lib/prisma");
+      const trackingNumber = body.trackingNumber?.trim() || null;
+      const updateData: any = { trackingNumber };
+      // Auto-update status to SHIPPED if tracking number is set and current status is PAID/PROCESSING
+      if (trackingNumber) {
+        const existing = await prisma.order.findUnique({ where: { id }, select: { status: true } });
+        if (existing?.status === "PAID" || existing?.status === "PROCESSING") {
+          updateData.status = "SHIPPED";
+        }
+      }
+      const order = await prisma.order.update({ where: { id }, data: updateData });
+      return NextResponse.json({ success: true, data: order });
+    }
+
 
     if (body.status) {
       const validStatuses = [

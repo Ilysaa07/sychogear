@@ -6,14 +6,14 @@ import HeroSlider from "@/components/store/HeroSlider";
 import PromoModal from "@/components/store/PromoModal";
 import { prisma } from "@/lib/prisma";
 import type { Metadata } from "next";
-
-export const dynamic = "force-dynamic";
 import type { ProductWithRelations } from "@/types";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
-  title: "Sychogear - Official Website Store",
+  title: "Sychogear — Official Archive",
   description:
-    "Explore the latest collection of premium streetwear. Hoodies, tees, jackets, and more. Designed for the bold.",
+    "A curated collection of premium streetwear. Explore the archive.",
 };
 
 async function getHeroSettings() {
@@ -27,10 +27,11 @@ async function getHeroSettings() {
   }
 }
 
-
 async function getNewArrivals(): Promise<ProductWithRelations[]> {
   try {
-    return (await productRepository.findNewArrivals(12)) as any as ProductWithRelations[];
+    return (await productRepository.findNewArrivals(
+      12
+    )) as any as ProductWithRelations[];
   } catch {
     return [];
   }
@@ -40,160 +41,360 @@ export default async function HomePage() {
   const [heroSettings, newArrivals] = await Promise.all([
     getHeroSettings(),
     getNewArrivals(),
-  ]);
-
-  let heroImages: string[] = [];
+  ]);  let heroImages: string[] = [];
   try {
-    heroImages = heroSettings.heroImages ? JSON.parse(heroSettings.heroImages) : [];
+    heroImages = heroSettings.heroImages
+      ? JSON.parse(heroSettings.heroImages)
+      : [];
   } catch {
     heroImages = [];
   }
 
-  const heroTagline = heroSettings.heroTagline || "Streetwear Collection 2026";
-  const heroTitle = heroSettings.heroTitle || "WEAR YOUR IDENTITY";
-  const heroSubtitle =
-    heroSettings.heroSubtitle ||
-    "Premium streetwear designed for those who dare to stand out. Every piece tells a story. Make it yours.";
-
-  // Split title for styling — first line vs "accented" line
-  const titleParts = heroTitle.split("\n");
-
-  const heroShowContent = heroSettings.heroShowContent !== "false";
-  const heroShowButtons = heroSettings.heroShowButtons !== "false";
+  const heroTagline    = heroSettings.heroTagline   || "Collection 01 — Otoriter";
+  const heroSubtitle   = heroSettings.heroSubtitle  || "FORGED IN FIRE.\\nBUILT FOR\\nTHE FIRM.";
+  const heroCtaText    = heroSettings.heroCtaText   || "EXPLORE THE ARCHIVE";
+  const heroCtaUrl     = heroSettings.heroCtaUrl    || "/products";
+  const heroShowContent  = heroSettings.heroShowContent  !== "false";
+  const heroShowButtons  = heroSettings.heroShowButtons  !== "false";
+  const marqueeText      = heroSettings.marqueeText      || "";
 
   const promoSettings = {
-    active: heroSettings.promoActive === "true",
-    image: heroSettings.promoImage || "",
-    title: heroSettings.promoTitle || "LIMITED\\nDROP",
-    subtitle: heroSettings.promoSubtitle || "Jangan sampai kehabisan rilisan eksklusif terbaru kami. Dapatkan sekarang sebelum sold out.",
-    linkUrl: heroSettings.promoLinkUrl || "/products",
-    linkText: heroSettings.promoLinkText || "Klaim Sekarang",
+    active:   heroSettings.promoActive === "true",
+    image:    heroSettings.promoImage    || "",
+    title:    heroSettings.promoTitle    || "New Arrival",
+    subtitle: heroSettings.promoSubtitle || "Just dropped",
+    linkUrl:  heroSettings.promoLinkUrl  || "/products",
+    linkText: heroSettings.promoLinkText || "Explore",
   };
 
   return (
-    <>
-      {/* Promotional Pop-up */}
+    <main className="w-full min-h-screen bg-void text-salt overflow-x-hidden">
       <PromoModal settings={promoSettings} />
 
-      {/* Hero Section */}
-      <section className="fixed inset-0 w-full h-screen flex items-center justify-center overflow-hidden -z-10">
-        {/* Background Slider */}
-        <HeroSlider images={heroImages} />
+      {/* ═══════════════════════════════════════════════
+          HERO — Full Viewport, Bottom-Left Anchored.
+          ════════════════════════════════════════════ */}
+      <section
+        className="relative w-full overflow-hidden"
+        style={{ height: "100svh", minHeight: "620px" }}
+        aria-label="Hero"
+      >
+        {/* ── Background ── */}
+        <div className="absolute inset-0 z-0">
+          <HeroSlider images={heroImages} />
+        </div>
 
-        {/* Dark overlay removed */}
+        {/* Left-heavy gradient: text stays legible, right stays cinematic */}
+        <div
+          className="absolute inset-0 z-[1] pointer-events-none"
+          style={{
+            background: [
+              "linear-gradient(to right,  rgba(8,8,8,0.96) 0%,  rgba(8,8,8,0.7) 45%, rgba(8,8,8,0.2) 100%)",
+              "linear-gradient(to top,    rgba(8,8,8,1.00) 0%,  transparent 35%)",
+              "linear-gradient(to bottom, rgba(8,8,8,0.60) 0%,  transparent 20%)",
+            ].join(", "),
+          }}
+          aria-hidden="true"
+        />
 
-
-
-        {/* Red accent overlays removed */}
-
-        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-red-600 to-transparent" />
-
-        {/* Content */}
+        {/* ── Hero content block — Minimalist, Premium, Harmonious ── */}
         {heroShowContent && (
-          <div className="relative z-10 text-center container-main">
-            {/* Tagline */}
-            <p className="text-[10px] md:text-sm tracking-[0.4em] uppercase text-red-500 mb-6 font-semibold fade-in">
-              {heroTagline}
-            </p>
+          <div
+            className="absolute inset-0 z-10 container-main flex flex-col justify-end pb-20 sm:pb-32"
+          >
+            <div className="max-w-4xl fade-in" style={{ animationDelay: "200ms" }}>
+              {/* Premium Eyebrow / Tagline */}
+              <div className="inline-flex items-center gap-3 mb-6 px-4 py-2 border border-white/10 bg-black/20 backdrop-blur-sm rounded-full">
+                <div className="w-1.5 h-1.5 rounded-full bg-red-600" style={{ background: "var(--signal, #dc2626)" }} />
+                <p className="text-[10px] sm:text-xs font-mono uppercase tracking-[0.25em] text-white/90">
+                  {heroTagline}
+                </p>
+              </div>
 
-            {/* Title */}
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-marker tracking-tighter mb-6 slide-up leading-[1.1] text-white">
-              {titleParts.map((part: string, i: number) =>
-                i === 0 ? (
-                  <span key={i}>
-                    {part}
-                    {titleParts.length > 1 && <br />}
+              {/* Minimalist & Harmonious Headline */}
+              <h1
+                className="font-display text-white mb-10 drop-shadow-lg"
+                style={{
+                  fontSize: "clamp(42px, 8vw, 110px)",
+                  lineHeight: 1.05,
+                  letterSpacing: "0.02em",
+                }}
+                aria-label={heroSubtitle.replace(/\\n/g, " ")}
+              >
+                {heroSubtitle.split("\\n").map((line, idx) => (
+                  <span key={idx} className="block">
+                    {line}
                   </span>
-                ) : (
-                  <span
-                    key={i}
-                    className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-red-600 to-red-700"
+                ))}
+              </h1>
+
+              {/* Premium CTA Button */}
+              {heroShowButtons && (
+                <div className="flex items-center gap-4">
+                  <Link
+                    href={heroCtaUrl}
+                    className="group blade-cut relative inline-flex items-center justify-center px-8 lg:px-10 py-4 font-mono text-xs uppercase tracking-[0.2em] text-white border border-white/20 bg-black/40 backdrop-blur-md overflow-hidden transition-all duration-500 hover:border-white/60"
+                    id="hero-cta"
                   >
-                    {part}
-                  </span>
-                )
+                    <span className="relative z-10 flex items-center gap-3 transition-colors duration-500 group-hover:text-black">
+                      {heroCtaText}
+                      <span className="group-hover:translate-x-1 transition-transform duration-500">→</span>
+                    </span>
+                    <div className="absolute inset-0 bg-white translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-[cubic-bezier(0.19,1,0.22,1)]" />
+                  </Link>
+                </div>
               )}
-            </h1>
+            </div>
+          </div>
+        )}
 
-            {/* Subtitle */}
-            <p className="text-brand-300 text-sm md:text-base max-w-lg mx-auto mb-10 fade-in leading-relaxed">
-              {heroSubtitle}
+        {/* ── Slide count — bottom right ── */}
+        {heroImages.length > 1 && (
+          <div
+            className="absolute bottom-8 right-10 z-10 pointer-events-none fade-in"
+            style={{ animationDelay: "1500ms" }}
+            aria-hidden="true"
+          >
+            <p
+              style={{
+                fontFamily: "var(--font-dm-mono), monospace",
+                fontSize: "9px",
+                letterSpacing: "0.3em",
+                color: "var(--fog)",
+                textTransform: "uppercase",
+              }}
+            >
+              01 / {String(heroImages.length).padStart(2, "0")}
             </p>
-            
-            {/* CTA Buttons */}
-            {heroShowButtons && (
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 fade-in">
-                <Link
-                  href="/products"
-                  className="inline-flex items-center justify-center px-10 py-4 bg-red-600 border border-red-600 text-white font-bold text-[10px] md:text-xs tracking-[0.2em] uppercase hover:bg-transparent hover:text-red-500 transition-all duration-300"
+          </div>
+        )}
+      </section>
+
+      {/* ═══════════════════════════════════════════════
+          MARQUEE — Admin Controlled (Red Background, Black Text)
+          ════════════════════════════════════════════ */}
+      <div
+        aria-hidden="true"
+        className="w-full overflow-hidden py-4 bg-red-600 border-y border-red-700 relative"
+      >
+        <style dangerouslySetInnerHTML={{ __html: `
+          @keyframes page-marquee-scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+          }
+        `}} />
+        <div
+          style={{
+            display: "flex",
+            gap: 0,
+            whiteSpace: "nowrap",
+            width: "max-content",
+            animation: "page-marquee-scroll 200s linear infinite",
+            willChange: "transform"
+          }}
+        >
+          {[...Array(16)].map((_, i) => (
+            <div
+              key={i}
+              className="flex items-center gap-10 px-5"
+              style={{
+                fontFamily: "var(--font-dm-mono), monospace",
+                fontSize: "0.75rem",
+                letterSpacing: "0.2em",
+                textTransform: "uppercase",
+                color: "#000000",
+                fontWeight: "700"
+              }}
+            >
+              <span>{marqueeText}</span>
+              <span className="text-black/40 flex items-center justify-center">
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  width="20" height="20" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2.5" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
                 >
-                  Shop Now
-                </Link>
-                <Link
-                  href="/products?sort=latest"
-                  className="inline-flex items-center justify-center px-10 py-4 border border-white/20 text-white font-bold text-[10px] md:text-xs tracking-[0.2em] uppercase hover:border-white hover:bg-white hover:text-black transition-all duration-300"
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M2.5 19.5l3-3-1-1-3 3 1 1ZM6.5 15.5l14-11c.7-.7 1.5-.5 1.5.5s-.3 1.5-1 2l-11 12-3.5-3.5Z" />
+                  <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+                </svg>
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ═══════════════════════════════════════════════
+          NEW ARRIVALS — Curated grid section
+          ════════════════════════════════════════════ */}
+      {newArrivals.length > 0 && (
+        <section
+          className="relative"
+          style={{ padding: "clamp(80px, 12vw, 140px) 0" }}
+          aria-label="New Arrivals"
+        >
+          <div className="container-main">
+            {/* Section header — Elegant & Simple */}
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-14 reveal border-b border-white/5 pb-6">
+              <div>
+                <p className="text-[10px] sm:text-xs font-mono uppercase tracking-[0.25em] text-white/50 mb-3">
+                  Latest Releases
+                </p>
+                <h2
+                  className="font-display text-white"
+                  style={{
+                    fontSize: "clamp(36px, 5vw, 72px)",
+                    lineHeight: 1.05,
+                    letterSpacing: "0.02em",
+                  }}
                 >
-                  New Arrivals
+                  THE DROP
+                </h2>
+              </div>
+              <Link
+                href="/products"
+                className="group flex items-center gap-3 text-[10px] sm:text-xs font-mono uppercase tracking-[0.2em] text-white/70 hover:text-white transition-colors duration-300 sm:pb-2"
+              >
+                <span>View Collection</span>
+                <span className="group-hover:translate-x-1 transition-transform duration-300">→</span>
+              </Link>
+            </div>
+
+            {/* Product grid */}
+            <div
+              className="grid gap-px"
+              style={{
+                gridTemplateColumns:
+                  "repeat(auto-fill, minmax(min(100%, 280px), 1fr))",
+              }}
+            >
+              {newArrivals.slice(0, 9).map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+
+            {/* "See more" link below grid */}
+            {newArrivals.length >= 9 && (
+              <div className="flex justify-center mt-16 reveal">
+                <Link href="/products" className="btn-ghost py-4 px-12">
+                  VIEW ALL GEAR
                 </Link>
               </div>
             )}
           </div>
-        )}
+        </section>
+      )}
 
-        {/* Scroll indicator */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
-          <span className="text-[10px] tracking-widest uppercase text-brand-600">
-            Scroll
-          </span>
-          <div className="w-px h-8 bg-gradient-to-b from-red-600/60 to-transparent" />
+      {/* ═══════════════════════════════════════════════
+          MANIFESTO — Split-panel brand statement
+          ════════════════════════════════════════════ */}
+      <section
+        className="relative bg-abyss border-t border-ember overflow-hidden"
+        style={{ padding: "clamp(80px, 14vw, 160px) 0" }}
+        aria-label="Brand manifesto"
+      >
+        <div
+          className="container-main manifesto-grid"
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1px 1fr",
+            gap: "clamp(40px, 6vw, 80px)",
+            alignItems: "center",
+          }}
+        >
+          {/* Left — atmospheric block */}
+          <div className="reveal">
+            <p
+              style={{
+                fontFamily: "var(--font-dm-mono), monospace",
+                fontSize: "0.625rem",
+                letterSpacing: "0.3em",
+                textTransform: "uppercase",
+                color: "var(--fog)",
+                marginBottom: "clamp(24px, 4vw, 48px)",
+              }}
+            >
+              § 02 // THE FIRM
+            </p>
+            <h2
+              className="font-display text-salt"
+              style={{
+                fontSize: "clamp(36px, 5.5vw, 80px)",
+                lineHeight: 0.92,
+                letterSpacing: "0.03em",
+              }}
+            >
+              WE DON&apos;T
+              <br />
+              MAKE
+              <br />
+              SPORTSWEAR.
+            </h2>
+          </div>
+
+          {/* Vertical rule */}
+          <div
+            className="manifesto-rule"
+            aria-hidden="true"
+            style={{
+              width: "1px",
+              height: "100%",
+              minHeight: "200px",
+              background: "var(--ember)",
+              alignSelf: "stretch",
+            }}
+          />
+
+          {/* Right — copy + CTA */}
+          <div className="reveal">
+            <p
+              style={{
+                fontFamily: "var(--font-dm-mono), monospace",
+                fontSize: "0.875rem",
+                color: "var(--pale)",
+                lineHeight: 1.9,
+                letterSpacing: "0.03em",
+                maxWidth: "420px",
+                marginBottom: "clamp(32px, 5vw, 56px)",
+              }}
+            >
+              Gear for men who don&apos;t ask permission.
+              <br />
+              Terrace-forged. Street-worn.
+              <br />
+              Built to last, not to impress.
+            </p>
+            <Link href="/products" className="btn-link text-xs">
+              EXPLORE THE FIRM →
+            </Link>
+          </div>
+        </div>
+
+        {/* Ghost atmospheric number */}
+        <div
+          className="absolute right-0 bottom-0 select-none pointer-events-none"
+          aria-hidden="true"
+          style={{
+            fontFamily: "var(--font-glitch), system-ui, sans-serif",
+            fontSize: "clamp(200px, 30vw, 400px)",
+            lineHeight: 1,
+            color: "var(--salt)",
+            opacity: 0.02,
+            letterSpacing: "-0.04em",
+          }}
+        >
+          02
         </div>
       </section>
 
-      {/* Foreground Scrollable Content */}
-      <div className="mt-[100vh] relative z-10 bg-brand-950 sm:rounded-t-[2.5rem] shadow-[0_-20px_50px_rgba(0,0,0,0.8)] flex flex-col min-h-screen">
-        
-        {/* Seamless Product Grid */}
-        {newArrivals.length > 0 && (
-          <section className="py-20 lg:py-32">
-            <div className="container-main">
-              {/* Branded Section Header */}
-              <div className="mb-16 relative">
-                <div className="absolute -left-1 -top-10 md:-top-16 opacity-[0.03] text-[15vw] font-marker uppercase select-none tracking-tighter leading-none whitespace-nowrap pointer-events-none -z-10">
-                  LATEST
-                </div>
-                <p className="text-[10px] md:text-xs tracking-[0.4em] uppercase text-brand-500 mb-3 font-semibold">
-                  Fresh Drops
-                </p>
-                <h2 className="text-4xl md:text-6xl font-marker tracking-tighter uppercase leading-none text-white lg:text-7xl">
-                  New Arrivals
-                </h2>
-                <div className="w-12 h-1 bg-brand-500 mt-6 md:mt-8"></div>
-              </div>
-
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-                {newArrivals.map((product) => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
-              </div>
-
-              <div className="mt-16 text-center fade-in">
-                <Link
-                  href="/products"
-                  className="inline-flex items-center justify-center px-10 py-5 bg-transparent border border-white/20 text-white font-bold text-[10px] md:text-xs tracking-[0.2em] uppercase hover:bg-white hover:text-black hover:border-white transition-all duration-300 group"
-                >
-                  View All Products
-                  <span className="ml-3 transform group-hover:translate-x-1 transition-transform">
-                    →
-                  </span>
-                </Link>
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* Newsletter */}
-        <NewsletterSection />
-      </div>
-    </>
+      {/* ═══════════════════════════════════════════════
+          NEWSLETTER
+          ════════════════════════════════════════════ */}
+      <NewsletterSection />
+    </main>
   );
 }

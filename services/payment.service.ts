@@ -1,31 +1,31 @@
 import { productRepository } from "@/repositories/product.repository";
 import { orderRepository } from "@/repositories/order.repository";
 import { customerRepository } from "@/repositories/customer.repository";
-import { couponRepository } from "@/repositories/coupon.repository";
 import { prisma } from "@/lib/prisma";
-import { generateOrderNumber } from "@/lib/utils";
+import { generateOrderNumber, convertIDRtoUSD } from "@/lib/utils";
 import { ManualTransferProvider } from "@/lib/paymentProvider";
 import { emailService } from "@/lib/emailService";
+import { isInternationalOrder, getCountryByCode } from "@/lib/countries";
 import type { CartItem } from "@/types";
 
-const paymentProvider = new ManualTransferProvider();
+const manualTransferProvider = new ManualTransferProvider();
 
 export const paymentService = {
   async createOrder(data: {
     customer: { email: string; name: string; phone: string; address: string };
     items: CartItem[];
     couponCode?: string;
+    country?: string;
+    appUrl?: string;
   }) {
+    const country = data.country || "ID";
+    const isInternational = isInternationalOrder(country);
+    const paymentMethod = "MANUAL_TRANSFER";
+
     // Find or create customer
     const customer = await customerRepository.findOrCreate(data.customer);
 
-    // Calculate totals and taxes
-    let subtotal = 0;
-    let totalTaxPpn = 0;
-    let totalTaxPph23 = 0;
-    let totalProductDiscount = 0;
-
-    // Bug #3 fix: validate stock before creating order
+    // Validate stock before creating order
     for (const item of data.items) {
       const variant = await prisma.productVariant.findUnique({
         where: { id: item.variantId },
@@ -36,52 +36,140 @@ export const paymentService = {
       }
     }
 
-    const itemsWithDetails = await Promise.all(data.items.map(async (item) => {
-      const product = await prisma.product.findUnique({
-        where: { id: item.productId },
-        select: { ppnRate: true, pph23Rate: true, discountRate: true } as any
+    // Fetch settings from DB — single flat rate for both shipping and tax
+    let shippingCost = 0;
+    let internationalTaxRate = 0; // % applied to ALL international orders
+    let exchangeRate = Number(process.env.IDR_TO_USD_RATE) || 16000;
+
+    try {
+      const settings = await (prisma as any).siteSettings.findMany({
+        where: {
+          key: {
+            in: [
+              "shippingZones",
+              "internationalTaxEnabled",
+              "internationalTaxRate",
+              "idrToUsdRate",
+            ],
+          },
+        },
       });
 
-      const price = item.salePrice ?? item.price;
-      const discountRate = product ? (product as any).discountRate : 0;
+      const settingsMap: Record<string, string> = {};
+      for (const s of settings) {
+        settingsMap[s.key as string] = s.value as string;
+      }
 
-      // Bug #1 fix: tax must be calculated on discounted price, not original price
-      const discountedPrice = price * (1 - discountRate / 100);
-      const discountedTotal = discountedPrice * item.quantity;
-      const originalTotal = price * item.quantity;
+      if (isInternational) {
+        // Region-based shipping rate
+        const countryInfo = getCountryByCode(country);
+        const defaultZones: Record<string, number> = {
+          "Southeast Asia": 150000,
+          "East Asia": 200000,
+          "South Asia": 250000,
+          "Middle East": 300000,
+          "Oceania": 350000,
+          "Europe": 400000,
+          "Americas": 450000,
+        };
 
-      const ppnAmount = product ? (discountedTotal * ((product as any).ppnRate / 100)) : 0;
-      const pph23Amount = product ? (discountedTotal * ((product as any).pph23Rate / 100)) : 0;
-      const discountAmount = originalTotal - discountedTotal;
+        if (countryInfo) {
+          if (settingsMap.shippingZones) {
+            try {
+              const zones = JSON.parse(settingsMap.shippingZones);
+              if (zones && typeof zones[countryInfo.region] === "number") {
+                shippingCost = zones[countryInfo.region];
+              } else {
+                shippingCost = defaultZones[countryInfo.region] ?? 0;
+              }
+            } catch (e) {
+              console.error("Failed to parse shipping zones in payment service", e);
+              shippingCost = defaultZones[countryInfo.region] ?? 0;
+            }
+          } else {
+            shippingCost = defaultZones[countryInfo.region] ?? 0;
+          }
+        }
 
-      subtotal += originalTotal;
-      totalTaxPpn += ppnAmount;
-      totalTaxPph23 += pph23Amount;
-      totalProductDiscount += discountAmount;
+        // Global PPN rate — same for ALL countries
+        const taxEnabled =
+          settingsMap.internationalTaxEnabled !== "false"; // default true
+        if (taxEnabled) {
+          internationalTaxRate = settingsMap.internationalTaxRate ? parseFloat(settingsMap.internationalTaxRate) || 11 : 11;
+        }
+      }
 
-      return {
-        productId: item.productId,
-        variantId: item.variantId,
-        quantity: item.quantity,
-        price,
-        size: item.size,
-        ppnAmount,
-        pph23Amount,
-        discountAmount,
-      };
-    }));
+      if (settingsMap.idrToUsdRate) {
+        exchangeRate = parseFloat(settingsMap.idrToUsdRate) || 16000;
+      }
+    } catch (err) {
+      console.warn("[PaymentService] Failed to fetch settings:", err);
+    }
 
-    // Apply coupon (on subtotal after product discounts?)
-    // Usually coupons are applied to the total or subtotal. 
-    // Let's keep it on subtotal for now as before.
+    // Calculate subtotals and taxes per item
+    let subtotal = 0;
+    let totalTaxPpn = 0;
+    let totalTaxPph23 = 0;
+    let totalProductDiscount = 0;
+
+    const itemsWithDetails = await Promise.all(
+      data.items.map(async (item) => {
+        const product = await prisma.product.findUnique({
+          where: { id: item.productId },
+          select: { ppnRate: true, pph23Rate: true, discountRate: true } as any,
+        });
+
+        const price = item.salePrice ?? item.price;
+        const discountRate = product ? (product as any).discountRate : 0;
+
+        // Tax calculated on discounted price
+        const discountedPrice = price * (1 - discountRate / 100);
+        const discountedTotal = discountedPrice * item.quantity;
+        const originalTotal = price * item.quantity;
+
+        let ppnAmount = 0;
+        let pph23Amount = 0;
+
+        if (isInternational) {
+          // Single global PPN rate for all international orders
+          ppnAmount = Math.round(discountedTotal * (internationalTaxRate / 100));
+          // No PPH23 for international
+        } else {
+          // Domestic: use per-product tax configuration
+          ppnAmount = product
+            ? Math.round(discountedTotal * ((product as any).ppnRate / 100))
+            : 0;
+          pph23Amount = product
+            ? Math.round(discountedTotal * ((product as any).pph23Rate / 100))
+            : 0;
+        }
+
+        const discountAmount = originalTotal - discountedTotal;
+
+        subtotal += originalTotal;
+        totalTaxPpn += ppnAmount;
+        totalTaxPph23 += pph23Amount;
+        totalProductDiscount += discountAmount;
+
+        return {
+          productId: item.productId,
+          variantId: item.variantId,
+          quantity: item.quantity,
+          price,
+          size: item.size,
+          ppnAmount,
+          pph23Amount,
+          discountAmount,
+        };
+      })
+    );
+
+    // Apply coupon on subtotal after product discounts
     const subtotalAfterProductDiscount = subtotal - totalProductDiscount;
     let couponDiscount = 0;
     let couponId: string | undefined;
 
     if (data.couponCode) {
-      // Bug #2 fix: wrap validation + increment in a single DB transaction
-      // to prevent race conditions where two simultaneous checkouts both pass
-      // the usage limit check before either increments the counter.
       const couponResult = await prisma.$transaction(async (tx) => {
         const coupon = await tx.coupon.findUnique({ where: { code: data.couponCode } });
         if (!coupon) return { valid: false as const, error: "Kupon tidak ditemukan" };
@@ -91,7 +179,10 @@ export const paymentService = {
         if (coupon.usageLimit && coupon.usageCount >= coupon.usageLimit)
           return { valid: false as const, error: "Kupon sudah mencapai batas penggunaan" };
         if (subtotalAfterProductDiscount < coupon.minPurchase)
-          return { valid: false as const, error: `Minimal pembelian Rp ${coupon.minPurchase.toLocaleString()}` };
+          return {
+            valid: false as const,
+            error: `Minimal pembelian Rp ${coupon.minPurchase.toLocaleString()}`,
+          };
 
         let discount = 0;
         if (coupon.discountType === "PERCENTAGE") {
@@ -101,7 +192,6 @@ export const paymentService = {
           discount = coupon.discountValue;
         }
 
-        // Atomically increment usage count within the same transaction
         await tx.coupon.update({
           where: { id: coupon.id },
           data: { usageCount: { increment: 1 } },
@@ -120,16 +210,22 @@ export const paymentService = {
       }
     }
 
-    const uniqueCode = Math.floor(100 + Math.random() * 900); // 3 digit code
-    
-    // total = subtotalAfterProductDiscount - couponDiscount + PPN + PPH23
-    const total = subtotalAfterProductDiscount - couponDiscount + totalTaxPpn + totalTaxPph23;
+    // Unique code only for domestic (3-digit suffix for bank transfer matching)
+    const uniqueCode = isInternational ? 0 : Math.floor(100 + Math.random() * 900);
+
+    // Total = (subtotal - productDiscount - couponDiscount) + tax + shipping + uniqueCode
+    const total =
+      subtotalAfterProductDiscount -
+      couponDiscount +
+      totalTaxPpn +
+      totalTaxPph23 +
+      shippingCost;
     const totalWithCode = total + uniqueCode;
     const invoiceNumber = generateOrderNumber().replace("SG-", "INV-");
-    
-    // Set expiry 15 minutes from now
+
+    // Expiry: 15 min domestic, 24 hrs international
     const expiredAt = new Date();
-    expiredAt.setMinutes(expiredAt.getMinutes() + 15);
+    expiredAt.setMinutes(expiredAt.getMinutes() + (isInternational ? 1440 : 15));
 
     // Create order
     const order = await orderRepository.create({
@@ -146,75 +242,93 @@ export const paymentService = {
       totalWithCode,
       total,
       couponId,
+      country,
+      paymentMethod,
+      shippingCost,
       expiredAt,
       items: itemsWithDetails,
     });
 
-    // Create payment via provider
-    const paymentResult = await paymentProvider.createPayment({
+    // All orders: Manual Transfer flow
+    const paymentResult = await manualTransferProvider.createPayment({
       invoiceNumber,
       amount: totalWithCode,
       customerEmail: customer.email,
       customerName: customer.name,
     });
 
-    // Save payment record (optional, kept for compatibility/history if needed)
+    // Save payment record
     await prisma.payment.create({
       data: {
         orderId: order.id,
         externalId: paymentResult.externalId,
         invoiceUrl: `/order-success/${invoiceNumber}`,
         amount: totalWithCode,
-        status: "PENDING", // PENDING in old payment model mapped to UNPAID in order model
+        currency: isInternational ? "USD" : "IDR",
+        currencyAmount: isInternational
+          ? convertIDRtoUSD(totalWithCode, exchangeRate)
+          : null,
+        status: "PENDING",
+        method: "MANUAL_TRANSFER",
       },
     });
 
-    // Send Invoice Email via Brevo
-    await emailService.sendInvoiceEmail({
-      to: customer.email,
-      customerName: customer.name,
-      invoiceNumber,
-      totalAmount: totalWithCode,
-      expiredAt,
-    }).catch(err => console.error("Failed sending email:", err));
+    // Send invoice email
+    await emailService
+      .sendInvoiceEmail({
+        to: customer.email,
+        customerName: customer.name,
+        invoiceNumber,
+        totalAmount: totalWithCode,
+        expiredAt,
+        isInternational,
+        amountUSD: isInternational
+          ? convertIDRtoUSD(totalWithCode, exchangeRate)
+          : undefined,
+        country,
+      })
+      .catch((err) => console.error("Failed sending email:", err));
 
-    // Send Admin Notification via Brevo
-    await emailService.sendAdminNotification({
-      invoiceNumber,
-      customerName: customer.name,
-      customerEmail: customer.email,
-      totalAmount: totalWithCode,
-      items: data.items.map(item => ({
-        name: item.name,
-        quantity: item.quantity,
-        size: item.size,
-        price: item.salePrice ?? item.price,
-      })),
-    }).catch(err => console.error("Failed sending admin notification:", err));
+    // Send admin notification
+    await emailService
+      .sendAdminNotification({
+        invoiceNumber,
+        customerName: customer.name,
+        customerEmail: customer.email,
+        totalAmount: totalWithCode,
+        country,
+        paymentMethod: "MANUAL_TRANSFER",
+        amountUSD: isInternational
+          ? convertIDRtoUSD(totalWithCode, exchangeRate)
+          : undefined,
+        items: data.items.map((item) => ({
+          name: item.name,
+          quantity: item.quantity,
+          size: item.size,
+          price: item.salePrice ?? item.price,
+        })),
+      })
+      .catch((err) => console.error("Failed sending admin notification:", err));
 
     return {
       order,
       invoiceUrl: `/order-success/${invoiceNumber}`,
       invoiceNumber,
+      paymentMethod: "MANUAL_TRANSFER",
     };
   },
 
   async confirmPayment(invoiceNumber: string) {
-    const order = await orderRepository.findByInvoiceNumber(invoiceNumber) as any;
+    const order = (await orderRepository.findByInvoiceNumber(invoiceNumber)) as any;
     if (!order) throw new Error("Order not found");
     if (order.status !== "UNPAID") throw new Error("Order is not UNPAID");
 
-    // All DB writes are wrapped in a single transaction.
-    // If any step fails (e.g. stock runs out mid-loop), everything rolls back
-    // and the order stays UNPAID — no partial state possible.
     const updatedOrder = await prisma.$transaction(async (tx) => {
-      // 1. Update order status to PAID
       const paid = await tx.order.update({
         where: { id: order.id },
         data: { status: "PAID" },
       });
 
-      // 2. Atomically decrement stock for each item
       for (const item of order.items) {
         const variant = await tx.productVariant.findUnique({
           where: { id: item.variantId },
@@ -229,7 +343,6 @@ export const paymentService = {
         });
       }
 
-      // 3. Update payment record if exists
       if (order.payment) {
         await tx.payment.update({
           where: { id: order.payment.id },
@@ -240,26 +353,24 @@ export const paymentService = {
       return paid;
     });
 
-    // Send confirmation email after transaction commits (outside tx so email
-    // failure doesn't roll back the whole payment confirmation)
-    await emailService.sendConfirmationEmail({
-      to: order.customerEmail,
-      customerName: order.customerName,
-      invoiceNumber: order.invoiceNumber,
-    }).catch(err => console.error("Failed sending confirmation email:", err));
+    await emailService
+      .sendConfirmationEmail({
+        to: order.customerEmail,
+        customerName: order.customerName,
+        invoiceNumber: order.invoiceNumber,
+      })
+      .catch((err) => console.error("Failed sending confirmation email:", err));
 
     return { success: true, order: updatedOrder };
   },
 
   async expireOrder(invoiceNumber: string) {
-    const order = await orderRepository.findByInvoiceNumber(invoiceNumber) as any;
+    const order = (await orderRepository.findByInvoiceNumber(invoiceNumber)) as any;
     if (!order) throw new Error("Order not found");
     if (order.status !== "UNPAID") throw new Error("Order cannot be expired");
 
-    // Update order status
     await orderRepository.updateStatus(order.id, "EXPIRED");
 
-    // Update payment record if exists
     if (order.payment) {
       await prisma.payment.update({
         where: { id: order.payment.id },
@@ -267,13 +378,14 @@ export const paymentService = {
       });
     }
 
-    // Send expired email
-    await emailService.sendExpiredEmail({
-      to: order.customerEmail,
-      customerName: order.customerName,
-      invoiceNumber: order.invoiceNumber,
-    }).catch(err => console.error("Failed sending email:", err));
+    await emailService
+      .sendExpiredEmail({
+        to: order.customerEmail,
+        customerName: order.customerName,
+        invoiceNumber: order.invoiceNumber,
+      })
+      .catch((err) => console.error("Failed sending email:", err));
 
     return { success: true, order };
-  }
+  },
 };

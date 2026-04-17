@@ -7,76 +7,68 @@ import HeroSlider from "@/components/store/HeroSlider";
 
 const links = [
   {
-    title: "OFFICIAL WEBSTORE",
+    title: "Official Webstore",
     url: "/",
-    description: "Belanja Koleksi Lengkap Sychogear",
+    description: "Shop Full Collection • Worldwide Shipping",
     primary: true,
     image: "/images/logo-sychogear.webp",
   },
   {
-    title: "SHOPEE",
+    title: "Shopee",
     url: "https://shopee.co.id/sychogear",
-    description: "Promo & Gratis Ongkir",
+    description: "Exclusive Deals & Regional Shipping",
     image: "/images/shopee.webp",
   },
   {
-    title: "TOKOPEDIA",
+    title: "Tokopedia",
     url: "https://tk.tokopedia.com/ZSHHSgote/",
-    description: "Official Store Tokopedia",
+    description: "Tokopedia Official Store",
     image: "/images/tokopedia.webp",
   },
   {
-    title: "INSTAGRAM",
+    title: "Instagram",
     url: "https://www.instagram.com/sychogear",
-    description: "Katalog & Update Terbaru",
+    description: "Catalogs & Latest Drop Updates",
     image: "/images/instagram.webp",
   },
   {
-    title: "TIKTOK",
+    title: "TikTok",
     url: "https://www.tiktok.com/@sychogearofficial",
-    description: "Video Produk & Behind The Scenes",
+    description: "Product Videos & Behind The Scenes",
     image: "/images/tiktok.webp",
   },
   {
-    title: "WHATSAPP",
+    title: "WhatsApp",
     url: "https://wa.me/6283190138549",
-    description: "Customer Service & Pemesanan Manual",
+    description: "Customer Care & Direct Orders",
     image: "/images/whatsapp.webp",
   },
 ];
 
 export default function LinktreeClient({ heroImages = [] }: { heroImages?: string[] }) {
   return (
-    <div className="min-h-screen bg-[#050505]/80 backdrop-blur-md flex flex-col relative overflow-hidden font-sans selection:bg-red-600 selection:text-white">
-      {/* Optimized Background Ambience */}
+    <div className="min-h-screen bg-[#050505] flex flex-col relative overflow-hidden font-sans selection:bg-red-600 selection:text-black">
+      
+      {/* ── BACKGROUND AMBIENCE ── */}
       <div className="fixed inset-0 z-0 pointer-events-none">
-        
-        {/* Synchronized Home Background */}
         {heroImages.length > 0 && (
-          <div className="absolute inset-0 opacity-40">
+          <div className="absolute inset-0 opacity-20 filter grayscale">
             <HeroSlider images={heroImages} />
           </div>
         )}
-
-        {/* Global Dark Gradient Overlay to ensure text readability */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#050505]/90 via-[#050505]/60 to-[#050505]" />
-
-        {/* CSS Radial Gradient instead of heavy blur */}
-        <div 
-          className="absolute top-0 left-0 right-0 h-[800px] opacity-30 mix-blend-screen" 
-          style={{ background: 'radial-gradient(circle at 50% -20%, rgba(220, 38, 38, 0.4) 0%, transparent 60%)' }} 
-        />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#050505]/95 via-[#050505]/80 to-[#050505]" />
+        {/* Grain Overlay */}
+        <div className="absolute inset-0 opacity-20 pointer-events-none mix-blend-overlay" style={{ backgroundImage: 'url("/images/noise.png")', backgroundSize: '150px' }} />
       </div>
 
-      {/* Main Content Area */}
+      {/* ── MAIN CONTENT ── */}
       <main className="relative z-10 flex-1 flex flex-col items-center w-full max-w-md mx-auto px-5 py-12 md:py-16">
         
-        {/* Header Section - No animation delay for instant FCP/LCP */}
-        <header className="flex flex-col items-center mb-10 w-full">
+        {/* Header Section */}
+        <header className="flex flex-col items-center mb-12 w-full">
           <div className="relative group mb-6">
-            {/* Glowing ring effect using simple box-shadow instead of blur for performance */}
-            <div className="absolute -inset-2 bg-gradient-to-tr from-red-600/20 to-transparent rounded-full opacity-50 group-hover:opacity-100 transition-opacity duration-700 shadow-[0_0_40px_rgba(220,38,38,0.2)]" />
-            <div className="w-24 h-24 rounded-full border border-white/10 bg-[#0a0a0a] flex items-center justify-center p-4 relative overflow-hidden shadow-2xl">
+            {/* Brutalist Logo Box replacing the rounded glow */}
+            <div className="w-20 h-20 bg-black border border-white/20 flex items-center justify-center p-3 relative overflow-hidden blade-cut transition-colors duration-500 group-hover:border-red-600 group-hover:bg-red-600/10">
               <Image
                 src="/images/logo-sychogear.webp"
                 alt="SYCHOGEAR"
@@ -84,17 +76,21 @@ export default function LinktreeClient({ heroImages = [] }: { heroImages?: strin
                 height={120}
                 className="w-full h-auto brightness-200 contrast-200 drop-shadow-md"
                 priority
-                sizes="120px"
+                sizes="80px"
               />
             </div>
           </div>
           
-          <h1 className="text-2xl font-black tracking-[0.3em] uppercase text-white mb-2 text-center drop-shadow-lg">
+          <h1 className="text-3xl font-display font-black tracking-[0.3em] uppercase text-white mb-2 text-center">
             SYCHOGEAR
           </h1>
-          <p className="text-[11px] tracking-[0.2em] uppercase text-brand-400 font-medium mb-1 text-center">
-             Premium Fight Gear
-          </p>
+          <div className="flex items-center gap-3">
+             <span className="w-6 h-px bg-red-600"></span>
+             <p className="text-[10px] sm:text-[11px] font-mono tracking-[0.25em] uppercase text-red-600 font-medium text-center">
+               est 2026
+             </p>
+             <span className="w-6 h-px bg-red-600"></span>
+          </div>
         </header>
 
         {/* Links Section */}
@@ -102,30 +98,30 @@ export default function LinktreeClient({ heroImages = [] }: { heroImages?: strin
           {links.map((link, i) => (
             <div 
               key={i} 
-              className="animate-fade-in-up hover-scale-fast" 
-              style={{ animationDelay: `${i * 100}ms` }}
+              className="animate-slide-up" 
+              style={{ animationDelay: `${i * 80}ms`, opacity: 0, animationFillMode: "forwards" }}
             >
               <Link
                 href={link.url}
                 target={link.url.startsWith("/") ? "_self" : "_blank"}
                 rel={link.url.startsWith("/") ? "" : "noopener noreferrer"}
-                className={`group relative flex items-center w-full p-4 rounded-xl overflow-hidden transition-all duration-300 ${
+                className={`group blade-cut relative flex items-center w-full p-4 overflow-hidden transition-all duration-300 ${
                   link.primary
-                    ? "bg-white text-black border border-transparent shadow-[0_0_30px_rgba(255,255,255,0.15)] hover:shadow-[0_0_40px_rgba(255,255,255,0.3)]"
-                    : "bg-[#111111] border border-white/5 text-white hover:bg-[#1a1a1a] hover:border-white/20 shadow-lg hover:shadow-xl"
+                    ? "bg-white text-black border border-transparent"
+                    : "bg-[#0a0a0a] border border-white/10 text-white hover:bg-red-600 hover:border-red-600 hover:text-black"
                 }`}
               >
                 {/* Logo Area */}
-                <div className={`flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center overflow-hidden ${link.primary ? 'bg-black/5' : 'bg-black/50 border border-white/5'}`}>
+                <div className={`flex-shrink-0 w-12 h-12 flex items-center justify-center overflow-hidden transition-colors duration-300 blade-cut ${link.primary ? 'bg-black/10' : 'bg-black/40 border border-white/5 group-hover:bg-black/20 group-hover:border-black/20'}`}>
                   {link.image && (
-                    <div className="relative w-7 h-7">
+                    <div className="relative w-6 h-6">
                       <Image
                         src={link.image}
                         alt={link.title}
                         fill
-                        sizes="28px"
+                        sizes="24px"
                         priority={i === 0}
-                        className={`object-contain ${link.primary ? 'filter grayscale brightness-0' : 'filter transition-all duration-300'}`}
+                        className={`object-contain ${link.primary ? 'filter grayscale brightness-0' : 'transition-transform duration-300 group-hover:scale-110'}`}
                       />
                     </div>
                   )}
@@ -133,11 +129,11 @@ export default function LinktreeClient({ heroImages = [] }: { heroImages?: strin
 
                 {/* Text Area */}
                 <div className="flex-1 ml-4 flex flex-col justify-center">
-                  <span className="font-extrabold text-[13px] sm:text-sm uppercase tracking-[0.1em] leading-none mb-1.5">
+                  <span className={`font-mono font-bold text-[12px] sm:text-[13px] uppercase tracking-[0.15em] leading-none mb-1.5 transition-colors duration-300 ${link.primary ? "" : "group-hover:text-black"}`}>
                     {link.title}
                   </span>
                   {link.description && (
-                    <span className={`text-[10px] sm:text-[11px] leading-snug ${link.primary ? "text-gray-600 font-bold" : "text-gray-400 font-medium"}`}>
+                    <span className={`text-[10px] sm:text-[11px] leading-snug font-sans uppercase tracking-widest ${link.primary ? "text-gray-800 font-bold" : "text-gray-500 font-medium group-hover:text-black/70"}`}>
                       {link.description}
                     </span>
                   )}
@@ -145,7 +141,7 @@ export default function LinktreeClient({ heroImages = [] }: { heroImages?: strin
 
                 {/* Arrow Icon */}
                 <div className="flex-shrink-0 ml-3">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${link.primary ? 'bg-black text-white group-hover:rotate-[-45deg]' : 'bg-white/5 text-white/50 group-hover:bg-white/10 group-hover:text-white group-hover:rotate-[-45deg]'}`}>
+                  <div className={`w-8 h-8 flex items-center justify-center transition-all duration-300 blade-cut ${link.primary ? 'bg-black text-white group-hover:translate-x-1' : 'bg-white/5 text-white/50 group-hover:bg-black/20 group-hover:text-black group-hover:translate-x-1'}`}>
                     <HiOutlineArrowRight className="w-4 h-4" />
                   </div>
                 </div>
@@ -155,42 +151,52 @@ export default function LinktreeClient({ heroImages = [] }: { heroImages?: strin
         </div>
         
         {/* Footer */}
-        <footer className="mt-16 w-full flex flex-col items-center animate-fade-in-up" style={{ animationDelay: "400ms" }}>
-          <div className="w-12 h-px bg-gradient-to-r from-transparent via-red-600/50 to-transparent mb-6" />
+        <footer className="mt-16 w-full flex flex-col items-center animate-slide-up" style={{ animationDelay: "600ms", opacity: 0, animationFillMode: "forwards" }}>
           
-          {/* Semantic SEO Enrichment - Hidden for users but visible to crawlers */}
+          {/* Custom Hooligan Divider */}
+          <div className="flex items-center gap-2 mb-8 opacity-40">
+            <span className="w-12 h-px bg-white"></span>
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              width="14" height="14" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="2" 
+              className="text-white"
+            >
+              <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path>
+              <line x1="4" y1="22" x2="4" y2="15"></line>
+            </svg>
+            <span className="w-12 h-px bg-white"></span>
+          </div>
+          
           <div className="sr-only">
             <h2>SYCHOGEAR Official Hub</h2>
-            <p>Welcome to the official digital hub of SYCHOGEAR. Find our premium streetwear and fight gear collections on our official webstore or via our Shopee Mall & Tokopedia Official stores. Stay connected with the community on Instagram, TikTok, and YouTube for the latest drops and exclusive content. For manual orders and customer support, reach out directly to our WhatsApp care team.</p>
+            <p>Welcome to the official digital hub of SYCHOGEAR.</p>
           </div>
 
-          <p className="text-[9px] tracking-[0.4em] text-brand-600 uppercase font-bold text-center">
-             VIOLENCE IS OUR AESTHETIC
+          <p 
+            className="text-[12px] text-white uppercase text-center font-display font-black"
+            style={{ letterSpacing: "0.4em" }}
+          >
+             VIOLENCE IS OUR <br/><span className="text-red-600 mt-2 block">AESTHETIC</span>
           </p>
         </footer>
 
       </main>
 
-      {/* Optimized animations */}
+      {/* Internal Styles for Animations */}
       <style dangerouslySetInnerHTML={{__html: `
-        @keyframes fadeInUp {
-          from { opacity: 0; transform: translateY(15px); }
-          to { opacity: 1; transform: translateY(0); }
+        @keyframes slideUpHooligan {
+          0% { opacity: 0; transform: translateY(20px); filter: blur(4px); }
+          100% { opacity: 1; transform: translateY(0); filter: blur(0); }
         }
-        .animate-fade-in-up {
-          animation: fadeInUp 0.5s ease-out forwards;
-          opacity: 0;
-        }
-        .animate-fade-in-up:nth-child(1) { animation-delay: 0.1s; }
-        .hover-scale-fast {
-          transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .hover-scale-fast:hover {
-          transform: scale(1.02);
+        .animate-slide-up {
+          animation: slideUpHooligan 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
         @media (prefers-reduced-motion: reduce) {
-          .animate-fade-in-up { animation: none; opacity: 1; }
-          .hover-scale-fast:hover { transform: none; }
+          .animate-slide-up { animation: none !important; opacity: 1 !important; transform: none !important; filter: none !important; }
         }
       `}} />
     </div>

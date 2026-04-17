@@ -58,6 +58,9 @@ export interface OrderWithRelations {
   status: string;
   notes: string | null;
   couponId: string | null;
+  country: string;
+  paymentMethod: string;
+  shippingCost: number;
   expiredAt: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -89,6 +92,8 @@ export interface OrderWithRelations {
     externalId: string;
     invoiceUrl: string;
     amount: number;
+    currency: string;
+    currencyAmount: number | null;
     status: string;
     method: string | null;
     paidAt: Date | null;

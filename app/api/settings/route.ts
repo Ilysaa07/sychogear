@@ -12,13 +12,22 @@ const ALLOWED_KEYS = [
   "heroTagline",
   "heroShowContent",
   "heroShowButtons",
+  "marqueeText",
   "promoActive",
   "promoImage",
   "promoTitle",
   "promoSubtitle",
   "promoLinkUrl",
   "promoLinkText",
+  // Payment & Currency
+  "idrToUsdRate",
+  // International Tax (single global rate)
+  "internationalTaxEnabled",   // "true" | "false"
+  "internationalTaxRate",      // e.g. "11" (%)
+  // Region-Based Shipping Zones
+  "shippingZones",             // JSON string
 ];
+
 
 // GET /api/settings — public
 export async function GET() {

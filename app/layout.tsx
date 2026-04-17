@@ -1,28 +1,74 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Cormorant_Garamond, Syne, DM_Mono, Metal_Mania, Rubik_Glitch } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
 
-const inter = Inter({
+/* ─── DISPLAY — Cormorant Garamond ─────────────────────────
+   Role: Hero headings, product names, editorial statements
+   Using italic at display scale — weight comes from contrast
+   ──────────────────────────────────────────────────────── */
+const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
-  variable: "--font-inter",
+  weight: ["400", "600", "700"],
+  style: ["normal", "italic"],
+  variable: "--font-display-cormorant",
   display: "swap",
 });
 
+const metalMania = Metal_Mania({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-metal",
+  display: "swap",
+});
+
+const rubikGlitch = Rubik_Glitch({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-glitch",
+  display: "swap",
+});
+
+/* ─── LABEL / NAV — Syne ────────────────────────────────────
+   Role: Navigation, section labels, buttons, UI chrome
+   ──────────────────────────────────────────────────────── */
+const syne = Syne({
+  subsets: ["latin"],
+  weight: ["400", "600", "700", "800"],
+  variable: "--font-syne",
+  display: "swap",
+});
+
+/* ─── UTILITY / MONO — DM Mono ──────────────────────────────
+   Role: Prices, metadata, form labels, captions, order IDs
+   Cold, clinical, precise.
+   ──────────────────────────────────────────────────────── */
+const dmMono = DM_Mono({
+  subsets: ["latin"],
+  weight: ["300", "400", "500"],
+  style: ["normal", "italic"],
+  variable: "--font-dm-mono",
+  display: "swap",
+});
+
+/* ─── ACCENT — Hooligan (local) ─────────────────────────────
+   Role: Retained as a secret weapon. Use sparingly —
+   only for flash sale events and easter eggs.
+   ──────────────────────────────────────────────────────── */
 const hooliganFont = localFont({
   src: "../public/fonts/hooligan.ttf",
-  variable: "--font-marker",
+  variable: "--font-hooligan",
   display: "swap",
 });
 
 export const metadata: Metadata = {
   title: {
-    default: "Sychogear - Official Webstore",
+    default: "Sychogear — Official Archive",
     template: "%s | SYCHOGEAR",
   },
   description:
-    "Premium streetwear clothing brand. Explore our latest collection of hoodies, tees, jackets, and accessories. Designed for the bold.",
+    "Sychogear. A curated collection of premium streetwear for those who move in silence. Explore the archive.",
   keywords: [
     "streetwear",
     "clothing brand",
@@ -31,15 +77,16 @@ export const metadata: Metadata = {
     "tees",
     "premium",
     "SYCHOGEAR",
+    "avant-garde",
   ],
   openGraph: {
     type: "website",
     locale: "id_ID",
     url: process.env.NEXT_PUBLIC_APP_URL,
     siteName: "SYCHOGEAR",
-    title: "SYCHOGEAR — Streetwear Clothing Brand",
+    title: "SYCHOGEAR — Official Archive",
     description:
-      "Premium streetwear clothing brand. Designed for the bold.",
+      "A curated collection of premium streetwear. Designed for those who move in silence.",
   },
   icons: {
     icon: [
@@ -62,9 +109,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "SYCHOGEAR — Streetwear Clothing Brand",
-    description: "Premium streetwear clothing brand. Designed for the bold.",
-    images: ["/images/og-image.jpg"], // Ensure this exists or use dynamic
+    title: "SYCHOGEAR — Official Archive",
+    description: "A curated collection of premium streetwear. Designed for those who move in silence.",
+    images: ["/images/og-image.jpg"],
   },
   alternates: {
     canonical: process.env.NEXT_PUBLIC_APP_URL || "https://sychogear.com",
@@ -86,30 +133,67 @@ export default function RootLayout({
     "logo": `${process.env.NEXT_PUBLIC_APP_URL || "https://sychogear.com"}/images/logo.png`,
     "sameAs": [
       "https://instagram.com/sychogear",
-      // Add other social links
+      "https://tiktok.com/@sychogearofficial",
     ],
   };
 
   return (
     <html lang="id">
-      <head>
-        {/* Font loading is handled by next/font in layout.tsx */}
-      </head>
-      <body className={`antialiased ${inter.variable} ${hooliganFont.variable} font-sans bg-brand-950 text-white min-h-screen relative overflow-x-hidden`}>
+      <head />
+      <body
+        className={`
+          antialiased
+          ${cormorant.variable}
+          ${syne.variable}
+          ${dmMono.variable}
+          ${hooliganFont.variable}
+          ${metalMania.variable}
+          ${rubikGlitch.variable}
+          bg-void text-salt min-h-screen relative overflow-x-hidden
+        `}
+      >
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
+
+        {/* Global grain overlay — fixed, always on */}
+        <div className="atmospheric-grain" aria-hidden="true" />
+
         <LenisProvider>
           {children}
           <Toaster
             position="bottom-right"
             toastOptions={{
+              duration: 3000,
               style: {
-                background: "#171717",
-                color: "#fafafa",
-                border: "1px solid #262626",
-                fontSize: "0.875rem",
+                background: "var(--abyss)",
+                color: "var(--pale)",
+                border: "1px solid var(--ember)",
+                borderRadius: "0",
+                fontSize: "0.75rem",
+                fontFamily: "var(--font-dm-mono), monospace",
+                letterSpacing: "0.05em",
+                padding: "12px 16px",
+                boxShadow: "none",
+              },
+              success: {
+                style: {
+                  borderLeft: "2px solid var(--success)",
+                },
+                iconTheme: {
+                  primary: "var(--success)",
+                  secondary: "var(--abyss)",
+                },
+              },
+              error: {
+                style: {
+                  borderLeft: "2px solid var(--error)",
+                },
+                iconTheme: {
+                  primary: "var(--error)",
+                  secondary: "var(--abyss)",
+                },
               },
             }}
           />

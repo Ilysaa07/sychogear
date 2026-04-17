@@ -8,6 +8,22 @@ import ConfirmModal from "@/components/admin/ConfirmModal";
 import toast from "react-hot-toast";
 import { HiOutlineDownload, HiOutlineEye, HiOutlineTrash } from "react-icons/hi";
 import Papa from "papaparse";
+import Image from "next/image";
+
+const COUNTRY_NAMES: Record<string, string> = {
+  ID: "Indonesia", MY: "Malaysia", SG: "Singapore", TH: "Thailand", PH: "Philippines",
+  VN: "Vietnam", MM: "Myanmar", KH: "Cambodia", LA: "Laos", BN: "Brunei",
+  JP: "Japan", KR: "South Korea", CN: "China", HK: "Hong Kong", TW: "Taiwan",
+  IN: "India", PK: "Pakistan", BD: "Bangladesh", LK: "Sri Lanka",
+  AE: "UAE", SA: "Saudi Arabia", QA: "Qatar", KW: "Kuwait",
+  AU: "Australia", NZ: "New Zealand",
+  GB: "United Kingdom", DE: "Germany", FR: "France", NL: "Netherlands", IT: "Italy", ES: "Spain",
+  US: "United States", CA: "Canada", BR: "Brazil", MX: "Mexico",
+};
+
+function formatUSD(amount: number): string {
+  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 }).format(amount);
+}
 
 const STATUS_FILTERS = [
   "ALL",
@@ -40,6 +56,8 @@ export default function AdminOrdersPage() {
   const [deleteOrderId, setDeleteOrderId] = useState<string | null>(null);
   const [forceUpdateConfig, setForceUpdateConfig] = useState<{ id: string; status: string } | null>(null);
   const [editingCustomer, setEditingCustomer] = useState(false);
+  const [savingTracking, setSavingTracking] = useState(false);
+  const [trackingInput, setTrackingInput] = useState("");
   const [customerForm, setCustomerForm] = useState({
     name: "",
     email: "",
@@ -59,6 +77,7 @@ export default function AdminOrdersPage() {
         phone: selectedOrder.customer.phone || "",
         address: selectedOrder.customer.address || "",
       });
+      setTrackingInput((selectedOrder as any).trackingNumber || "");
       setEditingCustomer(false);
     }
   }, [selectedOrder]);
@@ -150,6 +169,26 @@ export default function AdminOrdersPage() {
       toast.error(err?.response?.data?.error || "Failed to update customer details");
     } finally {
       setUpdatingStatus(false);
+    }
+  };
+
+  const handleSaveTracking = async () => {
+    if (!selectedOrder) return;
+    setSavingTracking(true);
+    try {
+      const { data } = await axios.patch(`/api/orders/${selectedOrder.id}`, {
+        trackingNumber: trackingInput,
+      });
+      if (data.success) {
+        toast.success(`Tracking number saved!${trackingInput ? " Status updated to SHIPPED." : ""}`);
+        const updatedOrder = { ...selectedOrder, trackingNumber: trackingInput, status: data.data?.status || selectedOrder.status } as any;
+        setSelectedOrder(updatedOrder);
+        setOrders((prev) => prev.map((o) => (o.id === selectedOrder.id ? { ...o, status: updatedOrder.status, trackingNumber: trackingInput } as any : o)));
+      }
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || "Failed to save tracking number");
+    } finally {
+      setSavingTracking(false);
     }
   };
 
@@ -258,8 +297,27 @@ export default function AdminOrdersPage() {
                       </p>
                     </td>
                     <td className="p-4">
-                      <p className="text-sm">{order.customer.name}</p>
-                      <p className="text-xs text-brand-500">{order.customer.email}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm">{order.customer.name}</p>
+                        {(order as any).country && (order as any).country !== "ID" && (
+                          <span className="w-4 h-3 relative rounded-[2px] overflow-hidden inline-block flex-shrink-0" title={COUNTRY_NAMES[(order as any).country] || (order as any).country}>
+                            <Image
+                              src={`https://flagcdn.com/w20/${(order as any).country.toLowerCase()}.png`}
+                              alt={(order as any).country}
+                              fill
+                              unoptimized={false}
+                              sizes="16px"
+                              className="object-cover"
+                            />
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs text-brand-500">{order.customer.email}</p>
+                        {(order as any).country && (order as any).country !== "ID" && (
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 bg-emerald-500/10 text-emerald-400 rounded">Intl</span>
+                        )}
+                      </div>
                     </td>
                     <td className="p-4 text-sm font-medium">
                       {formatCurrency(order.totalWithCode)}
@@ -508,20 +566,76 @@ export default function AdminOrdersPage() {
                   <h4 className="text-xs text-brand-500 uppercase tracking-wider mb-2">
                     Payment
                   </h4>
-                  <p className="text-sm">Method: {selectedOrder.payment.method || "-"}</p>
-                  <p className="text-sm">
-                    Status:{" "}
-                    <span className={`${getStatusColor(selectedOrder.payment.status)}`}>
-                      {selectedOrder.payment.status}
-                    </span>
-                  </p>
-                  {selectedOrder.payment.paidAt && (
-                    <p className="text-sm text-brand-400">
-                      Paid: {new Date(selectedOrder.payment.paidAt).toLocaleString()}
+                  <div className="space-y-1">
+                    <p className="text-sm">
+                      Method: {selectedOrder.payment.method || "-"}
+                    </p>
+                    <p className="text-sm">
+                      Status:{" "}
+                      <span className={`${getStatusColor(selectedOrder.payment.status)}`}>
+                        {selectedOrder.payment.status}
+                      </span>
+                    </p>
+                    {(selectedOrder.payment as any).currencyAmount && (
+                      <p className="text-sm text-brand-400">
+                        USD Equivalent: {formatUSD((selectedOrder.payment as any).currencyAmount)}
+                      </p>
+                    )}
+                    {selectedOrder.payment.paidAt && (
+                      <p className="text-sm text-brand-400">
+                        Paid: {new Date(selectedOrder.payment.paidAt).toLocaleString()}
+                      </p>
+                    )}
+                  </div>
+                  {(selectedOrder as any).country && (
+                    <p className="text-sm mt-2 flex items-center gap-2">
+                      Country: 
+                      <span className="w-4 h-3 relative rounded-[2px] overflow-hidden inline-block flex-shrink-0">
+                        <Image
+                          src={`https://flagcdn.com/w20/${(selectedOrder as any).country.toLowerCase()}.png`}
+                          alt={(selectedOrder as any).country}
+                          fill
+                          unoptimized={false}
+                          sizes="16px"
+                          className="object-cover"
+                        />
+                      </span>
+                      {COUNTRY_NAMES[(selectedOrder as any).country] || (selectedOrder as any).country}
                     </p>
                   )}
                 </div>
               )}
+
+              {/* AWB / Tracking Number */}
+              <div className="border-t border-white/5 pt-4">
+                <h4 className="text-xs text-brand-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+                  🚚 Tracking Number (AWB/Resi)
+                </h4>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={trackingInput}
+                    onChange={(e) => setTrackingInput(e.target.value.toUpperCase())}
+                    className="input-field text-sm flex-1 font-mono"
+                    placeholder="e.g. LP1234567890"
+                  />
+                  <button
+                    onClick={handleSaveTracking}
+                    disabled={savingTracking}
+                    className="px-3 py-1.5 text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded disabled:opacity-50 transition-colors whitespace-nowrap"
+                  >
+                    {savingTracking ? "Saving..." : "Save"}
+                  </button>
+                </div>
+                {(selectedOrder as any).trackingNumber && (
+                  <p className="text-[10px] text-emerald-400 mt-1.5">
+                    ✓ Current: {(selectedOrder as any).trackingNumber}
+                  </p>
+                )}
+                <p className="text-[10px] text-brand-600 mt-1">
+                  Input resi Lion Parcel. Status order otomatis berubah ke SHIPPED.
+                </p>
+              </div>
             </div>
           </div>
         </>
