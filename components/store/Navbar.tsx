@@ -140,25 +140,6 @@ export default function Navbar() {
           aria-modal="true"
           aria-label="Mobile navigation"
         >
-          {/* Top bar matching navbar height */}
-          <div className="h-16 flex items-center justify-between px-6 border-b border-ember">
-            <Link href="/" onClick={() => setMobileOpen(false)}>
-              <Image
-                src="/images/logo-sychogear.webp"
-                alt="SYCHOGEAR"
-                width={240}
-                height={60}
-                className="h-8 w-auto opacity-85"
-              />
-            </Link>
-            <button
-              onClick={() => setMobileOpen(false)}
-              className="p-2 text-ash hover:text-salt transition-colors"
-              aria-label="Close menu"
-            >
-              <span className="font-mono text-xl leading-none">×</span>
-            </button>
-          </div>
 
           {/* Nav links — large, stacked */}
           <nav className="flex-1 flex flex-col justify-center px-8" aria-label="Mobile navigation">
