@@ -28,45 +28,31 @@ export async function PATCH(
       );
     }
 
-    // Handle tracking number update (AWB / Resi)
-    if (body.trackingNumber !== undefined) {
-      const { prisma } = await import("@/lib/prisma");
-      const trackingNumber = body.trackingNumber?.trim() || null;
-      const updateData: any = { trackingNumber };
+    const { prisma } = await import("@/lib/prisma");
+    let order;
+    const existingOrder = await orderRepository.findById(id) as any;
+    if (!existingOrder) {
+      return NextResponse.json({ success: false, error: "Order tidak ditemukan" }, { status: 404 });
+    }
+
+    // Prepare tracking number and courier if provided
+    let trackingNumberToSave = existingOrder.trackingNumber;
+    let courierToSave = existingOrder.courier;
+
+    if (body.trackingNumber !== undefined || body.courier !== undefined) {
+      trackingNumberToSave = body.trackingNumber !== undefined ? (body.trackingNumber?.trim() || null) : existingOrder.trackingNumber;
+      courierToSave = body.courier !== undefined ? (body.courier?.trim() || null) : existingOrder.courier;
+      
       // Auto-update status to SHIPPED if tracking number is set and current status is PAID/PROCESSING
-      if (trackingNumber) {
-        const existing = await prisma.order.findUnique({ where: { id }, select: { status: true } });
-        if (existing?.status === "PAID" || existing?.status === "PROCESSING") {
-          updateData.status = "SHIPPED";
+      if (trackingNumberToSave && !body.status) {
+        if (existingOrder.status === "PAID" || existingOrder.status === "PROCESSING") {
+          body.status = "SHIPPED";
         }
       }
-      const order = await prisma.order.update({ where: { id }, data: updateData });
-      return NextResponse.json({ success: true, data: order });
     }
-
-
-    if (body.status) {
-      const validStatuses = [
-        "UNPAID", "PAID", "PROCESSING", "SHIPPED", 
-        "DELIVERED", "CANCELLED", "EXPIRED", "FAILED"
-      ];
-      if (!validStatuses.includes(body.status)) {
-        return NextResponse.json({ success: false, error: "Invalid status" }, { status: 400 });
-      }
-    }
-
-    let order;
-    const { prisma } = await import("@/lib/prisma");
 
     // Handle customer details update
     if (body.customer) {
-      // Find the order to get the customerId
-      const existingOrder = await orderRepository.findById(id);
-      if (!existingOrder) {
-        return NextResponse.json({ success: false, error: "Order tidak ditemukan" }, { status: 404 });
-      }
-      
-      // Update customer record
       await prisma.customer.update({
         where: { id: existingOrder.customerId },
         data: {
@@ -76,56 +62,108 @@ export async function PATCH(
           address: body.customer.address,
         },
       });
-      // Fetch fresh order
-      order = await orderRepository.findById(id);
     }
 
-    if (!body.status) {
-      return NextResponse.json({ success: true, data: order });
-    }
-
-    if (body.status === "PAID" && body.force) {
-      // Admin override: force-confirm even if order is not UNPAID.
-      // Useful to recover orders stuck in a partial-failure state.
-      const existingOrder = await orderRepository.findById(id) as any;
-      if (!existingOrder) {
-        return NextResponse.json({ success: false, error: "Order tidak ditemukan" }, { status: 404 });
+    if (body.status) {
+      const validStatuses = [
+        "UNPAID", "PAID", "PROCESSING", "SHIPPED", 
+        "DELIVERED", "CANCELLED", "EXPIRED", "FAILED"
+      ];
+      if (!validStatuses.includes(body.status)) {
+        return NextResponse.json({ success: false, error: "Invalid status" }, { status: 400 });
       }
-      order = await prisma.$transaction(async (tx) => {
-        const paid = await tx.order.update({
-          where: { id: existingOrder.id },
-          data: { status: "PAID" },
-        });
-        for (const item of existingOrder.items) {
-          const variant = await tx.productVariant.findUnique({
-            where: { id: item.variantId },
-            select: { stock: true },
+
+      const ACTIVE_STATUSES = ["PAID", "PROCESSING", "SHIPPED", "DELIVERED"];
+      
+      if (body.status === "PAID" && body.force) {
+        // Admin override: force-confirm even if order is not UNPAID.
+        order = await prisma.$transaction(async (tx) => {
+          const paid = await tx.order.update({
+            where: { id: existingOrder.id },
+            data: { status: "PAID", trackingNumber: trackingNumberToSave, courier: courierToSave },
           });
-          // Only decrement if stock is still available (skip if already decremented)
-          if (variant && variant.stock >= item.quantity) {
-            await tx.productVariant.update({
+          for (const item of existingOrder.items) {
+            const variant = await tx.productVariant.findUnique({
               where: { id: item.variantId },
-              data: { stock: { decrement: item.quantity } },
+              select: { stock: true },
+            });
+            if (variant && variant.stock >= item.quantity) {
+              await tx.productVariant.update({
+                where: { id: item.variantId },
+                data: { stock: { decrement: item.quantity } },
+              });
+            }
+          }
+          if (existingOrder.payment) {
+            await tx.payment.update({
+              where: { id: existingOrder.payment.id },
+              data: { status: "PAID", paidAt: new Date() },
             });
           }
-        }
-        if (existingOrder.payment) {
-          await tx.payment.update({
-            where: { id: existingOrder.payment.id },
-            data: { status: "PAID", paidAt: new Date() },
+          return paid;
+        });
+      } else if (ACTIVE_STATUSES.includes(body.status) && existingOrder.status === "UNPAID") {
+        // If moving from UNPAID to an active status, trigger payment confirmation (stock reduction)
+        if (body.status === "PAID") {
+          const result = await paymentService.confirmPayment(existingOrder.invoiceNumber);
+          // Update tracking number and courier if provided
+          if (body.trackingNumber !== undefined || body.courier !== undefined) {
+             order = await prisma.order.update({
+               where: { id },
+               data: { trackingNumber: trackingNumberToSave, courier: courierToSave }
+             });
+          } else {
+            order = result.order;
+          }
+        } else {
+          // Manually moving to PROCESSING/SHIPPED/etc - must also reduce stock
+          order = await prisma.$transaction(async (tx) => {
+            const updated = await tx.order.update({
+              where: { id: existingOrder.id },
+              data: { status: body.status, trackingNumber: trackingNumberToSave, courier: courierToSave },
+            });
+            for (const item of existingOrder.items) {
+              const variant = await tx.productVariant.findUnique({
+                where: { id: item.variantId },
+                select: { stock: true },
+              });
+              if (!variant || variant.stock < item.quantity) {
+                throw new Error(`Stok tidak mencukupi untuk varian ${item.variantId}`);
+              }
+              await tx.productVariant.update({
+                where: { id: item.variantId },
+                data: { stock: { decrement: item.quantity } },
+              });
+            }
+            if (existingOrder.payment) {
+              await tx.payment.update({
+                where: { id: existingOrder.payment.id },
+                data: { status: "PAID", paidAt: new Date() },
+              });
+            }
+            return updated;
           });
         }
-        return paid;
-      });
-    } else if (body.status === "PAID") {
-      const existingOrder = await orderRepository.findById(id);
-      if (!existingOrder) {
-        return NextResponse.json({ success: false, error: "Order tidak ditemukan" }, { status: 404 });
+      } else {
+        // Normal status update or just tracking/courier update
+        order = await prisma.order.update({
+          where: { id },
+          data: { 
+            status: body.status,
+            trackingNumber: trackingNumberToSave,
+            courier: courierToSave
+          }
+        });
       }
-      const result = await paymentService.confirmPayment(existingOrder.invoiceNumber);
-      order = result.order;
+    } else if (body.trackingNumber !== undefined || body.courier !== undefined) {
+      // Only tracking/courier update, no status changerequested (and not auto-triggered)
+      order = await prisma.order.update({
+        where: { id },
+        data: { trackingNumber: trackingNumberToSave, courier: courierToSave }
+      });
     } else {
-      order = await orderRepository.updateStatus(id, body.status);
+      // Must be customer update only
+      order = await orderRepository.findById(id);
     }
 
     return NextResponse.json({ success: true, data: order });

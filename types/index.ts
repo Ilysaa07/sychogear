@@ -61,6 +61,8 @@ export interface OrderWithRelations {
   country: string;
   paymentMethod: string;
   shippingCost: number;
+  trackingNumber: string | null;
+  courier: string | null;
   expiredAt: Date;
   createdAt: Date;
   updatedAt: Date;

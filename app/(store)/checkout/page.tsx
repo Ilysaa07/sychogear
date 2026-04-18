@@ -22,6 +22,7 @@ import {
   HiOutlineSearch,
   HiChevronDown,
 } from "react-icons/hi";
+import CopyButton from "@/components/store/CopyButton";
 
 
 export default function CheckoutPage() {
@@ -35,12 +36,9 @@ export default function CheckoutPage() {
   const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
   const [exchangeRate, setExchangeRate] = useState(16000); // fallback IDR to USD
   const [localCurrencyRate, setLocalCurrencyRate] = useState<number | null>(null);
-  const [shippingCost, setShippingCost] = useState(0);
-  const [internationalTaxEnabled, setInternationalTaxEnabled] = useState(true);
   const [internationalTaxRates, setInternationalTaxRates] = useState<Record<string, number>>({});
   const [countrySearch, setCountrySearch] = useState("");
   const [countryDropdownOpen, setCountryDropdownOpen] = useState(false);
-  const [fetchingShipping, setFetchingShipping] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const {
@@ -61,12 +59,12 @@ export default function CheckoutPage() {
   const countryInfo = getCountryByCode(selectedCountry);
 
   const subtotal = getSubtotal();
-  const domesticTax = isInternational ? 0 : getTotalTax();
-  // Single global PPN rate for all international orders
-  const intlTaxRate = isInternational && internationalTaxEnabled ? (internationalTaxRates["_global"] ?? 0) : 0;
+  const domesticTax = 0; // Forced inactive for domestic as per requirement
+  // Single global PPN rate for all international orders — automatically active
+  const intlTaxRate = isInternational ? (internationalTaxRates["_global"] ?? 11) : 0;
   const internationalTax = isInternational ? Math.round(subtotal * (intlTaxRate / 100)) : 0;
   const applicableTax = isInternational ? internationalTax : domesticTax;
-  const finalTotal = Math.max(0, subtotal + applicableTax - discountAmount + shippingCost);
+  const finalTotal = Math.max(0, subtotal + applicableTax - discountAmount);
   
   // Custom Dynamic Local Currency formatting
   const localCurrencyCode = countryInfo?.currency || "USD";
@@ -117,9 +115,6 @@ export default function CheckoutPage() {
           if (data.data.idrToUsdRate) {
             setExchangeRate(parseFloat(data.data.idrToUsdRate) || 16000);
           }
-          if (data.data.internationalTaxEnabled !== undefined) {
-            setInternationalTaxEnabled(data.data.internationalTaxEnabled === "true");
-          }
           // Single global rate — stored as "_global" key
           if (data.data.internationalTaxRate) {
             const rate = parseFloat(data.data.internationalTaxRate) || 11;
@@ -135,28 +130,8 @@ export default function CheckoutPage() {
     fetchSettings();
   }, []);
 
-  // Fetch flat shipping rate from admin settings when country changes
+  // Fetch dynamic currency conversion rate from CDN when country changes
   useEffect(() => {
-    const fetchShipping = async () => {
-      if (selectedCountry === "ID") {
-        setShippingCost(0);
-        return;
-      }
-      setFetchingShipping(true);
-      try {
-        const { data } = await axios.post("/api/shipping/rates", { country: selectedCountry });
-        if (data.success && data.data) {
-          setShippingCost(data.data.price || 0);
-        }
-      } catch {
-        setShippingCost(0);
-      } finally {
-        setFetchingShipping(false);
-      }
-    };
-    fetchShipping();
-
-    // Fetch dynamic currency conversion rate from CDN
     const fetchCurrencyRate = async () => {
       if (selectedCountry === "ID") {
         setLocalCurrencyRate(null);
@@ -570,7 +545,7 @@ export default function CheckoutPage() {
                 {errors.zipCode && (<p className="mt-1" style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.6875rem", color: "var(--error)" }}>{errors.zipCode.message}</p>)}
               </div>
 
-              {/* Shipping info */}
+              {/* Shipping Notice */}
               <div
                 className="flex items-start gap-3 p-4"
                 style={{ background: "var(--dim)", border: "1px solid var(--ember)" }}
@@ -580,20 +555,23 @@ export default function CheckoutPage() {
                   <p
                     style={{ fontFamily: "var(--font-syne), system-ui, sans-serif", fontSize: "0.6875rem", fontWeight: 600, letterSpacing: "0.15em", textTransform: "uppercase", color: isInternational ? "var(--signal)" : "var(--pale)" }}
                   >
-                    {fetchingShipping
-                      ? "Calculating shipping…"
-                      : isInternational
-                      ? `Lion Parcel INTERPACK — ${shippingCost > 0 ? formatCurrency(shippingCost) : "Free"}`
-                      : "Domestic Shipping (Indonesia)"}
+                    {isInternational
+                        ? "International Delivery"
+                        : "Domestic Delivery (Indonesia)"}
                   </p>
                   <p
-                    className="mt-1"
+                    className="mt-1 mb-2"
                     style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.6875rem", color: "var(--ash)", letterSpacing: "0.05em" }}
                   >
                     {isInternational
-                      ? "Est. 3–14 days · Confirm via WhatsApp"
-                      : "Domestic delivery · Confirm via WhatsApp"}
+                      ? "Est. 3–14 days"
+                      : "Domestic standard delivery"}
                   </p>
+                  <div className="p-2.5 rounded bg-black/40 border border-signal/20">
+                    <p style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.625rem", color: "var(--signal)", lineHeight: 1.5 }}>
+                      * Price does not include shipping fee. Please complete the checkout first and contact our CS via WhatsApp to coordinate shipping costs.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -611,16 +589,15 @@ export default function CheckoutPage() {
                 <p className="label-syne text-salt">Payment Method</p>
               </div>
               <div className="flex items-center gap-4 p-4" style={{ background: "var(--dim)", border: "1px solid var(--ember)" }}>
-                <svg viewBox="0 0 24 24" className="w-5 h-5 flex-shrink-0" style={{ color: "var(--signal)" }} fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="2" y="5" width="20" height="14"/>
-                  <path d="M2 10h20"/>
-                </svg>
+                <div className="w-12 h-auto flex-shrink-0 bg-white rounded p-1 flex items-center justify-center">
+                  <img src="/images/bca.png" alt="BCA Logo" className="w-full h-auto object-contain" />
+                </div>
                 <div>
                   <p style={{ fontFamily: "var(--font-syne), system-ui, sans-serif", fontSize: "0.75rem", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--salt)" }}>Bank Transfer (BCA)</p>
                   <p className="mt-1" style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.6875rem", color: "var(--ash)", letterSpacing: "0.05em" }}>
                     {isInternational
                       ? "International bank transfer · Confirm via WhatsApp"
-                      : "Transfer ke rekening BCA · Konfirmasi via WhatsApp"}
+                      : "Domestic bank transfer · Confirm via WhatsApp"}
                   </p>
                 </div>
               </div>
@@ -747,16 +724,6 @@ export default function CheckoutPage() {
                   </div>
                 </div>
               )}
-              {shippingCost > 0 && (
-                <div className="flex justify-between">
-                  <span style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.75rem", color: "var(--fog)", letterSpacing: "0.08em" }}>Shipping</span>
-                  <div className="text-right">
-                    <span style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.75rem", color: "var(--fog)" }}>+{formatCurrency(shippingCost)}</span>
-                    {isInternational && (<p style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.625rem", color: "var(--fog)", marginTop: "2px" }}>≈ +{formatLocalCurrency(shippingCost * localExchangeRate, localCurrencyCode)}</p>)}
-                  </div>
-                </div>
-              )}
-
               <div className="section-divider" />
 
               <div className="flex justify-between pt-1">
@@ -770,15 +737,20 @@ export default function CheckoutPage() {
 
             {/* BCA reminder */}
             <div className="mt-8 pt-6" style={{ borderTop: "1px solid var(--ember)" }}>
-              <p className="label-eyebrow mb-3">Payment via</p>
-              <div className="flex items-center gap-3">
-                <svg viewBox="0 0 24 24" className="w-4 h-4 flex-shrink-0" style={{ color: "var(--ash)" }} fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="2" y="5" width="20" height="14"/>
-                  <path d="M2 10h20"/>
-                </svg>
+              <p className="label-eyebrow mb-3">Payment Information</p>
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-auto mt-1 flex-shrink-0 bg-white rounded p-1 flex items-center justify-center">
+                  <img src="/images/bca.png" alt="BCA Logo" className="w-full h-auto object-contain" />
+                </div>
                 <div>
-                  <p style={{ fontFamily: "var(--font-syne), system-ui, sans-serif", fontSize: "0.6875rem", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--pale)" }}>BCA Bank Transfer</p>
-                  <p style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.625rem", color: "var(--ash)", marginTop: "3px" }}>883190138549</p>
+                  <p className="mb-2" style={{ fontFamily: "var(--font-syne), system-ui, sans-serif", fontSize: "0.75rem", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--pale)" }}>BCA Bank Transfer</p>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <p style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.6875rem", color: "var(--salt)" }}>Acc No: <span style={{ color: "var(--signal)" }}>6768126284</span></p>
+                      <CopyButton text="6768126284" />
+                    </div>
+                    <p style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.6875rem", color: "var(--ash)" }}>Acc Name: ILYASA MEYDIANSYAH A</p>
+                  </div>
                 </div>
               </div>
             </div>

@@ -114,7 +114,8 @@ model Order {
   country        String      @default("ID")
   paymentMethod  String      @default("MANUAL_TRANSFER")
   shippingCost   Float       @default(0)
-  trackingNumber String?     // AWB/Resi Lion Parcel
+  trackingNumber String?     // AWB/Resi
+  courier        String?     // Courier name (JNT, JNE, etc.)
   expiredAt      DateTime
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt

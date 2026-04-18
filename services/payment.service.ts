@@ -37,7 +37,7 @@ export const paymentService = {
     }
 
     // Fetch settings from DB — single flat rate for both shipping and tax
-    let shippingCost = 0;
+    let shippingCost = 0; // Forced to 0
     let internationalTaxRate = 0; // % applied to ALL international orders
     let exchangeRate = Number(process.env.IDR_TO_USD_RATE) || 16000;
 
@@ -46,7 +46,6 @@ export const paymentService = {
         where: {
           key: {
             in: [
-              "shippingZones",
               "internationalTaxEnabled",
               "internationalTaxRate",
               "idrToUsdRate",
@@ -61,42 +60,8 @@ export const paymentService = {
       }
 
       if (isInternational) {
-        // Region-based shipping rate
-        const countryInfo = getCountryByCode(country);
-        const defaultZones: Record<string, number> = {
-          "Southeast Asia": 150000,
-          "East Asia": 200000,
-          "South Asia": 250000,
-          "Middle East": 300000,
-          "Oceania": 350000,
-          "Europe": 400000,
-          "Americas": 450000,
-        };
-
-        if (countryInfo) {
-          if (settingsMap.shippingZones) {
-            try {
-              const zones = JSON.parse(settingsMap.shippingZones);
-              if (zones && typeof zones[countryInfo.region] === "number") {
-                shippingCost = zones[countryInfo.region];
-              } else {
-                shippingCost = defaultZones[countryInfo.region] ?? 0;
-              }
-            } catch (e) {
-              console.error("Failed to parse shipping zones in payment service", e);
-              shippingCost = defaultZones[countryInfo.region] ?? 0;
-            }
-          } else {
-            shippingCost = defaultZones[countryInfo.region] ?? 0;
-          }
-        }
-
-        // Global PPN rate — same for ALL countries
-        const taxEnabled =
-          settingsMap.internationalTaxEnabled !== "false"; // default true
-        if (taxEnabled) {
-          internationalTaxRate = settingsMap.internationalTaxRate ? parseFloat(settingsMap.internationalTaxRate) || 11 : 11;
-        }
+        // Global PPN rate — same for ALL countries. Forced to active as per request.
+        internationalTaxRate = settingsMap.internationalTaxRate ? parseFloat(settingsMap.internationalTaxRate) || 11 : 11;
       }
 
       if (settingsMap.idrToUsdRate) {
@@ -135,13 +100,9 @@ export const paymentService = {
           ppnAmount = Math.round(discountedTotal * (internationalTaxRate / 100));
           // No PPH23 for international
         } else {
-          // Domestic: use per-product tax configuration
-          ppnAmount = product
-            ? Math.round(discountedTotal * ((product as any).ppnRate / 100))
-            : 0;
-          pph23Amount = product
-            ? Math.round(discountedTotal * ((product as any).pph23Rate / 100))
-            : 0;
+          // Domestic: PPN and PPH23 forced inactive (0)
+          ppnAmount = 0;
+          pph23Amount = 0;
         }
 
         const discountAmount = originalTotal - discountedTotal;

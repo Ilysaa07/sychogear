@@ -24,8 +24,6 @@ const ALLOWED_KEYS = [
   // International Tax (single global rate)
   "internationalTaxEnabled",   // "true" | "false"
   "internationalTaxRate",      // e.g. "11" (%)
-  // Region-Based Shipping Zones
-  "shippingZones",             // JSON string
 ];
 
 

@@ -44,8 +44,7 @@ export default function CartPage() {
   }
 
   const subtotal = getSubtotal();
-  const tax = getTotalTax();
-  const total = getTotal();
+  const total = subtotal; // Tax calculated at checkout stage based on location
 
   return (
     <div
@@ -272,29 +271,7 @@ export default function CartPage() {
                   </span>
                 </div>
 
-                {tax > 0 && (
-                  <div className="flex items-center justify-between">
-                    <span
-                      className="text-fog"
-                      style={{
-                        fontFamily: "var(--font-dm-mono), monospace",
-                        fontSize: "0.6875rem",
-                        letterSpacing: "0.08em",
-                      }}
-                    >
-                      Pajak (PPN/PPH 23)
-                    </span>
-                    <span
-                      className="text-fog"
-                      style={{
-                        fontFamily: "var(--font-dm-mono), monospace",
-                        fontSize: "0.6875rem",
-                      }}
-                    >
-                      +{formatCurrency(tax)}
-                    </span>
-                  </div>
-                )}
+
 
                 <div className="flex items-center justify-between">
                   <span

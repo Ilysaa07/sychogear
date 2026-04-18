@@ -28,8 +28,6 @@ interface Settings {
   // International Tax — single global rate for all countries
   internationalTaxEnabled: boolean;
   internationalTaxRate: string; // e.g. "11"
-  // Region-Based Shipping Zones
-  shippingZones: Record<string, number>;
 }
 
 const defaultSettings: Settings = {
@@ -51,15 +49,6 @@ const defaultSettings: Settings = {
   idrToUsdRate: "16000",
   internationalTaxEnabled: true,
   internationalTaxRate: "11",
-  shippingZones: {
-    "Southeast Asia": 150000,
-    "East Asia": 200000,
-    "South Asia": 250000,
-    "Middle East": 300000,
-    "Oceania": 350000,
-    "Europe": 400000,
-    "Americas": 450000,
-  },
 };
 
 export default function AdminSettingsPage() {
@@ -83,14 +72,7 @@ export default function AdminSettingsPage() {
               console.error("Failed to parse heroImages", e);
             }
           }
-          let parsedShippingZones: Record<string, number> = defaultSettings.shippingZones;
-          if (data.data.shippingZones) {
-            try {
-              parsedShippingZones = { ...defaultSettings.shippingZones, ...JSON.parse(data.data.shippingZones) };
-            } catch (e) {
-              console.error("Failed to parse shippingZones", e);
-            }
-          }
+
 
           setSettings({
             heroImages: parsedImages,
@@ -111,7 +93,6 @@ export default function AdminSettingsPage() {
             idrToUsdRate: data.data.idrToUsdRate || defaultSettings.idrToUsdRate,
             internationalTaxEnabled: data.data.internationalTaxEnabled !== "false",
             internationalTaxRate: data.data.internationalTaxRate || defaultSettings.internationalTaxRate,
-            shippingZones: parsedShippingZones,
           });
         }
       } catch {
@@ -134,7 +115,6 @@ export default function AdminSettingsPage() {
         promoActive: String(settings.promoActive),
         internationalTaxEnabled: String(settings.internationalTaxEnabled),
         internationalTaxRate: settings.internationalTaxRate,
-        shippingZones: JSON.stringify(settings.shippingZones),
       };
 
       const { data } = await axios.put("/api/settings", payload);
@@ -547,32 +527,6 @@ export default function AdminSettingsPage() {
           )}
         </div>
 
-        <div className="h-px bg-white/5 w-full" />
-
-        {/* Region-Based Shipping Rates */}
-        <div>
-          <label className="block text-xs font-medium text-brand-400 uppercase tracking-wider mb-2">Region-Based Shipping Rates (IDR)</label>
-          <p className="text-xs text-brand-500 mb-4">Applied automatically based on buyer's selected country. Enter 0 for free shipping.</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {Object.keys(defaultSettings.shippingZones).map((zone) => (
-              <div key={zone} className="bg-brand-900/50 border border-white/5 rounded-lg p-3">
-                <label className="block text-xs font-bold text-brand-300 mb-2 truncate">{zone}</label>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-brand-500 flex-shrink-0">Rp</span>
-                  <input
-                    type="number"
-                    min="0"
-                    step="1000"
-                    value={settings.shippingZones?.[zone] ?? 0}
-                    onChange={(e) => setSettings({ ...settings, shippingZones: { ...settings.shippingZones, [zone]: parseInt(e.target.value) || 0 } })}
-                    className="input-field w-full"
-                    placeholder="0"
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
 
       {/* Save */}
