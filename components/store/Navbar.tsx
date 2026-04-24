@@ -85,16 +85,13 @@ export default function Navbar() {
         <div className="container-main">
           <div className="relative flex items-center justify-between" style={{ height: "60px" }}>
 
-            {/* Left — Desktop Nav & Region Selector */}
+            {/* Left — Desktop Nav */}
             <nav className="hidden md:flex items-center gap-8" aria-label="Primary navigation">
               {navLinks.map((link) => (
                 <Link key={link.href} href={link.href} className="nav-link">
                   {link.label}
                 </Link>
               ))}
-              <div className="pl-4 border-l border-ember">
-                <RegionCurrencySelector />
-              </div>
             </nav>
 
             {/* Center — Logo */}
@@ -116,6 +113,9 @@ export default function Navbar() {
 
             {/* Right — Actions */}
             <div className="flex items-center gap-4">
+              <div className="hidden md:block border-r border-ember pr-4 mr-2">
+                <RegionCurrencySelector />
+              </div>
               <div className="md:hidden">
                  <RegionCurrencySelector />
               </div>

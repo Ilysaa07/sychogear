@@ -126,8 +126,13 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
-    /* Custom cursor — desktop only */
-    cursor: none;
+    /* Custom cursor — desktop only (Removed until CustomCursor component is implemented) */
+    /* cursor: none; */
+  }
+
+  /* Restore cursor in admin dashboard */
+  .admin-panel, .admin-panel * {
+    cursor: auto !important;
   }
 
   /* Restore default cursor on mobile / touch */

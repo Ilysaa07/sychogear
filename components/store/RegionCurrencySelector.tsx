@@ -43,12 +43,12 @@ export default function RegionCurrencySelector() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 text-ash hover:text-salt transition-colors"
-        style={{ fontFamily: "var(--font-syne), sans-serif", fontSize: "0.6875rem", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase" }}
+        className="flex items-center gap-2.5 px-3 py-1.5 border border-ember hover:border-signal text-salt transition-all duration-300"
+        style={{ fontFamily: "var(--font-syne), sans-serif", fontSize: "0.6875rem", fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase" }}
       >
-        <HiOutlineGlobeAlt className="w-4 h-4" />
+        <HiOutlineGlobeAlt className="w-3.5 h-3.5 text-signal" />
         <span className="hidden sm:inline">{currentCountry?.code} / {currentCountry?.currency}</span>
-        <HiChevronDown className={`w-3 h-3 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
+        <HiChevronDown className={`w-3 h-3 text-ash transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`} />
       </button>
 
       {isOpen && (

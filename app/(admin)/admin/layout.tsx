@@ -13,7 +13,7 @@ export default function AdminLayout({
   const setOpen = useUIStore((s) => s.setAdminSidebarOpen);
 
   return (
-    <div className="flex min-h-screen bg-brand-950 text-white">
+    <div className="flex min-h-screen bg-brand-950 text-white admin-panel">
       <AdminSidebar />
       
       <div className="flex-1 flex flex-col min-w-0">

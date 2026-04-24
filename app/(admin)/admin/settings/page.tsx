@@ -472,8 +472,16 @@ export default function AdminSettingsPage() {
             <input type="text" value={settings.promoTitle} onChange={(e) => setSettings({ ...settings, promoTitle: e.target.value })} placeholder="LIMITED DROP" className="input-field" />
           </div>
           <div>
+            <label className="block text-xs font-medium text-brand-400 uppercase tracking-wider mb-2">Subtitle / Eyebrow</label>
+            <input type="text" value={settings.promoSubtitle} onChange={(e) => setSettings({ ...settings, promoSubtitle: e.target.value })} placeholder="Just dropped" className="input-field" />
+          </div>
+          <div>
             <label className="block text-xs font-medium text-brand-400 uppercase tracking-wider mb-2">Link URL</label>
-            <input type="text" value={settings.promoLinkUrl} onChange={(e) => setSettings({ ...settings, promoLinkUrl: e.target.value })} placeholder="/products" className="input-field max-w-xl" dir="ltr" />
+            <input type="text" value={settings.promoLinkUrl} onChange={(e) => setSettings({ ...settings, promoLinkUrl: e.target.value })} placeholder="/products" className="input-field" dir="ltr" />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-brand-400 uppercase tracking-wider mb-2">Button Text</label>
+            <input type="text" value={settings.promoLinkText} onChange={(e) => setSettings({ ...settings, promoLinkText: e.target.value })} placeholder="Shop Now" className="input-field" />
           </div>
         </div>
       </div>
