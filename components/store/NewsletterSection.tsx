@@ -3,6 +3,8 @@
 import { useState } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
+import Link from "next/link";
+import Image from "next/image";
 
 export default function NewsletterSection() {
   const [email, setEmail] = useState("");
@@ -12,7 +14,6 @@ export default function NewsletterSection() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || loading) return;
-
     setLoading(true);
     try {
       const { data } = await axios.post("/api/newsletter", { email });
@@ -37,128 +38,72 @@ export default function NewsletterSection() {
   return (
     <section
       id="newsletter"
-      className="relative bg-abyss border-t border-ember overflow-hidden"
-      style={{ padding: "clamp(80px, 12vw, 140px) 0" }}
+      className="relative min-h-[90vh] flex flex-col items-center justify-center bg-[#111512] px-6 py-24 text-center overflow-hidden border-t border-ember"
     >
-      <div className="container-main">
-        <div className="max-w-2xl">
+      {/* Background Graphic Element - subtle glow or noise could go here */}
 
-          {/* Eyebrow */}
-          <p className="label-eyebrow mb-6">§ INNER CIRCLE</p>
-
-          {/* Heading */}
-          <h2
-            className="font-display text-salt mb-4 reveal"
-            style={{
-              fontSize: "clamp(40px, 6vw, 72px)",
-              lineHeight: 0.95,
-              letterSpacing: "0.02em",
-            }}
-          >
-            THE INNER CIRCLE.
-          </h2>
-
-          {/* Subtext */}
-          <p
-            className="reveal"
-            style={{
-              fontFamily: "var(--font-dm-mono), monospace",
-              fontSize: "0.8125rem",
-              color: "var(--ash)",
-              letterSpacing: "0.05em",
-              lineHeight: 1.8,
-              marginBottom: "clamp(32px, 5vw, 56px)",
-              maxWidth: "380px",
-            }}
-          >
-            Drop alerts. No noise.
-            <br />
-            We don&apos;t share intel.
-          </p>
-
-          {/* Form */}
-          {sent ? (
-            <div className="reveal is-visible">
-              <p
-                style={{
-                  fontFamily: "var(--font-dm-mono), monospace",
-                  fontSize: "0.8125rem",
-                  color: "var(--signal)",
-                  letterSpacing: "0.1em",
-                }}
-              >
-                ✓ intel received.
-              </p>
-            </div>
-          ) : (
-            <form
-              onSubmit={handleSubmit}
-              className="flex items-end gap-0 max-w-sm reveal"
-              style={{ borderBottom: "1px solid var(--ember)" }}
-            >
-              <div className="flex-1">
-                <label htmlFor="newsletter-email" className="sr-only">
-                  Email address
-                </label>
-                <input
-                  id="newsletter-email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="your@email.com"
-                  required
-                  autoComplete="email"
-                  style={{
-                    width: "100%",
-                    padding: "0.75rem 0",
-                    background: "transparent",
-                    border: "none",
-                    color: "var(--salt)",
-                    fontFamily: "var(--font-dm-mono), monospace",
-                    fontSize: "0.8125rem",
-                    letterSpacing: "0.05em",
-                    outline: "none",
-                  }}
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={loading}
-                aria-label="Subscribe"
-                style={{
-                  background: "none",
-                  border: "none",
-                  padding: "0.75rem 0 0.75rem 1rem",
-                  color: loading ? "var(--fog)" : "var(--signal)",
-                  fontFamily: "var(--font-dm-mono), monospace",
-                  fontSize: "1rem",
-                  cursor: loading ? "not-allowed" : "pointer",
-                  transition: "color 200ms ease",
-                  lineHeight: 1,
-                }}
-              >
-                {loading ? "…" : "→"}
-              </button>
-            </form>
-          )}
-
-        </div>
+      {/* Centerpiece: Animated Logo */}
+      <div className="relative w-32 h-32 sm:w-48 sm:h-48 mb-8 z-10 transition-transform duration-700 hover:scale-105">
+        <img
+          src="/images/logo.gif"
+          alt="Sychogear"
+          className="w-full h-full object-contain"
+        />
       </div>
 
-      {/* Subtle ambient glow — bottom right corner */}
-      <div
-        aria-hidden="true"
-        style={{
-          position: "absolute",
-          right: "-10%",
-          bottom: "-20%",
-          width: "500px",
-          height: "500px",
-          borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(200,169,110,0.05) 0%, transparent 70%)",
-          pointerEvents: "none",
-        }}
-      />
+      {/* Massive Typography Statement */}
+      <h2
+        className="font-syne font-bold text-salt uppercase leading-[0.85] tracking-tight mb-8 z-10"
+        style={{ fontSize: "clamp(48px, 12vw, 140px)" }}
+      >
+        Rule Your<br />Domain.
+      </h2>
+
+      {/* Action Link */}
+      <Link
+        href="/products"
+        className="font-syne font-bold text-salt text-xs uppercase tracking-[0.2em] mb-24 pb-2 border-b-2 border-salt hover:text-ash hover:border-ash transition-colors z-10"
+      >
+        Shop The Archive
+      </Link>
+
+      {/* Minimalist Newsletter Form */}
+      <div className="w-full max-w-md z-10">
+        <p className="font-syne font-bold text-salt text-sm tracking-widest uppercase mb-3">
+          Stay Informed
+        </p>
+        <p className="font-dm-mono text-xs text-ash mb-8">
+          Drop alerts. No noise. Unsubscribe any time.
+        </p>
+
+        {sent ? (
+          <p className="font-syne font-bold text-signal text-xl uppercase tracking-widest py-4 border-b border-signal inline-block">
+            You're on the list.
+          </p>
+        ) : (
+          <form onSubmit={handleSubmit} className="flex border-b border-ash group hover:border-salt focus-within:border-salt transition-colors">
+            <label htmlFor="newsletter-email" className="sr-only">Email address</label>
+            <input
+              id="newsletter-email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="your@email.com"
+              required
+              autoComplete="email"
+              className="w-full bg-transparent border-none outline-none py-4 font-dm-mono text-sm text-center text-salt placeholder-dim focus:ring-0"
+            />
+            <button
+              type="submit"
+              disabled={loading}
+              aria-label="Subscribe"
+              className="px-4 font-syne font-bold text-salt text-xl group-hover:translate-x-1 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? "..." : "→"}
+            </button>
+          </form>
+        )}
+      </div>
     </section>
   );
 }

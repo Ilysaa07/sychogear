@@ -26,7 +26,7 @@ export default function ScrollReveal() {
 
 function setupObserver() {
   const elements = document.querySelectorAll<HTMLElement>(
-    ".reveal, .reveal-stagger"
+    ".reveal, .reveal-stagger, .reveal-clip, .reveal-scale"
   );
 
   if (!elements.length) return;

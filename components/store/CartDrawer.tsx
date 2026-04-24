@@ -1,34 +1,24 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { HiOutlineX, HiPlus, HiMinus, HiOutlineShoppingBag } from "react-icons/hi";
+import { HiOutlineX, HiPlus, HiMinus } from "react-icons/hi";
 import { useCartStore } from "@/stores/cart-store";
 import { useUIStore } from "@/stores/ui-store";
 import { useCurrency } from "@/components/store/CurrencyProvider";
 import Link from "next/link";
 
 export default function CartDrawer() {
-  const isOpen = useUIStore((s) => s.isCartDrawerOpen);
+  const isOpen  = useUIStore((s) => s.isCartDrawerOpen);
   const setOpen = useUIStore((s) => s.setCartDrawerOpen);
-  const { items, removeItem, updateQuantity, getTotal, getSubtotal, getTotalTax, syncItemPrices } =
-    useCartStore();
+  const { items, removeItem, updateQuantity, getSubtotal, syncItemPrices } = useCartStore();
   const { formatPrice } = useCurrency();
-
   const drawerRef = useRef<HTMLDivElement>(null);
 
-  // Sync prices each time drawer opens
-  useEffect(() => {
-    if (isOpen) {
-      syncItemPrices();
-    }
-  }, [isOpen, syncItemPrices]);
+  useEffect(() => { if (isOpen) syncItemPrices(); }, [isOpen, syncItemPrices]);
 
-  // Trap focus & close on Escape
   useEffect(() => {
     if (!isOpen) return;
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
-    };
+    const handleKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
     window.addEventListener("keydown", handleKey);
     document.body.style.overflow = "hidden";
     drawerRef.current?.focus();
@@ -41,16 +31,11 @@ export default function CartDrawer() {
   if (!isOpen) return null;
 
   const subtotal = getSubtotal();
-  const total = subtotal; // Tax calculated at checkout stage based on location
 
   return (
     <>
       {/* Overlay */}
-      <div
-        className="cart-overlay fade-in"
-        onClick={() => setOpen(false)}
-        aria-hidden="true"
-      />
+      <div className="cart-overlay fade-in" onClick={() => setOpen(false)} aria-hidden="true" />
 
       {/* Drawer */}
       <div
@@ -62,68 +47,74 @@ export default function CartDrawer() {
         tabIndex={-1}
       >
         {/* ─── Header ─────────────────────────────────── */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-ember flex-shrink-0">
-          <div className="flex items-center gap-3">
-            <HiOutlineShoppingBag className="w-4 h-4 text-signal" />
-            <p className="label-syne text-salt">YOUR KIT</p>
-            <span
-              className="text-fog"
-              style={{
-                fontFamily: "var(--font-dm-mono), monospace",
-                fontSize: "0.6875rem",
-                letterSpacing: "0.1em",
-              }}
-            >
-              [{items.length}]
-            </span>
+        <div
+          className="flex items-center justify-between px-6 py-5 flex-shrink-0"
+          style={{ borderBottom: "1px solid var(--ember)" }}
+        >
+          <div>
+            <p className="label-syne text-salt">
+              Your Cart{" "}
+              <span
+                style={{
+                  fontFamily: "var(--font-dm-mono), monospace",
+                  fontSize: "0.75rem",
+                  color: "var(--ash)",
+                  fontWeight: 400,
+                  letterSpacing: "0.05em",
+                }}
+              >
+                ({items.length})
+              </span>
+            </p>
           </div>
           <button
             onClick={() => setOpen(false)}
             className="p-1 text-ash hover:text-salt transition-colors duration-200"
             aria-label="Close cart"
+            style={{ fontSize: "1.25rem", lineHeight: 1 }}
           >
-            <HiOutlineX className="w-4 h-4" />
+            ×
           </button>
         </div>
 
+        {/* Thin signal line under header */}
+        <div style={{ height: "1px", background: "var(--signal)", flexShrink: 0, opacity: 0.3 }} aria-hidden="true" />
+
         {/* ─── Items ──────────────────────────────────── */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto custom-scrollbar">
           {items.length === 0 ? (
             /* Empty state */
-            <div className="flex flex-col items-center justify-center h-full text-center px-8 py-16">
-              <HiOutlineShoppingBag className="w-10 h-10 text-fog mb-8" />
+            <div className="flex flex-col items-start justify-center h-full px-8 py-16">
               <p
-                className="text-fog mb-5"
-                style={{
-                  fontFamily: "var(--font-dm-mono), monospace",
-                  fontSize: "0.75rem",
-                  letterSpacing: "0.15em",
-                }}
+                className="font-metal text-salt mb-6"
+                style={{ fontSize: "clamp(28px, 5vw, 42px)", lineHeight: 1 }}
               >
-                (nothing yet.)
+                Cart is empty.
               </p>
               <button onClick={() => setOpen(false)} className="btn-link text-[10px]">
-                Explore the gear →
+                Explore the archive →
               </button>
             </div>
           ) : (
-            <div className="divide-y divide-ember">
+            <div>
               {items.map((item) => {
-                const itemPrice =
-                  (item.salePrice ?? item.price) *
-                  (1 - (item.discountRate || 0) / 100);
-                const hasDiscount =
-                  item.salePrice || (item.discountRate && item.discountRate > 0);
+                const itemPrice = (item.salePrice ?? item.price) * (1 - (item.discountRate || 0) / 100);
+                const hasDiscount = item.salePrice || (item.discountRate && item.discountRate > 0);
 
                 return (
                   <div
                     key={`${item.productId}-${item.variantId}`}
                     className="flex gap-4 px-6 py-5"
+                    style={{ borderBottom: "1px solid var(--ember)" }}
                   >
                     {/* Thumbnail */}
                     <div
                       className="flex-shrink-0 overflow-hidden bg-dim"
-                      style={{ width: "72px", height: "90px" }}
+                      style={{
+                        width: "72px",
+                        height: "90px",
+                        borderLeft: "2px solid var(--signal)",
+                      }}
                     >
                       <img
                         src={item.image || "/placeholder.svg"}
@@ -136,48 +127,33 @@ export default function CartDrawer() {
                     {/* Info */}
                     <div className="flex-1 min-w-0 flex flex-col justify-between">
                       <div>
-                        <p
-                          className="text-salt truncate"
-                          style={{
-                            fontFamily: "var(--font-syne), system-ui, sans-serif",
-                            fontSize: "0.75rem",
-                            fontWeight: 600,
-                            letterSpacing: "0.08em",
-                            textTransform: "uppercase",
-                            lineHeight: 1.4,
-                          }}
-                        >
+                        <p style={{
+                          fontFamily: "var(--font-syne), system-ui, sans-serif",
+                          fontSize: "0.75rem",
+                          fontWeight: 600,
+                          letterSpacing: "0.08em",
+                          textTransform: "uppercase",
+                          color: "var(--salt)",
+                          lineHeight: 1.4,
+                        }}>
                           {item.name}
                         </p>
-                        <p
-                          className="text-ash mt-1"
-                          style={{
-                            fontFamily: "var(--font-dm-mono), monospace",
-                            fontSize: "0.6875rem",
-                            letterSpacing: "0.15em",
-                            textTransform: "uppercase",
-                          }}
-                        >
-                          SIZE / {item.size}
+                        <p style={{
+                          fontFamily: "var(--font-dm-mono), monospace",
+                          fontSize: "0.5625rem",
+                          letterSpacing: "0.2em",
+                          textTransform: "uppercase",
+                          color: "var(--ash)",
+                          marginTop: "2px",
+                        }}>
+                          Size / {item.size}
                         </p>
                         <div className="flex items-baseline gap-2 mt-1">
-                          <p
-                            className="text-signal"
-                            style={{
-                              fontFamily: "var(--font-dm-mono), monospace",
-                              fontSize: "0.8125rem",
-                            }}
-                          >
+                          <p style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.8125rem", color: "var(--signal)" }}>
                             {formatPrice(itemPrice)}
                           </p>
                           {hasDiscount && (
-                            <p
-                              className="text-fog line-through"
-                              style={{
-                                fontFamily: "var(--font-dm-mono), monospace",
-                                fontSize: "0.6875rem",
-                              }}
-                            >
+                            <p style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.6875rem", color: "var(--fog)", textDecoration: "line-through" }}>
                               {formatPrice(item.price)}
                             </p>
                           )}
@@ -186,42 +162,31 @@ export default function CartDrawer() {
 
                       {/* Qty + Remove */}
                       <div className="flex items-center justify-between mt-3">
-                        {/* Qty controls — inline, minimal */}
                         <div className="flex items-center gap-3">
                           <button
-                            onClick={() =>
-                              updateQuantity(item.productId, item.variantId, item.quantity - 1)
-                            }
+                            onClick={() => updateQuantity(item.productId, item.variantId, item.quantity - 1)}
                             className="text-ash hover:text-salt transition-colors w-5 h-5 flex items-center justify-center"
                             aria-label="Decrease quantity"
                           >
                             <HiMinus className="w-3 h-3" />
                           </button>
-                          <span
-                            className="text-salt w-4 text-center"
-                            style={{
-                              fontFamily: "var(--font-dm-mono), monospace",
-                              fontSize: "0.8125rem",
-                            }}
-                          >
+                          <span style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.8125rem", color: "var(--salt)", width: "16px", textAlign: "center" }}>
                             {item.quantity}
                           </span>
                           <button
-                            onClick={() =>
-                              updateQuantity(item.productId, item.variantId, item.quantity + 1)
-                            }
+                            onClick={() => updateQuantity(item.productId, item.variantId, item.quantity + 1)}
                             className="text-ash hover:text-salt transition-colors w-5 h-5 flex items-center justify-center"
                             aria-label="Increase quantity"
                           >
                             <HiPlus className="w-3 h-3" />
                           </button>
                         </div>
-
-                        {/* Remove */}
                         <button
                           onClick={() => removeItem(item.productId, item.variantId)}
-                          className="btn-link text-[10px] text-fog hover:text-error"
-                          style={{ borderBottomColor: "transparent" }}
+                          className="btn-link text-[9px]"
+                          style={{ color: "var(--fog)", borderBottomColor: "transparent" }}
+                          onMouseEnter={e => (e.currentTarget.style.color = "var(--redline)")}
+                          onMouseLeave={e => (e.currentTarget.style.color = "var(--fog)")}
                         >
                           Remove
                         </button>
@@ -236,72 +201,40 @@ export default function CartDrawer() {
 
         {/* ─── Footer — Totals + CTA ───────────────────── */}
         {items.length > 0 && (
-          <div className="border-t border-ember px-6 py-6 flex-shrink-0 space-y-4">
-            {/* Totals — invoice style */}
+          <div
+            className="flex-shrink-0 px-6 py-6 space-y-4"
+            style={{ borderTop: "1px solid var(--ember)" }}
+          >
+            {/* Totals */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span
-                  className="text-ash"
-                  style={{
-                    fontFamily: "var(--font-dm-mono), monospace",
-                    fontSize: "0.6875rem",
-                    letterSpacing: "0.15em",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  SUBTOTAL
+                <span style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.5625rem", letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--ash)" }}>
+                  Subtotal
                 </span>
-                <span
-                  className="text-pale"
-                  style={{
-                    fontFamily: "var(--font-dm-mono), monospace",
-                    fontSize: "0.8125rem",
-                  }}
-                >
+                <span style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.8125rem", color: "var(--pale)" }}>
                   {formatPrice(subtotal)}
                 </span>
               </div>
-
-
-
-              {/* Divider */}
-              <div className="section-divider" />
-
+              <div style={{ height: "1px", background: "var(--ember)" }} />
               <div className="flex items-center justify-between pt-1">
-                <span
-                  className="text-salt"
-                  style={{
-                    fontFamily: "var(--font-syne), system-ui, sans-serif",
-                    fontSize: "0.75rem",
-                    fontWeight: 600,
-                    letterSpacing: "0.2em",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  TOTAL
+                <span style={{ fontFamily: "var(--font-syne), system-ui, sans-serif", fontSize: "0.75rem", fontWeight: 600, letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--salt)" }}>
+                  Total
                 </span>
-                <span
-                  className="text-signal"
-                  style={{
-                    fontFamily: "var(--font-dm-mono), monospace",
-                    fontSize: "1.125rem",
-                    fontWeight: 500,
-                  }}
-                >
-                  {formatPrice(total)}
+                <span style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "1.125rem", fontWeight: 500, color: "var(--signal)" }}>
+                  {formatPrice(subtotal)}
                 </span>
               </div>
             </div>
 
-            {/* Checkout CTA */}
+            {/* CTA */}
             <Link
               href="/checkout"
               onClick={() => setOpen(false)}
               className="btn-primary w-full text-center block py-4"
               id="cart-checkout-btn"
-              style={{ fontSize: "0.75rem", letterSpacing: "0.2em" }}
+              style={{ fontSize: "0.625rem", letterSpacing: "0.3em" }}
             >
-              PROCEED →
+              Checkout →
             </Link>
           </div>
         )}

@@ -23,40 +23,32 @@ export default function PromoModal({ settings }: { settings: PromoSettings }) {
   useEffect(() => {
     if (!settings.active || hasShownInMemory) return;
     setHasRendered(true);
-
-    // Show after 2s delay — let the page settle first
     const timer = setTimeout(() => {
       setIsOpen(true);
       hasShownInMemory = true;
-      // Trigger entrance transition
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => setIsVisible(true));
-      });
+      requestAnimationFrame(() => requestAnimationFrame(() => setIsVisible(true)));
     }, 2000);
-
     return () => clearTimeout(timer);
   }, [settings.active]);
 
-  // Close on Escape
   useEffect(() => {
     if (!isOpen) return;
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") handleClose();
-    };
+    const handleKey = (e: KeyboardEvent) => { if (e.key === "Escape") handleClose(); };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
   }, [isOpen]);
 
   const handleClose = () => {
     setIsVisible(false);
-    setTimeout(() => setIsOpen(false), 400);
+    setTimeout(() => {
+      setIsOpen(false);
+      window.dispatchEvent(new CustomEvent("promoClosed"));
+    }, 450);
   };
 
   if (!hasRendered || !isOpen || !settings.active) return null;
 
-  const titleLines = settings.title
-    ? settings.title.split("\\n")
-    : ["New Arrival"];
+  const titleLines = settings.title ? settings.title.split("\\n") : ["New Arrival"];
 
   return (
     <div
@@ -67,113 +59,85 @@ export default function PromoModal({ settings }: { settings: PromoSettings }) {
     >
       {/* Backdrop */}
       <div
-        className="absolute inset-0 transition-opacity duration-400"
+        className="absolute inset-0 transition-opacity duration-500"
         style={{
-          background: "rgba(8, 8, 8, 0.8)",
-          backdropFilter: "blur(4px)",
+          background: "rgba(8, 8, 8, 0.88)",
+          backdropFilter: "blur(6px)",
           opacity: isVisible ? 1 : 0,
         }}
         onClick={handleClose}
         aria-hidden="true"
       />
 
-      {/* Modal */}
+      {/* Modal — clean scale entrance */}
       <div
-        className="relative z-10 overflow-hidden"
+        className="relative z-10 w-full max-w-[680px] bg-void border border-ember overflow-hidden"
         style={{
-          width: "100%",
-          maxWidth: "340px",
-          background: "var(--abyss)",
-          border: "1px solid var(--ember)",
           opacity: isVisible ? 1 : 0,
-          transform: isVisible ? "translateY(0)" : "translateY(20px)",
-          transition: "opacity 400ms ease, transform 400ms var(--ease-compose)",
+          transform: isVisible ? "scale(1)" : "scale(0.96)",
+          transition: "opacity 450ms ease, transform 450ms var(--ease-out-expo)",
         }}
       >
-        {/* Close button — absolute top right */}
+        {/* Close button */}
         <button
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            handleClose();
-          }}
-          className="absolute top-4 right-4 z-30 text-ash hover:text-salt transition-colors duration-200"
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleClose(); }}
+          className="absolute top-4 right-4 z-30 group flex items-center justify-center w-8 h-8 rounded-full bg-void/50 text-salt hover:bg-salt hover:text-void transition-colors duration-300"
           aria-label="Close"
-          style={{
-            fontFamily: "var(--font-dm-mono), monospace",
-            fontSize: "1.25rem",
-            lineHeight: 1,
-            padding: "4px",
-          }}
         >
-          ×
+          <span className="text-xl leading-none">×</span>
         </button>
 
-        {/* Image — full width, 16:10 aspect */}
-        {settings.image && (
-          <div
-            className="relative w-full overflow-hidden"
-            style={{ aspectRatio: "4 / 3" }}
-          >
-            <Image
-              src={settings.image}
-              alt={settings.title}
-              fill
-              className="object-cover"
+        <div className="grid grid-cols-1 md:grid-cols-2">
+          {/* Image Panel */}
+          {settings.image && (
+            <div className="relative aspect-[4/3] md:aspect-auto md:h-full min-h-[260px] overflow-hidden" style={{ borderRight: "1px solid var(--ember)" }}>
+              <Image
+                src={settings.image}
+                alt={settings.title}
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, 340px"
+              />
+            </div>
+          )}
+
+          {/* Content Panel */}
+          <div className="p-8 md:p-10 flex flex-col justify-center">
+            {/* Eyebrow */}
+            <p
+              className="mb-4 text-ash"
+              style={{ fontFamily: "var(--font-syne), sans-serif", fontSize: "0.6875rem", fontWeight: 600, letterSpacing: "0.2em", textTransform: "uppercase" }}
+            >
+              {settings.subtitle || "Latest Drop"}
+            </p>
+
+            {/* Title */}
+            <h2
+              className="font-syne text-salt mb-8"
               style={{
-                filter: "grayscale(15%) brightness(0.85) contrast(1.1)",
+                fontSize: "clamp(28px, 4vw, 42px)",
+                fontWeight: 700,
+                lineHeight: 1.1,
+                textTransform: "uppercase"
               }}
-              sizes="340px"
-            />
-            {/* Bottom gradient for text readability */}
-            <div
-              className="absolute inset-0"
-              style={{
-                background:
-                  "linear-gradient(to top, rgba(15,15,15,0.7) 0%, transparent 60%)",
-              }}
-            />
+            >
+              {titleLines.map((line, i) => (
+                <span key={i} className="block">{line}</span>
+              ))}
+            </h2>
+
+            {/* CTAs */}
+            <div className="space-y-3">
+              <Link
+                href={settings.linkUrl}
+                onClick={handleClose}
+                className="btn-primary w-full text-center py-4"
+                id="promo-modal-cta"
+              >
+                {settings.linkText || "Shop Now"}
+              </Link>
+            </div>
           </div>
-        )}
-
-        {/* Content */}
-        <div className="p-6">
-          {/* Eyebrow */}
-          <p className="label-eyebrow mb-3">{settings.subtitle}</p>
-
-          {/* Title */}
-          <h2
-            className="font-display text-salt mb-6"
-            style={{
-              fontSize: "clamp(28px, 5vw, 40px)",
-              lineHeight: 0.95,
-            }}
-          >
-            {titleLines.map((line, i) => (
-              <span key={i}>
-                {line}
-                {i < titleLines.length - 1 && <br />}
-              </span>
-            ))}
-          </h2>
-
-          {/* CTA */}
-          <Link
-            href={settings.linkUrl}
-            onClick={handleClose}
-            className="btn-primary block text-center py-3.5 text-xs"
-            id="promo-modal-cta"
-          >
-            {settings.linkText || "Explore"} ↗
-          </Link>
-
-          {/* Dismiss */}
-          <button
-            onClick={handleClose}
-            className="btn-link w-full justify-center mt-4 text-[10px]"
-          >
-            No thanks
-          </button>
         </div>
       </div>
     </div>

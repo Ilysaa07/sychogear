@@ -16,8 +16,6 @@ import {
   HiOutlineShoppingBag,
   HiOutlineGlobeAlt,
   HiOutlineUser,
-  HiOutlineMail,
-  HiOutlinePhone,
   HiOutlineLocationMarker,
   HiOutlineSearch,
   HiChevronDown,
@@ -159,26 +157,18 @@ export default function CheckoutPage() {
         className="min-h-screen bg-void flex flex-col items-center justify-center text-center px-6"
         style={{ paddingTop: "clamp(100px, 16vw, 160px)" }}
       >
-        <HiOutlineShoppingBag className="w-10 h-10 text-fog mb-6" />
+        <HiOutlineShoppingBag className="w-10 h-10 text-ash mb-6" />
         <h1
-          className="font-display text-salt mb-3"
+          className="font-syne text-salt mb-4 uppercase font-bold"
           style={{ fontSize: "clamp(32px, 5vw, 52px)", lineHeight: 0.95 }}
         >
           Your cart is empty.
         </h1>
-        <p
-          className="text-ash mb-10"
-          style={{
-            fontFamily: "var(--font-dm-mono), monospace",
-            fontSize: "0.8125rem",
-            maxWidth: "380px",
-            lineHeight: 1.7,
-          }}
-        >
+        <p className="font-dm-mono text-ash mb-10 max-w-[380px] text-sm">
           Add products to your cart before proceeding to checkout.
         </p>
         <Link href="/products" className="btn-primary py-4 px-10">
-          Explore Archive ↗
+          Explore Archive
         </Link>
       </div>
     );
@@ -255,10 +245,9 @@ export default function CheckoutPage() {
       >
         {/* Page heading */}
         <div className="mb-12 pb-8 border-b border-ember">
-          <p className="label-eyebrow mb-3">Complete your order</p>
           <h1
-            className="font-display text-salt"
-            style={{ fontSize: "clamp(48px, 8vw, 88px)", lineHeight: 0.9 }}
+            className="font-syne font-bold text-salt uppercase"
+            style={{ fontSize: "clamp(42px, 8vw, 80px)", lineHeight: 0.88 }}
           >
             Checkout
           </h1>
@@ -270,22 +259,16 @@ export default function CheckoutPage() {
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
 
             {/* ── Contact Information ── */}
-            <div
-              className="p-6 space-y-6"
-              style={{ background: "var(--abyss)", border: "1px solid var(--ember)" }}
-            >
+            <div className="space-y-6">
               <div className="flex items-center gap-3 pb-4 border-b border-ember">
-                <HiOutlineUser className="w-4 h-4 text-signal flex-shrink-0" />
-                <p className="label-syne text-salt">Contact Information</p>
+                <HiOutlineUser className="w-5 h-5 text-salt flex-shrink-0" />
+                <p className="font-syne font-bold text-salt uppercase tracking-widest text-sm">Contact Information</p>
               </div>
 
               {/* Full Name */}
               <div>
-                <label
-                  htmlFor="fullName"
-                  className="label-eyebrow block mb-3"
-                >
-                  Full Name <span style={{ color: "var(--error)" }}>*</span>
+                <label htmlFor="fullName" className="font-syne font-bold text-ash text-xs uppercase tracking-widest block mb-3">
+                  Full Name <span className="text-signal">*</span>
                 </label>
                 <input
                   {...register("fullName")}
@@ -295,14 +278,14 @@ export default function CheckoutPage() {
                   autoComplete="name"
                 />
                 {errors.fullName && (
-                  <p className="mt-1" style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.6875rem", color: "var(--error)" }}>{errors.fullName.message}</p>
+                  <p className="mt-1 font-dm-mono text-xs text-signal">{errors.fullName.message}</p>
                 )}
               </div>
 
               {/* Email */}
               <div>
-                <label htmlFor="email" className="label-eyebrow block mb-3">
-                  Email Address <span style={{ color: "var(--error)" }}>*</span>
+                <label htmlFor="email" className="font-syne font-bold text-ash text-xs uppercase tracking-widest block mb-3">
+                  Email Address <span className="text-signal">*</span>
                 </label>
                 <input
                   {...register("email")}
@@ -313,23 +296,19 @@ export default function CheckoutPage() {
                   autoComplete="email"
                 />
                 {errors.email && (
-                  <p className="mt-1" style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.6875rem", color: "var(--error)" }}>{errors.email.message}</p>
+                  <p className="mt-1 font-dm-mono text-xs text-signal">{errors.email.message}</p>
                 )}
               </div>
 
               {/* Phone */}
               <div>
-                <label htmlFor="phone" className="label-eyebrow block mb-3">
-                  Phone Number{" "}
-                  <span style={{ color: "var(--error)" }}>*</span>
-                  <span style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.6875rem", color: "var(--ash)", textTransform: "none", letterSpacing: "0", marginLeft: "8px" }}>(WhatsApp preferred)</span>
+                <label htmlFor="phone" className="font-syne font-bold text-ash text-xs uppercase tracking-widest block mb-3">
+                  Phone Number <span className="text-signal">*</span>
+                  <span className="font-dm-mono text-[10px] text-ash normal-case tracking-normal ml-2">(WhatsApp preferred)</span>
                 </label>
                 <div className="relative">
                   {countryInfo && (
-                    <span
-                      className="absolute top-1/2 -translate-y-1/2 pointer-events-none select-none"
-                      style={{ left: 0, fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.8125rem", color: "var(--ash)" }}
-                    >
+                    <span className="absolute top-1/2 -translate-y-1/2 left-0 font-dm-mono text-sm text-salt pointer-events-none select-none">
                       {countryInfo.phonePrefix}
                     </span>
                   )}
@@ -342,45 +321,34 @@ export default function CheckoutPage() {
                   />
                 </div>
                 {errors.phone && (
-                  <p className="mt-1" style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.6875rem", color: "var(--error)" }}>{errors.phone.message}</p>
+                  <p className="mt-1 font-dm-mono text-xs text-signal">{errors.phone.message}</p>
                 )}
-                <p
-                  className="mt-2"
-                  style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.6875rem", color: "var(--ash)", letterSpacing: "0.05em" }}
-                >
+                <p className="mt-2 font-dm-mono text-xs text-ash">
                   We'll use this number to confirm your order via WhatsApp.
                 </p>
               </div>
             </div>
 
             {/* ── Shipping Address ── */}
-            <div
-              className="p-6 space-y-6"
-              style={{ background: "var(--abyss)", border: "1px solid var(--ember)" }}
-            >
+            <div className="space-y-6 pt-6 mt-6">
               <div className="flex items-center gap-3 pb-4 border-b border-ember">
-                <HiOutlineLocationMarker className="w-4 h-4 text-signal flex-shrink-0" />
-                <p className="label-syne text-salt">Shipping Address</p>
+                <HiOutlineLocationMarker className="w-5 h-5 text-salt flex-shrink-0" />
+                <p className="font-syne font-bold text-salt uppercase tracking-widest text-sm">Shipping Address</p>
               </div>
 
               {/* Country Dropdown */}
               <div>
-                <label className="label-eyebrow block mb-3">
-                  Country <span style={{ color: "var(--error)" }}>*</span>
+                <label className="font-syne font-bold text-ash text-xs uppercase tracking-widest block mb-3">
+                  Country <span className="text-signal">*</span>
                 </label>
                 <div className="relative" ref={dropdownRef}>
-                  {/* Trigger */}
                   <button
                     id="country-selector"
                     type="button"
                     onClick={() => setCountryDropdownOpen(!countryDropdownOpen)}
-                    className="w-full flex items-center justify-between gap-2 text-left py-3"
-                    style={{ borderBottom: `1px solid ${countryDropdownOpen ? "var(--signal)" : "var(--ember)"}`, background: "transparent", transition: "border-color 200ms ease" }}
+                    className={`w-full flex items-center justify-between gap-2 text-left py-3 border-b transition-colors ${countryDropdownOpen ? "border-salt" : "border-ember"}`}
                   >
-                    <span
-                      className="flex items-center gap-2"
-                      style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.8125rem", color: countryInfo ? "var(--salt)" : "var(--fog)" }}
-                    >
+                    <span className="flex items-center gap-2 font-dm-mono text-sm">
                       {countryInfo ? (
                         <>
                           <span className="w-5 h-3.5 overflow-hidden flex-shrink-0">
@@ -390,41 +358,29 @@ export default function CheckoutPage() {
                               className="w-full h-full object-cover"
                             />
                           </span>
-                          <span>{countryInfo.name}</span>
+                          <span className="text-salt">{countryInfo.name}</span>
                         </>
                       ) : (
-                        <span>Select your country</span>
+                        <span className="text-ash">Select your country</span>
                       )}
                     </span>
-                    <HiChevronDown
-                      className={`w-3.5 h-3.5 flex-shrink-0 transition-transform duration-200 ${countryDropdownOpen ? "rotate-180" : ""}`}
-                      style={{ color: "var(--ash)" }}
-                    />
+                    <HiChevronDown className={`w-4 h-4 text-ash transition-transform duration-200 ${countryDropdownOpen ? "rotate-180" : ""}`} />
                   </button>
 
-                  {/* Dropdown Panel */}
                   {countryDropdownOpen && (
-                    <div
-                      className="absolute z-50 top-full left-0 right-0 mt-1 overflow-hidden"
-                      style={{ background: "var(--abyss)", border: "1px solid var(--ember)", boxShadow: "0 24px 48px rgba(0,0,0,0.6)" }}
-                    >
-                      {/* Search */}
-                      <div className="p-3" style={{ borderBottom: "1px solid var(--ember)" }}>
-                        <div className="relative">
-                          <HiOutlineSearch className="absolute left-0 top-1/2 -translate-y-1/2 w-3.5 h-3.5" style={{ color: "var(--ash)" }} />
-                          <input
-                            type="text"
-                            value={countrySearch}
-                            onChange={e => setCountrySearch(e.target.value)}
-                            className="w-full pl-6 py-2"
-                            style={{ background: "transparent", border: "none", borderBottom: "1px solid var(--ember)", fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.75rem", color: "var(--salt)", outline: "none" }}
-                            placeholder="Search country..."
-                            autoFocus
-                          />
-                        </div>
+                    <div className="absolute z-50 top-full left-0 right-0 mt-1 overflow-hidden bg-abyss border border-ember shadow-2xl">
+                      <div className="p-3 border-b border-ember relative">
+                        <HiOutlineSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ash" />
+                        <input
+                          type="text"
+                          value={countrySearch}
+                          onChange={e => setCountrySearch(e.target.value)}
+                          className="w-full pl-8 py-2 bg-transparent border-b border-ember font-dm-mono text-sm text-salt outline-none focus:border-salt transition-colors"
+                          placeholder="Search country..."
+                          autoFocus
+                        />
                       </div>
-                      {/* List */}
-                      <div className="max-h-56 overflow-y-auto hide-scrollbar">
+                      <div className="max-h-56 overflow-y-auto custom-scrollbar">
                         {countrySearch ? (
                           filteredCountries.length > 0 ? (
                             filteredCountries.map(c => (
@@ -432,28 +388,24 @@ export default function CheckoutPage() {
                                 key={c.code}
                                 type="button"
                                 onClick={() => handleCountrySelect(c.code)}
-                                className="w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-dim"
-                                style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.75rem", color: selectedCountry === c.code ? "var(--signal)" : "var(--ash)" }}
+                                className="w-full flex items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-dim font-dm-mono text-sm"
                               >
                                 <span className="w-5 h-3.5 overflow-hidden flex-shrink-0">
                                   <img src={`https://flagcdn.com/w40/${c.code.toLowerCase()}.png`} alt={c.name} className="w-full h-full object-cover" />
                                 </span>
-                                <span>{c.name}</span>
-                                <span className="ml-auto" style={{ color: "var(--fog)", fontSize: "0.625rem" }}>{c.code}</span>
+                                <span className={selectedCountry === c.code ? "text-salt font-medium" : "text-ash"}>{c.name}</span>
+                                <span className="ml-auto text-xs text-ash">{c.code}</span>
                               </button>
                             ))
                           ) : (
-                            <p className="text-center py-6" style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.75rem", color: "var(--fog)" }}>No countries found</p>
+                            <p className="text-center py-6 font-dm-mono text-sm text-ash">No countries found</p>
                           )
                         ) : (
                           regions.map(region => {
                             const regionCountries = WORLDWIDE_COUNTRIES.filter(c => c.region === region);
                             return (
                               <div key={region}>
-                                <p
-                                  className="px-4 pt-4 pb-1"
-                                  style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.5625rem", color: "var(--fog)", letterSpacing: "0.25em", textTransform: "uppercase" }}
-                                >
+                                <p className="px-4 pt-4 pb-2 font-syne font-bold text-[10px] text-ash uppercase tracking-widest bg-dim">
                                   {region}
                                 </p>
                                 {regionCountries.map(c => (
@@ -461,14 +413,13 @@ export default function CheckoutPage() {
                                     key={c.code}
                                     type="button"
                                     onClick={() => handleCountrySelect(c.code)}
-                                    className="w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-dim"
-                                    style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.75rem", color: selectedCountry === c.code ? "var(--signal)" : "var(--ash)" }}
+                                    className="w-full flex items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-dim font-dm-mono text-sm"
                                   >
                                     <span className="w-5 h-3.5 overflow-hidden flex-shrink-0">
                                       <img src={`https://flagcdn.com/w40/${c.code.toLowerCase()}.png`} alt={c.name} className="w-full h-full object-cover" />
                                     </span>
-                                    <span>{c.name}</span>
-                                    <span className="ml-auto" style={{ color: "var(--fog)", fontSize: "0.625rem" }}>{c.code}</span>
+                                    <span className={selectedCountry === c.code ? "text-salt font-medium" : "text-ash"}>{c.name}</span>
+                                    <span className="ml-auto text-xs text-ash">{c.code}</span>
                                   </button>
                                 ))}
                               </div>
@@ -478,18 +429,17 @@ export default function CheckoutPage() {
                       </div>
                     </div>
                   )}
-                  {/* Hidden input for react-hook-form */}
                   <input type="hidden" {...register("country")} />
                 </div>
                 {errors.country && (
-                  <p className="mt-1" style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.6875rem", color: "var(--error)" }}>{errors.country.message}</p>
+                  <p className="mt-1 font-dm-mono text-xs text-signal">{errors.country.message}</p>
                 )}
               </div>
 
               {/* Street Address */}
               <div>
-                <label htmlFor="streetAddress" className="label-eyebrow block mb-3">
-                  Street Address <span style={{ color: "var(--error)" }}>*</span>
+                <label htmlFor="streetAddress" className="font-syne font-bold text-ash text-xs uppercase tracking-widest block mb-3">
+                  Street Address <span className="text-signal">*</span>
                 </label>
                 <input
                   {...register("streetAddress")}
@@ -499,15 +449,14 @@ export default function CheckoutPage() {
                   autoComplete="address-line1"
                 />
                 {errors.streetAddress && (
-                  <p className="mt-1" style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.6875rem", color: "var(--error)" }}>{errors.streetAddress.message}</p>
+                  <p className="mt-1 font-dm-mono text-xs text-signal">{errors.streetAddress.message}</p>
                 )}
               </div>
 
               {/* Apartment */}
               <div>
-                <label htmlFor="apartment" className="label-eyebrow block mb-3">
-                  Apartment, suite, etc.{" "}
-                  <span style={{ color: "var(--fog)", textTransform: "none", letterSpacing: 0 }}>(optional)</span>
+                <label htmlFor="apartment" className="font-syne font-bold text-ash text-xs uppercase tracking-widest block mb-3">
+                  Apartment, suite, etc. <span className="font-dm-mono normal-case tracking-normal text-[10px] text-ash">(optional)</span>
                 </label>
                 <input
                   {...register("apartment")}
@@ -521,54 +470,42 @@ export default function CheckoutPage() {
               {/* City + State/Province */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="city" className="label-eyebrow block mb-3">
-                    City <span style={{ color: "var(--error)" }}>*</span>
+                  <label htmlFor="city" className="font-syne font-bold text-ash text-xs uppercase tracking-widest block mb-3">
+                    City <span className="text-signal">*</span>
                   </label>
                   <input {...register("city")} id="city" className="input-field" placeholder="e.g. Singapore" autoComplete="address-level2" />
-                  {errors.city && (<p className="mt-1" style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.6875rem", color: "var(--error)" }}>{errors.city.message}</p>)}
+                  {errors.city && (<p className="mt-1 font-dm-mono text-xs text-signal">{errors.city.message}</p>)}
                 </div>
                 <div>
-                  <label htmlFor="stateProvince" className="label-eyebrow block mb-3">
-                    Province / State <span style={{ color: "var(--error)" }}>*</span>
+                  <label htmlFor="stateProvince" className="font-syne font-bold text-ash text-xs uppercase tracking-widest block mb-3">
+                    Province / State <span className="text-signal">*</span>
                   </label>
                   <input {...register("stateProvince")} id="stateProvince" className="input-field" placeholder="e.g. Central Region" autoComplete="address-level1" />
-                  {errors.stateProvince && (<p className="mt-1" style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.6875rem", color: "var(--error)" }}>{errors.stateProvince.message}</p>)}
+                  {errors.stateProvince && (<p className="mt-1 font-dm-mono text-xs text-signal">{errors.stateProvince.message}</p>)}
                 </div>
               </div>
 
               {/* ZIP / Postal Code */}
               <div>
-                <label htmlFor="zipCode" className="label-eyebrow block mb-3">
-                  Postal Code <span style={{ color: "var(--error)" }}>*</span>
+                <label htmlFor="zipCode" className="font-syne font-bold text-ash text-xs uppercase tracking-widest block mb-3">
+                  Postal Code <span className="text-signal">*</span>
                 </label>
                 <input {...register("zipCode")} id="zipCode" className="input-field" style={{ maxWidth: "200px" }} placeholder="e.g. 238801" autoComplete="postal-code" />
-                {errors.zipCode && (<p className="mt-1" style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.6875rem", color: "var(--error)" }}>{errors.zipCode.message}</p>)}
+                {errors.zipCode && (<p className="mt-1 font-dm-mono text-xs text-signal">{errors.zipCode.message}</p>)}
               </div>
 
               {/* Shipping Notice */}
-              <div
-                className="flex items-start gap-3 p-4"
-                style={{ background: "var(--dim)", border: "1px solid var(--ember)" }}
-              >
-                <HiOutlineGlobeAlt className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: isInternational ? "var(--signal)" : "var(--ash)" }} />
+              <div className="flex items-start gap-3 p-4 bg-abyss border border-ember mt-4">
+                <HiOutlineGlobeAlt className={`w-5 h-5 flex-shrink-0 mt-0.5 ${isInternational ? "text-salt" : "text-ash"}`} />
                 <div>
-                  <p
-                    style={{ fontFamily: "var(--font-syne), system-ui, sans-serif", fontSize: "0.6875rem", fontWeight: 600, letterSpacing: "0.15em", textTransform: "uppercase", color: isInternational ? "var(--signal)" : "var(--pale)" }}
-                  >
-                    {isInternational
-                        ? "International Delivery"
-                        : "Domestic Delivery (Indonesia)"}
+                  <p className={`font-syne font-bold text-xs tracking-widest uppercase mb-1 ${isInternational ? "text-salt" : "text-ash"}`}>
+                    {isInternational ? "International Delivery" : "Domestic Delivery (Indonesia)"}
                   </p>
-                  <p
-                    className="mt-1 mb-2"
-                    style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.6875rem", color: "var(--ash)", letterSpacing: "0.05em" }}
-                  >
-                    {isInternational
-                      ? "Est. 3–14 days"
-                      : "Domestic standard delivery"}
+                  <p className="font-dm-mono text-xs text-ash mb-3">
+                    {isInternational ? "Est. 3–14 days" : "Domestic standard delivery"}
                   </p>
-                  <div className="p-2.5 rounded bg-black/40 border border-signal/20">
-                    <p style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.625rem", color: "var(--signal)", lineHeight: 1.5 }}>
+                  <div className="p-3 bg-dim border border-ember">
+                    <p className="font-dm-mono text-[11px] text-ash leading-relaxed">
                       * Price does not include shipping fee. Please complete the checkout first and contact our CS via WhatsApp to coordinate shipping costs.
                     </p>
                   </div>
@@ -577,38 +514,30 @@ export default function CheckoutPage() {
             </div>
 
             {/* ── Payment Method ── */}
-            <div
-              className="p-6"
-              style={{ background: "var(--abyss)", border: "1px solid var(--ember)" }}
-            >
-              <div className="flex items-center gap-3 pb-4 mb-4 border-b border-ember">
-                <svg viewBox="0 0 24 24" className="w-4 h-4 flex-shrink-0" style={{ color: "var(--signal)" }} fill="none" stroke="currentColor" strokeWidth="2">
+            <div className="pt-6 mt-6">
+              <div className="flex items-center gap-3 pb-4 mb-6 border-b border-ember">
+                <svg viewBox="0 0 24 24" className="w-5 h-5 flex-shrink-0 text-salt" fill="none" stroke="currentColor" strokeWidth="2">
                   <rect x="2" y="5" width="20" height="14"/>
                   <path d="M2 10h20"/>
                 </svg>
-                <p className="label-syne text-salt">Payment Method</p>
+                <p className="font-syne font-bold text-salt uppercase tracking-widest text-sm">Payment Method</p>
               </div>
-              <div className="flex items-center gap-4 p-4" style={{ background: "var(--dim)", border: "1px solid var(--ember)" }}>
-                <div className="w-12 h-auto flex-shrink-0 bg-white rounded p-1 flex items-center justify-center">
+              <div className="flex items-center gap-4 p-5 bg-abyss border border-ember">
+                <div className="w-14 h-auto flex-shrink-0 bg-white p-1.5 flex items-center justify-center">
                   <img src="/images/bca.png" alt="BCA Logo" className="w-full h-auto object-contain" />
                 </div>
                 <div>
-                  <p style={{ fontFamily: "var(--font-syne), system-ui, sans-serif", fontSize: "0.75rem", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--salt)" }}>Bank Transfer (BCA)</p>
-                  <p className="mt-1" style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.6875rem", color: "var(--ash)", letterSpacing: "0.05em" }}>
-                    {isInternational
-                      ? "International bank transfer · Confirm via WhatsApp"
-                      : "Domestic bank transfer · Confirm via WhatsApp"}
+                  <p className="font-syne font-bold text-salt text-sm tracking-widest uppercase mb-1">Bank Transfer (BCA)</p>
+                  <p className="font-dm-mono text-xs text-ash">
+                    {isInternational ? "International bank transfer · Confirm via WhatsApp" : "Domestic bank transfer · Confirm via WhatsApp"}
                   </p>
                 </div>
               </div>
             </div>
 
             {/* ── Coupon ── */}
-            <div
-              className="p-6"
-              style={{ background: "var(--abyss)", border: "1px solid var(--ember)" }}
-            >
-              <p className="label-syne text-salt mb-6">Coupon Code</p>
+            <div className="pt-6 mt-6">
+              <p className="font-syne font-bold text-salt uppercase tracking-widest text-sm mb-4">Coupon Code</p>
               <div className="flex gap-4">
                 <input
                   value={couponCode}
@@ -624,132 +553,137 @@ export default function CheckoutPage() {
                   placeholder="Enter code"
                 />
                 {!appliedCoupon ? (
-                  <button type="button" onClick={handleApplyCoupon} disabled={!couponCode || validatingCoupon} className="btn-ghost text-xs whitespace-nowrap py-2 px-5 disabled:opacity-40">
-                    {validatingCoupon ? "…" : "Apply"}
+                  <button type="button" onClick={handleApplyCoupon} disabled={!couponCode || validatingCoupon} className="btn-ghost px-6 py-0 disabled:opacity-40 uppercase tracking-widest font-syne font-bold text-xs">
+                    {validatingCoupon ? "..." : "Apply"}
                   </button>
                 ) : (
-                  <button type="button" onClick={handleRemoveCoupon} className="btn-ghost text-xs whitespace-nowrap py-2 px-5" style={{ borderColor: "var(--error)", color: "var(--error)" }}>
+                  <button type="button" onClick={handleRemoveCoupon} className="btn-ghost px-6 py-0 uppercase tracking-widest font-syne font-bold text-xs text-signal border-signal hover:bg-signal hover:text-void">
                     Remove
                   </button>
                 )}
               </div>
               {appliedCoupon && (
-                <p className="mt-3" style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.6875rem", color: "var(--success)", letterSpacing: "0.05em" }}>
-                  ✓ Coupon applied — {formatCurrency(discountAmount)} off
+                <p className="mt-3 font-dm-mono text-xs text-salt bg-abyss border border-salt px-3 py-2 inline-block">
+                  ✓ Coupon applied: -{formatCurrency(discountAmount)}
                 </p>
               )}
             </div>
 
             {/* ── Submit ── */}
-            <button
-              type="submit"
-              id="place-order-btn"
-              disabled={loading}
-              className="btn-primary w-full py-5"
-            >
-              {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
-                  </svg>
-                  Processing…
-                </span>
-              ) : (
-                `Place Order — ${isInternational ? formatLocalCurrency(finalTotalLocal, localCurrencyCode) : formatCurrency(finalTotal)}`
-              )}
-            </button>
+            <div className="pt-8">
+              <button
+                type="submit"
+                id="place-order-btn"
+                disabled={loading}
+                className="btn-primary w-full py-5 text-sm tracking-[0.2em] uppercase transition-transform active:scale-[0.98]"
+              >
+                {loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                    </svg>
+                    Processing...
+                  </span>
+                ) : (
+                  `Place Order — ${isInternational ? formatLocalCurrency(finalTotalLocal, localCurrencyCode) : formatCurrency(finalTotal)}`
+                )}
+              </button>
 
-            <p
-              className="text-center"
-              style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.625rem", color: "var(--fog)", letterSpacing: "0.08em", lineHeight: 1.7 }}
-            >
-              By placing your order you agree to our{" "}
-              <Link href="/terms" className="hover:text-pale transition-colors" style={{ borderBottom: "1px solid var(--ember)" }}>Terms</Link>
-              {" "}and{" "}
-              <Link href="/privacy" className="hover:text-pale transition-colors" style={{ borderBottom: "1px solid var(--ember)" }}>Privacy Policy</Link>.
-            </p>
+              <p className="text-center mt-6 font-dm-mono text-[10px] text-ash leading-relaxed max-w-sm mx-auto">
+                By placing your order you agree to our{" "}
+                <Link href="/terms" className="text-salt underline underline-offset-4 hover:text-ash">Terms</Link>
+                {" "}and{" "}
+                <Link href="/privacy" className="text-salt underline underline-offset-4 hover:text-ash">Privacy Policy</Link>.
+              </p>
+            </div>
           </form>
         </div>
 
           {/* ── Order Summary ── */}
           <div
-            className="lg:col-span-5 p-6 h-fit"
-            style={{ background: "var(--abyss)", border: "1px solid var(--ember)", position: "sticky", top: "120px" }}
+            className="lg:col-span-5 p-6 h-fit bg-abyss border border-ember"
+            style={{ position: "sticky", top: "120px" }}
           >
-            <p className="label-syne text-salt mb-6">Order Summary</p>
+            <div className="flex items-center justify-between mb-6">
+              <p className="font-syne font-bold text-salt uppercase tracking-widest text-sm">Order Summary</p>
+            </div>
 
             {/* Items */}
-            <div className="space-y-4 mb-6 pb-6" style={{ borderBottom: "1px solid var(--ember)" }}>
+            <div className="space-y-4 mb-6 pb-6 border-b border-ember">
               {items.map((item) => (
-                <div key={`${item.productId}-${item.variantId}`} className="flex gap-3">
-                  <div className="flex-shrink-0 overflow-hidden bg-dim" style={{ width: "52px", height: "64px" }}>
-                    <img src={item.image || "/placeholder.svg"} alt={item.name} className="w-full h-full object-cover" style={{ filter: "grayscale(15%)" }} />
+                <div key={`${item.productId}-${item.variantId}`} className="flex gap-4">
+                  <div className="flex-shrink-0 w-16 h-20 bg-dim">
+                    <img src={item.image || "/placeholder.svg"} alt={item.name} className="w-full h-full object-cover" />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="truncate" style={{ fontFamily: "var(--font-syne), system-ui, sans-serif", fontSize: "0.6875rem", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--salt)" }}>{item.name}</p>
-                    <p style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.625rem", color: "var(--ash)", marginTop: "4px", letterSpacing: "0.1em" }}>{item.size} × {item.quantity}</p>
+                  <div className="flex-1 min-w-0 pt-1">
+                    <p className="font-syne font-bold text-salt text-xs tracking-widest uppercase truncate mb-1">{item.name}</p>
+                    <p className="font-dm-mono text-ash text-xs mb-2">Size {item.size} <span className="mx-1">×</span> {item.quantity}</p>
+                    <p className="font-dm-mono text-salt text-xs">
+                      {formatCurrency(((item.salePrice ?? item.price) * (1 - item.discountRate / 100)) * item.quantity)}
+                    </p>
                   </div>
-                  <p style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.75rem", color: "var(--pale)", whiteSpace: "nowrap" }}>
-                    {formatCurrency(((item.salePrice ?? item.price) * (1 - item.discountRate / 100)) * item.quantity)}
-                  </p>
                 </div>
               ))}
             </div>
 
             {/* Totals */}
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.75rem", color: "var(--ash)", letterSpacing: "0.1em", textTransform: "uppercase" }}>Subtotal</span>
+            <div className="space-y-4 font-dm-mono text-sm">
+              <div className="flex justify-between items-start">
+                <span className="text-ash uppercase tracking-widest text-xs mt-1">Subtotal</span>
                 <div className="text-right">
-                  <span style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.8125rem", color: "var(--pale)" }}>{formatCurrency(getSubtotal())}</span>
-                  {isInternational && (<p style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.625rem", color: "var(--fog)", marginTop: "2px" }}>≈ {formatLocalCurrency(getSubtotal() * localExchangeRate, localCurrencyCode)}</p>)}
+                  <span className="text-salt">{formatCurrency(getSubtotal())}</span>
+                  {isInternational && (<p className="text-xs text-ash mt-1">≈ {formatLocalCurrency(getSubtotal() * localExchangeRate, localCurrencyCode)}</p>)}
                 </div>
               </div>
+              
               {discountAmount > 0 && (
-                <div className="flex justify-between">
-                  <span style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.75rem", color: "var(--success)", letterSpacing: "0.1em", textTransform: "uppercase" }}>Discount</span>
+                <div className="flex justify-between items-start">
+                  <span className="text-salt uppercase tracking-widest text-xs mt-1">Discount</span>
                   <div className="text-right">
-                    <span style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.8125rem", color: "var(--success)" }}>-{formatCurrency(discountAmount)}</span>
-                    {isInternational && (<p style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.625rem", color: "var(--fog)", marginTop: "2px" }}>≈ -{formatLocalCurrency(discountAmount * localExchangeRate, localCurrencyCode)}</p>)}
+                    <span className="text-salt">-{formatCurrency(discountAmount)}</span>
+                    {isInternational && (<p className="text-xs text-ash mt-1">≈ -{formatLocalCurrency(discountAmount * localExchangeRate, localCurrencyCode)}</p>)}
                   </div>
                 </div>
               )}
+              
               {applicableTax > 0 && (
-                <div className="flex justify-between">
-                  <span style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.75rem", color: "var(--fog)", letterSpacing: "0.08em" }}>{isInternational ? `Tax PPN (${intlTaxRate}%)` : "Pajak (PPN/PPH 23)"}</span>
+                <div className="flex justify-between items-start">
+                  <span className="text-ash uppercase tracking-widest text-xs mt-1">{isInternational ? `Tax (${intlTaxRate}%)` : "Tax"}</span>
                   <div className="text-right">
-                    <span style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.75rem", color: "var(--fog)" }}>+{formatCurrency(applicableTax)}</span>
-                    {isInternational && (<p style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.625rem", color: "var(--fog)", marginTop: "2px" }}>≈ +{formatLocalCurrency(applicableTax * localExchangeRate, localCurrencyCode)}</p>)}
+                    <span className="text-ash">+{formatCurrency(applicableTax)}</span>
+                    {isInternational && (<p className="text-xs text-ash mt-1">≈ +{formatLocalCurrency(applicableTax * localExchangeRate, localCurrencyCode)}</p>)}
                   </div>
                 </div>
               )}
-              <div className="section-divider" />
+              
+              <div className="w-full h-px bg-ember my-6" />
 
-              <div className="flex justify-between pt-1">
-                <span style={{ fontFamily: "var(--font-syne), system-ui, sans-serif", fontSize: "0.75rem", fontWeight: 600, letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--salt)" }}>Total</span>
+              <div className="flex justify-between items-start">
+                <span className="font-syne font-bold text-salt uppercase tracking-widest text-sm mt-1">Total</span>
                 <div className="text-right">
-                  <span style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "1.125rem", color: "var(--signal)" }}>{formatCurrency(finalTotal)}</span>
-                  {isInternational && (<p style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.6875rem", color: "var(--ash)", marginTop: "4px" }}>≈ {formatLocalCurrency(finalTotalLocal, localCurrencyCode)}</p>)}
+                  <span className="text-lg text-salt font-medium">{formatCurrency(finalTotal)}</span>
+                  {isInternational && (<p className="text-xs text-ash mt-1">≈ {formatLocalCurrency(finalTotalLocal, localCurrencyCode)}</p>)}
                 </div>
               </div>
             </div>
 
             {/* BCA reminder */}
-            <div className="mt-8 pt-6" style={{ borderTop: "1px solid var(--ember)" }}>
-              <p className="label-eyebrow mb-3">Payment Information</p>
+            <div className="mt-8 pt-6 border-t border-ember">
+              <p className="font-syne font-bold text-ash text-[10px] uppercase tracking-widest mb-4">Payment Information</p>
               <div className="flex items-start gap-4">
-                <div className="w-12 h-auto mt-1 flex-shrink-0 bg-white rounded p-1 flex items-center justify-center">
+                <div className="w-12 h-auto flex-shrink-0 bg-white p-1.5 flex items-center justify-center">
                   <img src="/images/bca.png" alt="BCA Logo" className="w-full h-auto object-contain" />
                 </div>
                 <div>
-                  <p className="mb-2" style={{ fontFamily: "var(--font-syne), system-ui, sans-serif", fontSize: "0.75rem", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--pale)" }}>BCA Bank Transfer</p>
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <p style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.6875rem", color: "var(--salt)" }}>Acc No: <span style={{ color: "var(--signal)" }}>6768126284</span></p>
+                  <p className="font-syne font-bold text-salt text-xs tracking-widest uppercase mb-2">BCA Bank Transfer</p>
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2 font-dm-mono text-xs">
+                      <span className="text-ash">No:</span>
+                      <span className="text-salt">6768126284</span>
                       <CopyButton text="6768126284" />
                     </div>
-                    <p style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.6875rem", color: "var(--ash)" }}>Acc Name: ILYASA MEYDIANSYAH A</p>
+                    <p className="font-dm-mono text-xs text-ash">Name: ILYASA MEYDIANSYAH A</p>
                   </div>
                 </div>
               </div>

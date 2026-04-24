@@ -199,6 +199,24 @@ model FlashSale {
   @@map("flash_sales")
 }
 
+model VisitorLog {
+  id        String   @id @default(cuid())
+  sessionId String
+  ip        String?
+  country   String?
+  city      String?
+  device    String?
+  browser   String?
+  os        String?
+  page      String
+  referrer  String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([sessionId])
+  @@map("visitor_logs")
+}
+
 model NewsletterSubscriber {
   id        String   @id @default(cuid())
   email     String   @unique

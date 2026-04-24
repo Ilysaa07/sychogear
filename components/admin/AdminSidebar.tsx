@@ -12,6 +12,7 @@ import {
   HiOutlineTag,
   HiOutlineArrowLeft,
   HiOutlineCog,
+  HiOutlineEye,
   HiX,
 } from "react-icons/hi";
 
@@ -21,6 +22,7 @@ const navItems = [
   { href: "/admin/orders", label: "Orders", icon: HiOutlineClipboardList },
   { href: "/admin/customers", label: "Customers", icon: HiOutlineUsers },
   { href: "/admin/coupons", label: "Coupons", icon: HiOutlineTag },
+  { href: "/admin/visitors", label: "Visitors", icon: HiOutlineEye },
   { href: "/admin/settings", label: "Settings", icon: HiOutlineCog },
 ];
 

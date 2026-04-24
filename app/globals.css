@@ -70,6 +70,12 @@
   --signal-dim:  rgba(200, 169, 110, 0.15);
   --signal-glow: rgba(200, 169, 110, 0.06);
 
+  /* Archive Unit — New Accents */
+  --redline:        #c0392b;
+  --redline-dim:    rgba(192, 57, 43, 0.12);
+  --classified:     rgba(192, 57, 43, 0.06);
+  --wire:           rgba(232, 228, 220, 0.06);
+
   /* Functional */
   --error:   #c0392b;
   --success: #2e7d52;
@@ -105,7 +111,6 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    /* No border-radius anywhere in the system */
     border-radius: 0 !important;
   }
 
@@ -121,6 +126,14 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
+    /* Custom cursor — desktop only */
+    cursor: none;
+  }
+
+  /* Restore default cursor on mobile / touch */
+  @media (hover: none) {
+    body { cursor: auto; }
+    * { cursor: auto !important; }
   }
 
   /* Warm stone selection, not harsh white */
@@ -490,24 +503,20 @@
     filter: grayscale(0%) brightness(1);
   }
 
-  /* Gradient info overlay — reveals on hover */
+  /* Info overlay — horizontal clip-path wipe from left on hover */
   .product-card__info {
     position: absolute;
     bottom: 0;
     left: 0;
     right: 0;
     padding: 2rem 1.25rem 1.25rem;
-    background: linear-gradient(to top, rgba(8,8,8,0.92) 0%, rgba(8,8,8,0.6) 50%, transparent 100%);
-    transform: translateY(4px);
-    opacity: 0.85;
-    transition:
-      opacity 400ms ease,
-      transform 400ms var(--ease-compose);
+    background: linear-gradient(to top, rgba(8,8,8,0.95) 0%, rgba(8,8,8,0.65) 55%, transparent 100%);
+    clip-path: inset(0 100% 0 0);
+    transition: clip-path 500ms var(--ease-out-expo);
   }
 
   .product-card:hover .product-card__info {
-    opacity: 1;
-    transform: translateY(0);
+    clip-path: inset(0 0% 0 0);
   }
 
   .product-card__name {
@@ -905,6 +914,341 @@
   @keyframes firm-pulse {
     0%, 100% { box-shadow: 0 0 0 0 rgba(200, 169, 110, 0); }
     50%       { box-shadow: 0 0 0 6px rgba(200, 169, 110, 0.12); }
+  }
+
+  /* ─── ARCHIVE UNIT — NEW ANIMATIONS ───────────────────────── */
+
+  @keyframes clipRevealH {
+    from { clip-path: inset(0 100% 0 0); opacity: 0.3; }
+    to   { clip-path: inset(0 0% 0 0);   opacity: 1; }
+  }
+
+  @keyframes clipRevealV {
+    from { clip-path: inset(100% 0 0 0); }
+    to   { clip-path: inset(0% 0 0 0); }
+  }
+
+  @keyframes sliceOut {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-110%); }
+  }
+
+  @keyframes redlineDraw {
+    from { transform: scaleX(0); transform-origin: left; }
+    to   { transform: scaleX(1); transform-origin: left; }
+  }
+
+  @keyframes cursorPulse {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.7; }
+    50%       { transform: translate(-50%, -50%) scale(1.4); opacity: 1; }
+  }
+
+  @keyframes bootBlink {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0; }
+  }
+
+  @keyframes panelWipeLeft {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-105%); }
+  }
+
+  @keyframes panelWipeRight {
+    from { transform: translateX(0); }
+    to   { transform: translateX(105%); }
+  }
+
+  /* ─── CLIP REVEAL UTILITIES ──────────────────────────────── */
+
+  .reveal-clip {
+    clip-path: inset(0 100% 0 0);
+    opacity: 0;
+    transition:
+      clip-path 900ms var(--ease-out-expo),
+      opacity 300ms ease;
+  }
+
+  .reveal-clip.is-visible {
+    clip-path: inset(0 0% 0 0);
+    opacity: 1;
+  }
+
+  .reveal-scale {
+    opacity: 0;
+    transform: scale(0.94) translateY(12px);
+    transition:
+      opacity 700ms ease,
+      transform 700ms var(--ease-out-expo);
+  }
+
+  .reveal-scale.is-visible {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+
+  /* ─── EDITORIAL GRID ─────────────────────────────────────── */
+
+  .editorial-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 1px;
+    background: var(--ember);
+  }
+
+  .editorial-grid > * {
+    background: var(--void);
+  }
+
+  /* ─── REDLINE UTILITIES ──────────────────────────────────── */
+
+  .redline-top {
+    border-top: 1px solid var(--redline);
+  }
+
+  .redline-draw {
+    display: block;
+    height: 1px;
+    background: var(--redline);
+    animation: redlineDraw 800ms var(--ease-out-expo) forwards;
+  }
+
+  .classified-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-dm-mono), monospace;
+    font-size: 0.5625rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--redline);
+    padding: 3px 8px;
+    border: 1px solid var(--redline);
+    opacity: 0.85;
+  }
+
+  .redacted {
+    display: inline-block;
+    background: var(--ash);
+    color: transparent;
+    user-select: none;
+    padding: 0 4px;
+    height: 0.9em;
+    vertical-align: middle;
+  }
+
+  /* ─── CUSTOM CURSOR ──────────────────────────────────────── */
+
+  #sg-cursor {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 20px;
+    height: 20px;
+    border: 1px solid rgba(232, 228, 220, 0.6);
+    border-radius: 50% !important;
+    pointer-events: none;
+    z-index: 99999;
+    transform: translate(-50%, -50%);
+    transition:
+      width 200ms var(--ease-compose),
+      height 200ms var(--ease-compose),
+      border-color 200ms ease,
+      background-color 200ms ease;
+    mix-blend-mode: difference;
+  }
+
+  #sg-cursor.cursor-hover {
+    width: 48px;
+    height: 48px;
+    border-color: var(--signal);
+    background: rgba(200, 169, 110, 0.1);
+  }
+
+  #sg-cursor.cursor-click {
+    width: 12px;
+    height: 12px;
+    background: var(--salt);
+  }
+
+  /* ─── MOSAIC PRODUCT GRID ──────────────────────────────── */
+
+  .mosaic-hero {
+    grid-column: 1 / -1;
+  }
+
+  .mosaic-half {
+    grid-column: span 6;
+  }
+
+  .mosaic-third {
+    grid-column: span 4;
+  }
+
+  @media (max-width: 768px) {
+    .mosaic-half,
+    .mosaic-third { grid-column: 1 / -1; }
+  }
+
+  /* ─── ARCHIVE ENTRY CARD ──────────────────────────────── */
+
+  .product-card__left-border {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--redline);
+    transform: scaleY(0);
+    transform-origin: top;
+    transition: transform 350ms var(--ease-out-expo);
+  }
+
+  .product-card:hover .product-card__left-border {
+    transform: scaleY(1);
+  }
+
+
+
+  /* ─── VERTICAL TEXT UTILITY ───────────────────────────── */
+
+  .text-vertical {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transform: rotate(180deg);
+  }
+
+  /* ─── TERMINAL / CLI STYLES ───────────────────────────── */
+
+  .terminal-prefix::before {
+    content: '>_ ';
+    color: var(--signal);
+    font-family: var(--font-dm-mono), monospace;
+  }
+
+  .filter-token {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--font-dm-mono), monospace;
+    font-size: 0.625rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ash);
+    border: 1px solid var(--ember);
+    padding: 3px 8px;
+    transition: all 200ms ease;
+    cursor: pointer;
+  }
+
+  .filter-token.is-active {
+    color: var(--salt);
+    border-color: var(--signal);
+    background: rgba(200, 169, 110, 0.08);
+  }
+
+  .filter-token:hover:not(.is-active) {
+    border-color: var(--ash);
+    color: var(--pale);
+  }
+
+  /* ─── BOOT SEQUENCE ──────────────────────────────────── */
+
+  .boot-cursor {
+    display: inline-block;
+    width: 8px;
+    height: 1em;
+    background: var(--salt);
+    vertical-align: middle;
+    animation: bootBlink 700ms step-end infinite;
+  }
+
+  /* ─── DIAGONAL STRIPE TEXTURE ────────────────────────── */
+
+  .diagonal-texture {
+    background-image: repeating-linear-gradient(
+      -45deg,
+      rgba(232, 228, 220, 0.015) 0px,
+      rgba(232, 228, 220, 0.015) 1px,
+      transparent 1px,
+      transparent 8px
+    );
+  }
+
+  /* ─── MAGNETIC BUTTON ────────────────────────────────── */
+
+  .btn-magnetic {
+    transition:
+      transform 400ms var(--ease-out-expo),
+      background-color 250ms ease,
+      color 250ms ease,
+      border-color 250ms ease;
+  }
+
+  /* ─── ARCHIVE SECTION LABEL ──────────────────────────── */
+
+  .section-code {
+    font-family: var(--font-dm-mono), monospace;
+    font-size: 0.5625rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--fog);
+  }
+
+  /* ─── METAL MANIA DISPLAY ────────────────────────────── */
+
+  .font-metal {
+    font-family: var(--font-metal), system-ui, sans-serif;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* ─── NAVBAR REDLINE DRAW ────────────────────────────── */
+
+  .navbar-redline {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--redline);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 600ms var(--ease-out-expo);
+  }
+
+  .navbar-scrolled .navbar-redline {
+    transform: scaleX(1);
+  }
+
+  /* ─── CROSSHAIR ──────────────────────────────────────── */
+
+  .crosshair-overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 5;
+  }
+
+  .crosshair-overlay::before,
+  .crosshair-overlay::after {
+    content: '';
+    position: absolute;
+    background: rgba(232, 228, 220, 0.15);
+  }
+
+  .crosshair-overlay::before {
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+  }
+
+  .crosshair-overlay::after {
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
   }
 
   .badge-firm {
