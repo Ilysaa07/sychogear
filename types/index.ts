@@ -34,6 +34,8 @@ export interface ProductWithRelations {
   category: { id: string; name: string; slug: string };
   images: Array<{ id: string; url: string; alt: string | null; position: number }>;
   variants: Array<{ id: string; size: string; stock: number }>;
+  careInstructions?: string | null;
+  materials?: string | null;
   flashSale?: {
     id: string;
     salePrice: number;
