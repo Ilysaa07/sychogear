@@ -43,7 +43,7 @@ export default function RegionCurrencySelector() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2.5 px-3 py-1.5 border border-ember hover:border-signal text-salt transition-all duration-300"
+        className="flex items-center gap-1.5 sm:gap-2.5 px-2 sm:px-3 py-1.5 border border-ember hover:border-signal text-salt transition-all duration-300"
         style={{ fontFamily: "var(--font-syne), sans-serif", fontSize: "0.6875rem", fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase" }}
       >
         <HiOutlineGlobeAlt className="w-3.5 h-3.5 text-signal" />

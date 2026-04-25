@@ -85,19 +85,33 @@ export default function Navbar() {
         <div className="container-main">
           <div className="relative flex items-center justify-between" style={{ height: "60px" }}>
 
-            {/* Left — Desktop Nav */}
-            <nav className="hidden md:flex items-center gap-8" aria-label="Primary navigation">
-              {navLinks.map((link) => (
-                <Link key={link.href} href={link.href} className="nav-link">
-                  {link.label}
-                </Link>
-              ))}
-            </nav>
+            {/* Left — Desktop Nav & Mobile Hamburger */}
+            <div className="flex-1 flex items-center">
+              <nav className="hidden md:flex items-center gap-8" aria-label="Primary navigation">
+                {navLinks.map((link) => (
+                  <Link key={link.href} href={link.href} className="nav-link">
+                    {link.label}
+                  </Link>
+                ))}
+              </nav>
+              
+              {/* Mobile hamburger — Now on the Left */}
+              <button
+                id="mobile-menu-trigger"
+                onClick={() => setMobileOpen(!mobileOpen)}
+                className="md:hidden p-2 -ml-2 text-salt transition-colors duration-200 flex flex-col gap-1.5 justify-center items-center w-10 h-10"
+                aria-label={mobileOpen ? "Close menu" : "Open menu"}
+                aria-expanded={mobileOpen}
+              >
+                <span className={`block h-[1.5px] w-5 bg-current transition-all duration-300 origin-center ${mobileOpen ? "rotate-45 translate-y-[4.5px]" : ""}`} />
+                <span className={`block h-[1.5px] w-5 bg-current transition-all duration-300 origin-center ${mobileOpen ? "-rotate-45 -translate-y-[4.5px]" : ""}`} />
+              </button>
+            </div>
 
             {/* Center — Logo */}
             <Link
               href="/"
-              className="absolute left-1/2 -translate-x-1/2 flex items-center"
+              className="absolute left-1/2 -translate-x-1/2 flex items-center z-10"
               aria-label="SYCHOGEAR — Home"
             >
               <Image
@@ -106,17 +120,17 @@ export default function Navbar() {
                 width={320}
                 height={80}
                 className="w-auto opacity-100 transition-opacity duration-300"
-                style={{ height: "clamp(24px, 3.5vw, 36px)", filter: "brightness(1.1)" }}
+                style={{ height: "clamp(20px, 4vw, 32px)", filter: "brightness(1.1)" }}
                 priority
               />
             </Link>
 
             {/* Right — Actions */}
-            <div className="flex items-center gap-4">
+            <div className="flex-1 flex items-center justify-end gap-1 sm:gap-4">
               <div className="hidden md:block border-r border-ember pr-4 mr-2">
                 <RegionCurrencySelector />
               </div>
-              <div className="md:hidden">
+              <div className="md:hidden scale-90 origin-right">
                  <RegionCurrencySelector />
               </div>
               {/* Cart */}
@@ -135,18 +149,6 @@ export default function Navbar() {
                     {itemCount > 9 ? "9+" : itemCount}
                   </span>
                 )}
-              </button>
-
-              {/* Mobile hamburger */}
-              <button
-                id="mobile-menu-trigger"
-                onClick={() => setMobileOpen(!mobileOpen)}
-                className="md:hidden p-2 text-salt transition-colors duration-200 flex flex-col gap-1.5 justify-center items-center w-9 h-9"
-                aria-label={mobileOpen ? "Close menu" : "Open menu"}
-                aria-expanded={mobileOpen}
-              >
-                <span className={`block h-[2px] w-5 bg-current transition-all duration-300 origin-center ${mobileOpen ? "rotate-45 translate-y-[4px]" : ""}`} />
-                <span className={`block h-[2px] w-5 bg-current transition-all duration-300 origin-center ${mobileOpen ? "-rotate-45 -translate-y-[4px]" : ""}`} />
               </button>
             </div>
           </div>

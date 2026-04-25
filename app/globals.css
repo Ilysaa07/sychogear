@@ -91,7 +91,7 @@
 
   /* Container */
   --container-max: 1320px;
-  --container-pad: clamp(1.5rem, 6vw, 5rem);
+  --container-pad: clamp(1rem, 6vw, 5rem);
 
   /* Motion */
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
