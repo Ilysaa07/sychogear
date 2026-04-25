@@ -127,49 +127,11 @@ export default async function HomePage() {
         )}
       </section>
 
-      {/* ═══ MARQUEE ════════════════════════════════════════════ */}
-      <div
-        aria-hidden="true"
-        className="w-full overflow-hidden py-4 relative bg-[#111512] text-ash border-y border-ember"
-      >
-        <style dangerouslySetInnerHTML={{ __html: `
-          @keyframes page-marquee-scroll {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-          }
-        `}} />
-        <div
-          style={{
-            display: "flex",
-            gap: 0,
-            whiteSpace: "nowrap",
-            width: "max-content",
-            animation: "page-marquee-scroll 40s linear infinite",
-            willChange: "transform",
-          }}
-        >
-          {[...Array(12)].map((_, i) => (
-            <div
-              key={i}
-              className="flex items-center gap-8 px-6"
-              style={{
-                fontFamily: "var(--font-syne), sans-serif",
-                fontSize: "1rem",
-                letterSpacing: "0.15em",
-                textTransform: "uppercase",
-                fontWeight: "800",
-              }}
-            >
-              <span>{marqueeText}</span>
-              <span className="text-ember">✦</span>
-            </div>
-          ))}
-        </div>
-      </div>
+
 
       {/* ═══ COVER FLOW LOOKBOOK ════════════════════════════════════════ */}
       {newArrivals.length > 0 && (
-        <CoverFlowSlider products={recentItems} />
+        <CoverFlowSlider products={recentItems} marqueeText={marqueeText} />
       )}
 
 

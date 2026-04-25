@@ -16,6 +16,7 @@ export const paymentService = {
     items: CartItem[];
     couponCode?: string;
     country?: string;
+    orderNote?: string;
     appUrl?: string;
   }) {
     const country = data.country || "ID";
@@ -204,6 +205,7 @@ export const paymentService = {
       total,
       couponId,
       country,
+      notes: data.orderNote,
       paymentMethod,
       shippingCost,
       expiredAt,

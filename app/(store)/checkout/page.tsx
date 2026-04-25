@@ -25,7 +25,7 @@ import CopyButton from "@/components/store/CopyButton";
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { items, getTotal, getSubtotal, getTotalTax, clearCart } = useCartStore();
+  const { items, getTotal, getSubtotal, getTotalTax, clearCart, orderNote, setOrderNote } = useCartStore();
   const { countryCode: detectedCountry, isReady: currencyReady } = useCurrency();
   const [loading, setLoading] = useState(false);
   const [couponCode, setCouponCode] = useState("");
@@ -49,6 +49,7 @@ export default function CheckoutPage() {
     resolver: zodResolver(checkoutSchema),
     defaultValues: {
       country: "ID",
+      orderNote: orderNote || "",
     },
   });
 
@@ -184,6 +185,7 @@ export default function CheckoutPage() {
       });
 
       if (data.success) {
+        setOrderNote(""); // Clear order note on success
         clearCart();
         toast.success("Order created! Redirecting...");
         router.push(data.data.invoiceUrl);
@@ -259,10 +261,10 @@ export default function CheckoutPage() {
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
 
             {/* ── Contact Information ── */}
-            <div className="space-y-6">
-              <div className="flex items-center gap-3 pb-4 border-b border-ember">
-                <HiOutlineUser className="w-5 h-5 text-salt flex-shrink-0" />
-                <p className="font-syne font-bold text-salt uppercase tracking-widest text-sm">Contact Information</p>
+            <div className="space-y-8">
+              <div className="flex items-center gap-4 pb-4 border-b border-ash">
+                <span className="font-dm-mono text-signal">01 //</span>
+                <p className="font-syne font-bold text-salt uppercase tracking-[0.2em] text-sm">Contact Details</p>
               </div>
 
               {/* Full Name */}
@@ -330,10 +332,10 @@ export default function CheckoutPage() {
             </div>
 
             {/* ── Shipping Address ── */}
-            <div className="space-y-6 pt-6 mt-6">
-              <div className="flex items-center gap-3 pb-4 border-b border-ember">
-                <HiOutlineLocationMarker className="w-5 h-5 text-salt flex-shrink-0" />
-                <p className="font-syne font-bold text-salt uppercase tracking-widest text-sm">Shipping Address</p>
+            <div className="space-y-8 pt-6 mt-10">
+              <div className="flex items-center gap-4 pb-4 border-b border-ash">
+                <span className="font-dm-mono text-signal">02 //</span>
+                <p className="font-syne font-bold text-salt uppercase tracking-[0.2em] text-sm">Shipping Destination</p>
               </div>
 
               {/* Country Dropdown */}
@@ -495,32 +497,47 @@ export default function CheckoutPage() {
               </div>
 
               {/* Shipping Notice */}
-              <div className="flex items-start gap-3 p-4 bg-abyss border border-ember mt-4">
-                <HiOutlineGlobeAlt className={`w-5 h-5 flex-shrink-0 mt-0.5 ${isInternational ? "text-salt" : "text-ash"}`} />
+              <div className="flex items-start gap-4 p-5 bg-transparent border border-ember relative mt-8">
+                {/* Minimalist corner accents */}
+                <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-signal" />
+                <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-signal" />
+                
+                <HiOutlineGlobeAlt className={`w-5 h-5 flex-shrink-0 mt-0.5 ${isInternational ? "text-signal" : "text-ash"}`} />
                 <div>
                   <p className={`font-syne font-bold text-xs tracking-widest uppercase mb-1 ${isInternational ? "text-salt" : "text-ash"}`}>
-                    {isInternational ? "International Delivery" : "Domestic Delivery (Indonesia)"}
+                    {isInternational ? "International Dispatch" : "Domestic Dispatch [ID]"}
                   </p>
-                  <p className="font-dm-mono text-xs text-ash mb-3">
-                    {isInternational ? "Est. 3–14 days" : "Domestic standard delivery"}
+                  <p className="font-dm-mono text-[10px] text-ash mb-3 uppercase tracking-widest">
+                    {isInternational ? "Transit: 3–14 days" : "Standard local delivery"}
                   </p>
-                  <div className="p-3 bg-dim border border-ember">
-                    <p className="font-dm-mono text-[11px] text-ash leading-relaxed">
-                      * Price does not include shipping fee. Please complete the checkout first and contact our CS via WhatsApp to coordinate shipping costs.
-                    </p>
-                  </div>
+                  <p className="font-dm-mono text-[10px] text-fog leading-relaxed uppercase">
+                    &gt; Shipping fee calculated post-checkout via WhatsApp coordinator.
+                  </p>
                 </div>
               </div>
             </div>
 
+            {/* ── Order Notes ── */}
+            <div className="pt-6 mt-10">
+              <div className="flex items-center gap-4 pb-4 mb-6 border-b border-ash">
+                <span className="font-dm-mono text-signal">03 //</span>
+                <p className="font-syne font-bold text-salt uppercase tracking-[0.2em] text-sm">Special Instructions</p>
+              </div>
+              <div>
+                <textarea
+                  {...register("orderNote")}
+                  id="orderNote"
+                  className="w-full h-24 bg-transparent border-b border-ember text-salt py-3 resize-none focus:border-signal transition-colors font-dm-mono text-xs placeholder:text-fog"
+                  placeholder="Enter any notes or special instructions for this order..."
+                />
+              </div>
+            </div>
+
             {/* ── Payment Method ── */}
-            <div className="pt-6 mt-6">
-              <div className="flex items-center gap-3 pb-4 mb-6 border-b border-ember">
-                <svg viewBox="0 0 24 24" className="w-5 h-5 flex-shrink-0 text-salt" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="2" y="5" width="20" height="14"/>
-                  <path d="M2 10h20"/>
-                </svg>
-                <p className="font-syne font-bold text-salt uppercase tracking-widest text-sm">Payment Method</p>
+            <div className="pt-6 mt-10">
+              <div className="flex items-center gap-4 pb-4 mb-6 border-b border-ash">
+                <span className="font-dm-mono text-signal">04 //</span>
+                <p className="font-syne font-bold text-salt uppercase tracking-[0.2em] text-sm">Payment Protocol</p>
               </div>
               <div className="flex items-center gap-4 p-5 bg-abyss border border-ember">
                 <div className="w-14 h-auto flex-shrink-0 bg-white p-1.5 flex items-center justify-center">
@@ -575,18 +592,15 @@ export default function CheckoutPage() {
                 type="submit"
                 id="place-order-btn"
                 disabled={loading}
-                className="btn-primary w-full py-5 text-sm tracking-[0.2em] uppercase transition-transform active:scale-[0.98]"
+                className="btn-primary blade-cut w-full py-5 text-xs tracking-[0.2em] uppercase transition-transform active:scale-[0.98] mt-8"
               >
                 {loading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
-                    </svg>
-                    Processing...
+                  <span className="flex items-center justify-center gap-3">
+                    <span className="font-dm-mono text-signal">[]</span>
+                    PROCESSING_REQUEST...
                   </span>
                 ) : (
-                  `Place Order — ${isInternational ? formatLocalCurrency(finalTotalLocal, localCurrencyCode) : formatCurrency(finalTotal)}`
+                  `Execute Order — ${isInternational ? formatLocalCurrency(finalTotalLocal, localCurrencyCode) : formatCurrency(finalTotal)}`
                 )}
               </button>
 
@@ -601,92 +615,97 @@ export default function CheckoutPage() {
         </div>
 
           {/* ── Order Summary ── */}
-          <div
-            className="lg:col-span-5 p-6 h-fit bg-abyss border border-ember"
-            style={{ position: "sticky", top: "120px" }}
-          >
-            <div className="flex items-center justify-between mb-6">
-              <p className="font-syne font-bold text-salt uppercase tracking-widest text-sm">Order Summary</p>
-            </div>
+          <div className="lg:col-span-5">
+            <div
+              className="p-8 h-fit border border-ember relative"
+              style={{ position: "sticky", top: "120px" }}
+            >
+              {/* Receipt edge zig-zag top and bottom using CSS or just raw brutalist box */}
+              <div className="absolute top-0 left-0 w-full h-[3px] bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjMiPjxwb2x5Z29uIHBvaW50cz0iMCAwLCA0IDMsIDggMCIgZmlsbD0iIzIyMiIvPjwvc3ZnPg==')] repeat-x" />
+              
+              <div className="text-center mb-8 pb-6 border-b border-dashed border-ash">
+                <p className="font-dm-mono text-signal text-[10px] tracking-widest uppercase mb-2">Transaction Receipt</p>
+                <p className="font-syne font-bold text-salt uppercase tracking-widest text-lg">Archive Cart</p>
+                <p className="font-dm-mono text-[10px] text-ash mt-1">Terminal ID: {Math.floor(1000 + Math.random() * 9000)}-SYS</p>
+              </div>
 
-            {/* Items */}
-            <div className="space-y-4 mb-6 pb-6 border-b border-ember">
-              {items.map((item) => (
-                <div key={`${item.productId}-${item.variantId}`} className="flex gap-4">
-                  <div className="flex-shrink-0 w-16 h-20 bg-dim">
-                    <img src={item.image || "/placeholder.svg"} alt={item.name} className="w-full h-full object-cover" />
+              {/* Items */}
+              <div className="space-y-4 mb-6 pb-6 border-b border-dashed border-ash">
+                {items.map((item) => (
+                  <div key={`${item.productId}-${item.variantId}`} className="flex gap-4">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-dm-mono text-salt text-xs tracking-wider uppercase truncate">{item.name}</p>
+                      <p className="font-dm-mono text-ash text-[10px] mt-1">SIZE {item.size} <span className="mx-1">|</span> QTY {item.quantity}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-dm-mono text-salt text-xs">
+                        {formatCurrency(((item.salePrice ?? item.price) * (1 - item.discountRate / 100)) * item.quantity)}
+                      </p>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0 pt-1">
-                    <p className="font-syne font-bold text-salt text-xs tracking-widest uppercase truncate mb-1">{item.name}</p>
-                    <p className="font-dm-mono text-ash text-xs mb-2">Size {item.size} <span className="mx-1">×</span> {item.quantity}</p>
-                    <p className="font-dm-mono text-salt text-xs">
-                      {formatCurrency(((item.salePrice ?? item.price) * (1 - item.discountRate / 100)) * item.quantity)}
-                    </p>
+                ))}
+              </div>
+
+              {/* Totals */}
+              <div className="space-y-3 font-dm-mono text-[11px] tracking-wider text-ash">
+                <div className="flex justify-between items-start">
+                  <span className="uppercase">Subtotal</span>
+                  <div className="text-right">
+                    <span className="text-salt">{formatCurrency(getSubtotal())}</span>
                   </div>
                 </div>
-              ))}
-            </div>
+                
+                {discountAmount > 0 && (
+                  <div className="flex justify-between items-start">
+                    <span className="uppercase text-salt">Discount</span>
+                    <div className="text-right">
+                      <span className="text-salt">-{formatCurrency(discountAmount)}</span>
+                    </div>
+                  </div>
+                )}
+                
+                {applicableTax > 0 && (
+                  <div className="flex justify-between items-start">
+                    <span className="uppercase">{isInternational ? `Tax [${intlTaxRate}%]` : "Tax"}</span>
+                    <div className="text-right">
+                      <span className="text-ash">+{formatCurrency(applicableTax)}</span>
+                    </div>
+                  </div>
+                )}
+                
+                <div className="w-full border-t border-dashed border-ash my-4" />
 
-            {/* Totals */}
-            <div className="space-y-4 font-dm-mono text-sm">
-              <div className="flex justify-between items-start">
-                <span className="text-ash uppercase tracking-widest text-xs mt-1">Subtotal</span>
-                <div className="text-right">
-                  <span className="text-salt">{formatCurrency(getSubtotal())}</span>
-                  {isInternational && (<p className="text-xs text-ash mt-1">≈ {formatLocalCurrency(getSubtotal() * localExchangeRate, localCurrencyCode)}</p>)}
+                <div className="flex justify-between items-end">
+                  <span className="font-dm-mono text-salt uppercase tracking-widest text-xs">Total Due</span>
+                  <div className="text-right">
+                    <span className="text-base text-signal">{formatCurrency(finalTotal)}</span>
+                    {isInternational && (<p className="text-[10px] text-ash mt-1">≈ {formatLocalCurrency(finalTotalLocal, localCurrencyCode)}</p>)}
+                  </div>
                 </div>
               </div>
-              
-              {discountAmount > 0 && (
-                <div className="flex justify-between items-start">
-                  <span className="text-salt uppercase tracking-widest text-xs mt-1">Discount</span>
-                  <div className="text-right">
-                    <span className="text-salt">-{formatCurrency(discountAmount)}</span>
-                    {isInternational && (<p className="text-xs text-ash mt-1">≈ -{formatLocalCurrency(discountAmount * localExchangeRate, localCurrencyCode)}</p>)}
-                  </div>
-                </div>
-              )}
-              
-              {applicableTax > 0 && (
-                <div className="flex justify-between items-start">
-                  <span className="text-ash uppercase tracking-widest text-xs mt-1">{isInternational ? `Tax (${intlTaxRate}%)` : "Tax"}</span>
-                  <div className="text-right">
-                    <span className="text-ash">+{formatCurrency(applicableTax)}</span>
-                    {isInternational && (<p className="text-xs text-ash mt-1">≈ +{formatLocalCurrency(applicableTax * localExchangeRate, localCurrencyCode)}</p>)}
-                  </div>
-                </div>
-              )}
-              
-              <div className="w-full h-px bg-ember my-6" />
-
-              <div className="flex justify-between items-start">
-                <span className="font-syne font-bold text-salt uppercase tracking-widest text-sm mt-1">Total</span>
-                <div className="text-right">
-                  <span className="text-lg text-salt font-medium">{formatCurrency(finalTotal)}</span>
-                  {isInternational && (<p className="text-xs text-ash mt-1">≈ {formatLocalCurrency(finalTotalLocal, localCurrencyCode)}</p>)}
-                </div>
-              </div>
-            </div>
 
             {/* BCA reminder */}
-            <div className="mt-8 pt-6 border-t border-ember">
-              <p className="font-syne font-bold text-ash text-[10px] uppercase tracking-widest mb-4">Payment Information</p>
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-auto flex-shrink-0 bg-white p-1.5 flex items-center justify-center">
-                  <img src="/images/bca.png" alt="BCA Logo" className="w-full h-auto object-contain" />
-                </div>
-                <div>
-                  <p className="font-syne font-bold text-salt text-xs tracking-widest uppercase mb-2">BCA Bank Transfer</p>
-                  <div className="space-y-1.5">
-                    <div className="flex items-center gap-2 font-dm-mono text-xs">
-                      <span className="text-ash">No:</span>
-                      <span className="text-salt">6768126284</span>
-                      <CopyButton text="6768126284" />
+              <div className="mt-8 pt-6 border-t border-dashed border-ash">
+                <p className="font-dm-mono text-ash text-[10px] uppercase tracking-widest mb-4">Payment Information</p>
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-auto flex-shrink-0 p-1.5 flex items-center justify-center border border-ash blade-cut bg-void">
+                    <img src="/images/bca.png" alt="BCA Logo" className="w-full h-auto object-contain grayscale brightness-200" />
+                  </div>
+                  <div>
+                    <p className="font-syne font-bold text-salt text-xs tracking-widest uppercase mb-2">BCA Protocol</p>
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-2 font-dm-mono text-xs">
+                        <span className="text-ash">No:</span>
+                        <span className="text-signal">6768126284</span>
+                        <CopyButton text="6768126284" />
+                      </div>
+                      <p className="font-dm-mono text-[10px] text-ash">Name: ILYASA MEYDIANSYAH A</p>
                     </div>
-                    <p className="font-dm-mono text-xs text-ash">Name: ILYASA MEYDIANSYAH A</p>
                   </div>
                 </div>
               </div>
+              
+              <div className="absolute bottom-0 left-0 w-full h-[3px] bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjMiPjxwb2x5Z29uIHBvaW50cz0iMCAwLCA0IDMsIDggMCIgZmlsbD0iIzIyMiIvPjwvc3ZnPg==')] repeat-x rotate-180" />
             </div>
           </div>
         </div>

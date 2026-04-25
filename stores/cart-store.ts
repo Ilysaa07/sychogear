@@ -6,9 +6,11 @@ import type { CartItem } from "@/types";
 
 interface CartStore {
   items: CartItem[];
+  orderNote: string;
   addItem: (item: CartItem) => void;
   removeItem: (productId: string, variantId: string) => void;
   updateQuantity: (productId: string, variantId: string, quantity: number) => void;
+  setOrderNote: (note: string) => void;
   clearCart: () => void;
   getTotal: () => number;
   getSubtotal: () => number;
@@ -22,6 +24,9 @@ export const useCartStore = create<CartStore>()(
   persist(
     (set, get) => ({
       items: [],
+      orderNote: "",
+
+      setOrderNote: (note: string) => set({ orderNote: note }),
 
       addItem: (item: CartItem) => {
         const items = get().items;

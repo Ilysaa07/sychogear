@@ -12,6 +12,7 @@ export const checkoutSchema = z.object({
   stateProvince: z.string().min(2, "State / Province must be at least 2 characters"),
   zipCode: z.string().min(2, "ZIP / Postal Code must be at least 2 characters"),
   couponCode: z.string().optional(),
+  orderNote: z.string().optional(),
 });
 
 export type CheckoutFormData = z.infer<typeof checkoutSchema>;

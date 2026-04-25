@@ -78,6 +78,7 @@ export const orderRepository = {
     total: number;
     couponId?: string;
     country?: string;
+    notes?: string;
     paymentMethod?: string;
     shippingCost?: number;
     expiredAt: Date;
@@ -108,6 +109,7 @@ export const orderRepository = {
         total: data.total,
         couponId: data.couponId,
         country: data.country || "ID",
+        notes: data.notes,
         paymentMethod: data.paymentMethod || "MANUAL_TRANSFER",
         shippingCost: data.shippingCost || 0,
         expiredAt: data.expiredAt,

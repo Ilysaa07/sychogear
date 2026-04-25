@@ -47,6 +47,7 @@ export async function POST(request: Request) {
       items,
       couponCode,
       country: validation.data.country || "ID",
+      orderNote: validation.data.orderNote,
     });
 
     return NextResponse.json({
