@@ -4,12 +4,12 @@ import { useState } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
 import Link from "next/link";
-import Image from "next/image";
 
 export default function NewsletterSection() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,89 +20,70 @@ export default function NewsletterSection() {
       if (data.success) {
         setSent(true);
         setEmail("");
-        toast.success("You're on the list.");
+        toast.success("Welcome to the Syndicate.");
       } else {
-        toast.error(data.error || "Something went wrong.");
+        toast.error(data.error || "Transmission failed.");
       }
     } catch (error: any) {
-      if (axios.isAxiosError(error) && error.response?.data?.error) {
-        toast.error(error.response.data.error);
-      } else {
-        toast.error("Could not subscribe. Try again.");
-      }
+      toast.error("Network error. Try again.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <section
-      id="newsletter"
-      className="relative min-h-[90vh] flex flex-col items-center justify-center bg-[#111512] px-6 py-24 text-center overflow-hidden border-t border-ember"
-    >
-      {/* Background Graphic Element - subtle glow or noise could go here */}
-
-      {/* Centerpiece: Animated Logo */}
-      <div className="relative w-32 h-32 sm:w-48 sm:h-48 mb-8 z-10 transition-transform duration-700 hover:scale-105">
-        <img
-          src="/images/logo.gif"
-          alt="Sychogear"
-          className="w-full h-full object-contain"
-        />
+    <section className="relative min-h-[80vh] flex flex-col items-center justify-center bg-[#020202] px-6 py-32 text-center overflow-hidden border-t border-[#111]">
+      
+      {/* Massive Background Logo Hologram */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.03] transition-transform duration-[10s] hover:scale-105">
+        <img src="/images/logo.gif" alt="" className="w-[200vw] md:w-[100vw] h-auto object-contain" />
       </div>
 
-      {/* Massive Typography Statement */}
-      <h2
-        className="font-syne font-bold text-salt uppercase leading-[0.85] tracking-tight mb-8 z-10"
-        style={{ fontSize: "clamp(48px, 12vw, 140px)" }}
-      >
-        Rule Your<br />Domain.
-      </h2>
+      <div className="relative z-10 w-full max-w-4xl flex flex-col items-center">
+        
+        {/* Animated small logo */}
+        <div className="w-16 h-16 sm:w-24 sm:h-24 mb-16 opacity-70 hover:opacity-100 hover:scale-110 transition-all duration-700">
+           <img src="/images/logo.gif" alt="Sychogear Core" className="w-full h-full object-contain" />
+        </div>
 
-      {/* Action Link */}
-      <Link
-        href="/products"
-        className="font-syne font-bold text-salt text-xs uppercase tracking-[0.2em] mb-24 pb-2 border-b-2 border-salt hover:text-ash hover:border-ash transition-colors z-10"
-      >
-        Shop The Archive
-      </Link>
+        {/* Massive Typography Statement */}
+        <h2 className="font-syne font-black text-white uppercase leading-[0.8] tracking-tighter mb-20" style={{ fontSize: "clamp(60px, 14vw, 180px)" }}>
+          Rule<br/>Your<br/>Domain.
+        </h2>
 
-      {/* Minimalist Newsletter Form */}
-      <div className="w-full max-w-md z-10">
-        <p className="font-syne font-bold text-salt text-sm tracking-widest uppercase mb-3">
-          Stay Informed
-        </p>
-        <p className="font-dm-mono text-xs text-ash mb-8">
-          Drop alerts. No noise. Unsubscribe any time.
-        </p>
-
-        {sent ? (
-          <p className="font-syne font-bold text-signal text-xl uppercase tracking-widest py-4 border-b border-signal inline-block">
-            You're on the list.
+        {/* Sleek Form */}
+        <div className="w-full max-w-lg">
+          {sent ? (
+            <p className="font-syne font-bold text-white text-xl uppercase tracking-[0.3em] py-4 border-b border-white animate-pulse">
+              Access Granted.
+            </p>
+          ) : (
+            <form onSubmit={handleSubmit} className="relative group">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setIsFocused(false)}
+                placeholder="ENTER YOUR EMAIL..."
+                required
+                className={`w-full bg-transparent border-b-2 p-4 text-center font-dm-mono text-sm text-white placeholder-[#444] focus:outline-none transition-all duration-500 uppercase tracking-widest ${isFocused ? 'border-white' : 'border-[#222]'}`}
+              />
+              {/* Magnetic Button that appears on focus/typing */}
+              <button
+                type="submit"
+                disabled={loading}
+                className={`absolute right-2 top-0 bottom-0 px-4 font-syne font-bold text-white transition-all duration-500 flex items-center justify-center ${isFocused || email.length > 0 ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4 pointer-events-none'}`}
+              >
+                {loading ? "..." : "→"}
+              </button>
+            </form>
+          )}
+          
+          <p className="font-dm-mono text-[10px] text-[#444] uppercase tracking-[0.2em] mt-8">
+            Join the archive. No noise. Unsubscribe anytime.
           </p>
-        ) : (
-          <form onSubmit={handleSubmit} className="flex border-b border-ash group hover:border-salt focus-within:border-salt transition-colors">
-            <label htmlFor="newsletter-email" className="sr-only">Email address</label>
-            <input
-              id="newsletter-email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="your@email.com"
-              required
-              autoComplete="email"
-              className="w-full bg-transparent border-none outline-none py-4 font-dm-mono text-sm text-center text-salt placeholder-dim focus:ring-0"
-            />
-            <button
-              type="submit"
-              disabled={loading}
-              aria-label="Subscribe"
-              className="px-4 font-syne font-bold text-salt text-xl group-hover:translate-x-1 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? "..." : "→"}
-            </button>
-          </form>
-        )}
+        </div>
       </div>
     </section>
   );

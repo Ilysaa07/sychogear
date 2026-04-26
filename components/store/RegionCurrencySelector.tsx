@@ -75,7 +75,7 @@ export default function RegionCurrencySelector() {
           </div>
 
           {/* List */}
-          <div className="overflow-y-auto custom-scrollbar flex-1">
+          <div className="overflow-y-auto overscroll-contain custom-scrollbar flex-1 min-h-0 pointer-events-auto">
             {filteredCountries.length > 0 ? (
               filteredCountries.map(c => (
                 <button

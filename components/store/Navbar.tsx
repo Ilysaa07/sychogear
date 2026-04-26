@@ -76,109 +76,115 @@ export default function Navbar() {
       {/* ─── Custom Cursor ─────────────────────────────────── */}
       <div id="sg-cursor" ref={cursorRef} aria-hidden="true" />
       {/* ─── Header ────────────────────────────────────────── */}
-      <header
-        id="site-navbar"
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-          scrolled ? "bg-void/95 backdrop-blur-md border-b border-ember" : "bg-transparent"
-        }`}
-      >
-        <div className="container-main">
-          <div className="relative flex items-center justify-between" style={{ height: "60px" }}>
+      <div className="fixed top-0 left-0 right-0 z-50 flex justify-center pointer-events-none px-4 md:px-8 transition-all duration-700 ease-[cubic-bezier(0.4,0,0.2,1)]" style={{ paddingTop: scrolled ? "16px" : "0" }}>
+        <header
+          id="site-navbar"
+          className={`w-full transition-all duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] pointer-events-auto ${
+            scrolled 
+              ? "max-w-6xl bg-[#050505]/70 backdrop-blur-2xl border border-white/10 shadow-[0_20px_40px_rgba(0,0,0,0.6)]" 
+              : "max-w-full bg-transparent border-transparent"
+          }`}
+          style={{ borderRadius: scrolled ? "40px" : "0px" }}
+        >
+          <div className={`transition-all duration-700 ${scrolled ? "px-6 md:px-10" : "px-4 md:px-8"}`}>
+            <div className="relative flex items-center justify-between" style={{ height: scrolled ? "70px" : "80px" }}>
 
-            {/* Left — Desktop Nav & Mobile Hamburger */}
-            <div className="flex-1 flex items-center">
-              <nav className="hidden md:flex items-center gap-8" aria-label="Primary navigation">
-                {navLinks.map((link) => (
-                  <Link key={link.href} href={link.href} className="nav-link">
-                    {link.label}
-                  </Link>
-                ))}
-              </nav>
-              
-              {/* Mobile hamburger — Now on the Left */}
-              <button
-                id="mobile-menu-trigger"
-                onClick={() => setMobileOpen(!mobileOpen)}
-                className="md:hidden p-2 -ml-2 text-salt transition-colors duration-200 flex flex-col gap-1.5 justify-center items-center w-10 h-10"
-                aria-label={mobileOpen ? "Close menu" : "Open menu"}
-                aria-expanded={mobileOpen}
-              >
-                <span className={`block h-[1.5px] w-5 bg-current transition-all duration-300 origin-center ${mobileOpen ? "rotate-45 translate-y-[4.5px]" : ""}`} />
-                <span className={`block h-[1.5px] w-5 bg-current transition-all duration-300 origin-center ${mobileOpen ? "-rotate-45 -translate-y-[4.5px]" : ""}`} />
-              </button>
-            </div>
-
-            {/* Center — Logo */}
-            <Link
-              href="/"
-              className="absolute left-1/2 -translate-x-1/2 flex items-center z-10"
-              aria-label="SYCHOGEAR — Home"
-            >
-              <Image
-                src="/images/logo-sychogear.webp"
-                alt="SYCHOGEAR"
-                width={320}
-                height={80}
-                className="w-auto opacity-100 transition-opacity duration-300"
-                style={{ height: "clamp(20px, 4vw, 32px)", filter: "brightness(1.1)" }}
-                priority
-              />
-            </Link>
-
-            {/* Right — Actions */}
-            <div className="flex-1 flex items-center justify-end gap-1 sm:gap-4">
-              <div className="hidden md:block border-r border-ember pr-4 mr-2">
-                <RegionCurrencySelector />
+              {/* Left — Desktop Nav & Mobile Hamburger */}
+              <div className="flex-1 flex items-center">
+                <nav className="hidden md:flex items-center gap-8" aria-label="Primary navigation">
+                  {navLinks.map((link) => (
+                    <Link key={link.href} href={link.href} className="font-syne font-bold text-xs uppercase tracking-[0.2em] text-white/70 hover:text-white transition-colors duration-300">
+                      {link.label}
+                    </Link>
+                  ))}
+                </nav>
+                
+                {/* Mobile hamburger */}
+                <button
+                  id="mobile-menu-trigger"
+                  onClick={() => setMobileOpen(!mobileOpen)}
+                  className="md:hidden p-2 -ml-2 text-white transition-colors duration-200 flex flex-col gap-1.5 justify-center items-center w-10 h-10"
+                  aria-label={mobileOpen ? "Close menu" : "Open menu"}
+                  aria-expanded={mobileOpen}
+                >
+                  <span className={`block h-[1.5px] w-5 bg-current transition-all duration-300 origin-center ${mobileOpen ? "rotate-45 translate-y-[4.5px]" : ""}`} />
+                  <span className={`block h-[1.5px] w-5 bg-current transition-all duration-300 origin-center ${mobileOpen ? "-rotate-45 -translate-y-[4.5px]" : ""}`} />
+                </button>
               </div>
-              <div className="md:hidden scale-90 origin-right">
-                 <RegionCurrencySelector />
-              </div>
-              {/* Cart */}
-              <button
-                id="cart-trigger"
-                onClick={() => setCartDrawerOpen(true)}
-                className="relative p-2 text-salt transition-colors duration-200"
-                aria-label={`Cart${mounted && itemCount > 0 ? `, ${itemCount} items` : ""}`}
+
+              {/* Center — Logo */}
+              <Link
+                href="/"
+                className="absolute left-1/2 -translate-x-1/2 flex items-center z-10"
+                aria-label="SYCHOGEAR — Home"
               >
-                <HiOutlineShoppingBag className="w-5 h-5" />
-                {mounted && itemCount > 0 && (
-                  <span
-                    className="absolute top-1 right-1 w-3.5 h-3.5 flex items-center justify-center bg-salt text-void text-[8px] font-mono leading-none rounded-full"
-                    aria-hidden="true"
-                  >
-                    {itemCount > 9 ? "9+" : itemCount}
-                  </span>
-                )}
-              </button>
+                <Image
+                  src="/images/logo-sychogear.webp"
+                  alt="SYCHOGEAR"
+                  width={320}
+                  height={80}
+                  className="w-auto opacity-100 transition-opacity duration-300 mix-blend-screen"
+                  style={{ height: "clamp(20px, 4vw, 32px)", filter: "brightness(1.5)" }}
+                  priority
+                />
+              </Link>
+
+              {/* Right — Actions */}
+              <div className="flex-1 flex items-center justify-end gap-1 sm:gap-4">
+                <div className="hidden md:block border-r border-white/20 pr-4 mr-2">
+                  <RegionCurrencySelector />
+                </div>
+                <div className="md:hidden scale-90 origin-right">
+                   <RegionCurrencySelector />
+                </div>
+                {/* Cart */}
+                <button
+                  id="cart-trigger"
+                  onClick={() => setCartDrawerOpen(true)}
+                  className="relative p-2 text-white/80 hover:text-white transition-colors duration-300"
+                  aria-label={`Cart${mounted && itemCount > 0 ? `, ${itemCount} items` : ""}`}
+                >
+                  <HiOutlineShoppingBag className="w-5 h-5" />
+                  {mounted && itemCount > 0 && (
+                    <span
+                      className="absolute top-0 right-0 w-4 h-4 flex items-center justify-center bg-white text-black text-[9px] font-bold leading-none rounded-full"
+                      aria-hidden="true"
+                    >
+                      {itemCount > 9 ? "9+" : itemCount}
+                    </span>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
+      </div>
 
       {/* ─── Mobile Nav — Full Screen ──────────────────────── */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 z-40 bg-void flex flex-col overflow-hidden"
+          className="fixed inset-0 z-40 bg-[#020202] flex flex-col overflow-hidden"
           role="dialog"
           aria-modal="true"
           aria-label="Mobile navigation"
-          style={{ animation: "fadeIn 300ms ease-out forwards" }}
+          style={{ animation: "fadeIn 400ms ease-out forwards" }}
         >
           {/* Close bar */}
-          <div className="flex items-center justify-between px-8 py-5 border-b border-ember" style={{ height: "60px" }}>
+          <div className="flex items-center justify-between px-8 py-6 border-b border-[#111]">
             <Link href="/" onClick={() => setMobileOpen(false)} aria-label="SYCHOGEAR — Home">
               <Image
                 src="/images/logo-sychogear.webp"
                 alt="SYCHOGEAR"
                 width={200}
                 height={50}
-                className="h-7 w-auto opacity-100"
+                className="h-8 w-auto opacity-100 mix-blend-screen"
+                style={{ filter: "brightness(1.5)" }}
               />
             </Link>
             <button
               onClick={() => setMobileOpen(false)}
-              className="text-salt transition-colors duration-200"
-              style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "1.5rem", lineHeight: 1 }}
+              className="text-white hover:text-gray-400 transition-colors duration-200"
+              style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "2rem", lineHeight: 1 }}
               aria-label="Close menu"
             >
               ×
@@ -191,17 +197,17 @@ export default function Navbar() {
               {navLinks.map((link, i) => (
                 <div
                   key={link.href}
-                  className="overflow-hidden border-b border-ember"
+                  className="overflow-hidden border-b border-[#111]"
                 >
                   <Link
                     href={link.href}
                     onClick={() => setMobileOpen(false)}
                     className="block py-6 group"
-                    style={{ animation: `clipRevealV 600ms ${i * 80}ms var(--ease-out-expo) both` }}
+                    style={{ animation: `clipRevealV 600ms ${i * 80}ms cubic-bezier(0.4, 0, 0.2, 1) both` }}
                   >
                     <span
-                      className="font-syne text-salt group-hover:text-pale transition-colors duration-200 block"
-                      style={{ fontSize: "clamp(32px, 8vw, 64px)", lineHeight: 1.05, fontWeight: 700, textTransform: "uppercase" }}
+                      className="font-syne text-white group-hover:text-gray-400 transition-colors duration-300 block"
+                      style={{ fontSize: "clamp(40px, 10vw, 80px)", lineHeight: 1, fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.02em" }}
                     >
                       {link.label}
                     </span>
@@ -212,13 +218,13 @@ export default function Navbar() {
           </nav>
 
           {/* Bottom social strip */}
-          <div className="px-8 pb-10 pt-6 border-t border-ember flex justify-between items-center">
-            <div className="flex gap-6">
+          <div className="px-8 pb-12 pt-8 border-t border-[#111] flex justify-between items-center">
+            <div className="flex gap-8">
               <a
                 href="https://www.instagram.com/sychogear"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn-link text-[10px]"
+                className="font-dm-mono text-[11px] text-white/50 hover:text-white uppercase tracking-widest transition-colors"
               >
                 Instagram ↗
               </a>
@@ -226,7 +232,7 @@ export default function Navbar() {
                 href="https://www.tiktok.com/@sychogearofficial"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn-link text-[10px]"
+                className="font-dm-mono text-[11px] text-white/50 hover:text-white uppercase tracking-widest transition-colors"
               >
                 TikTok ↗
               </a>
