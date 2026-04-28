@@ -121,41 +121,33 @@ export default function HeroSlider({ images }: HeroSliderProps) {
 
       {/* Green CRT OSD Overlay (Sync with TV component) */}
       <div className="absolute inset-0 pointer-events-none z-20 p-6 sm:p-10 pt-32 sm:pt-40 flex flex-col justify-between font-dm-mono text-[#0f0] font-bold text-xs sm:text-base tracking-widest uppercase" style={{ textShadow: "0 0 8px #0f0" }}>
-        
-        {/* Top Row */}
-        <div className="flex justify-between items-start">
-          <div className="flex items-center gap-3">
-            <span style={{ fontSize: "1.2em", animation: "recBlink 1.5s infinite" }}>▶</span>
-            <span className="animate-[recBlink_1.5s_infinite]">PLAY</span>
-          </div>
-          <div className="text-right">
-            <span className="block mb-1">ARCHIVE-CAM</span>
-            <span className="text-[10px] sm:text-xs">REC <span className="text-red-500 shadow-[0_0_8px_red] align-middle inline-block w-2 h-2 rounded-full bg-red-500 animate-[recBlink_1s_infinite] ml-1" /></span>
-          </div>
-        </div>
 
-        {/* Bottom Row */}
-        <div className="flex justify-between items-end pb-4 sm:pb-8">
-          <div>
-            <span>TCR {formatTime(time)}</span>
-            <span className="block mt-1">SP</span>
-          </div>
-          
-          {/* Slide Indicators acting as Channel Selectors */}
-          <div className="flex flex-col items-end gap-2 pointer-events-auto">
-            {images.length > 1 && images.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => goTo(i)}
-                className={`transition-all duration-300 hover:text-white hover:scale-110 ${i === currentIndex ? "opacity-100" : "opacity-40"}`}
-                aria-label={`Go to channel ${i + 1}`}
-              >
-                CH{String(i + 1).padStart(2, '0')}
-              </button>
-            ))}
-          </div>
+      </div>
+
+      {/* Subtle Minimalist Indicators - Bottom Edge */}
+      <div className="absolute bottom-8 sm:bottom-12 left-0 right-0 z-30 flex justify-center pointer-events-auto px-6 sm:px-10">
+        <div className="flex items-center gap-4 sm:gap-6 max-w-2xl w-full">
+          {images.length > 1 && images.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => goTo(i)}
+              className="flex-1 group py-4"
+              aria-label={`Go to slide ${i + 1}`}
+            >
+              <div className="relative h-[1px] w-full bg-white/10 overflow-hidden">
+                <div 
+                  className={`absolute inset-0 bg-white/40 transition-transform origin-left ${i === currentIndex ? "scale-x-100" : "scale-x-0"}`}
+                  style={{ 
+                    transitionDuration: i === currentIndex ? "9000ms" : "0ms",
+                    transitionTimingFunction: "linear"
+                  }}
+                />
+              </div>
+            </button>
+          ))}
         </div>
       </div>
+
     </>
   );
 }

@@ -206,41 +206,49 @@ export default function CoverFlowSlider({ products, marqueeText = "SYCHOGEAR WOR
         /* PVM Chassis (Outer) */
         .pvm-casing-outer {
           position: relative;
-          background: linear-gradient(180deg, #303030 0%, #1e1e1e 100%);
-          border-radius: clamp(12px, 2.5vw, 24px);
-          padding: clamp(12px, 2vw, 24px);
+          background: #2b2b2b;
+          border-radius: clamp(16px, 3vw, 28px);
+          padding: clamp(16px, 2.5vw, 32px);
+          /* Simplified shadows for better scroll performance */
           box-shadow: 
-            inset 0 2px 4px rgba(255,255,255,0.08),
-            inset 0 -4px 12px rgba(0,0,0,0.8),
-            0 40px 80px -10px rgba(0,0,0,0.9),
-            0 10px 30px rgba(0,0,0,0.8),
-            0 0 0 1px #050505;
+            inset 0 4px 6px rgba(255,255,255,0.1),
+            inset 0 -8px 24px rgba(0,0,0,0.8),
+            0 40px 60px -20px rgba(0,0,0,0.9),
+            0 0 0 2px #111;
           max-width: 900px;
           width: 100%;
           display: flex;
           flex-direction: column;
-          gap: clamp(12px, 2vw, 20px);
+          gap: clamp(16px, 2.5vw, 24px);
           z-index: 10;
+          border-top: 1px solid #444;
+          transform: translateZ(0); /* Hardware acceleration */
+          will-change: transform;
         }
 
-        /* Metallic Noise Texture */
-        .pvm-casing-outer::before {
-          content: ''; position: absolute; inset: 0;
-          background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><filter id="noise"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23noise)" opacity="0.05"/></svg>');
-          pointer-events: none; border-radius: inherit; z-index: 1;
+        /* Vents */
+
+        .pvm-casing-outer::after {
+          content: ''; position: absolute;
+          top: clamp(6px, 1vw, 12px); left: 10%; right: 10%; height: clamp(8px, 1.5vw, 16px);
+          background: repeating-linear-gradient(90deg, transparent, transparent 8px, rgba(0,0,0,0.8) 8px, rgba(0,0,0,0.8) 12px, rgba(255,255,255,0.05) 12px, rgba(255,255,255,0.05) 13px);
+          opacity: 0.9; z-index: 1; border-radius: 4px; pointer-events: none;
         }
 
-        /* Screen Recess Bezel (Thick inner black border) */
+        /* Screen Recess Bezel (Thick inner border) */
         .pvm-screen-recess {
-          background: #080808;
-          border-radius: clamp(8px, 1.5vw, 16px);
-          padding: clamp(12px, 2.5vw, 32px);
+          background: #141414;
+          border-radius: clamp(10px, 2vw, 20px);
+          padding: clamp(16px, 3vw, 40px);
           box-shadow: 
-            inset 0 8px 24px rgba(0,0,0,1),
-            inset 0 0 0 2px #000,
-            0 2px 3px rgba(255,255,255,0.08);
+            inset 0 16px 35px rgba(0,0,0,1),
+            inset 0 4px 10px rgba(0,0,0,0.9),
+            inset 0 0 0 2px #080808,
+            0 2px 0 rgba(255,255,255,0.05);
           position: relative;
           z-index: 2;
+          border-top: 2px solid #080808;
+          border-left: 2px solid #0c0c0c;
         }
 
         /* The CRT Screen Tube */
@@ -251,9 +259,7 @@ export default function CoverFlowSlider({ products, marqueeText = "SYCHOGEAR WOR
           background: #020202;
           border-radius: 50% / 4%;
           overflow: hidden;
-          box-shadow: 
-            inset 0 0 60px rgba(0,0,0,0.95),
-            inset 0 0 10px rgba(255,255,255,0.03);
+          box-shadow: inset 0 0 60px rgba(0,0,0,1);
           transform: perspective(1000px) rotateX(1deg) scaleY(0.98);
         }
         
@@ -261,11 +267,12 @@ export default function CoverFlowSlider({ products, marqueeText = "SYCHOGEAR WOR
           position: absolute; inset: 0;
           border-radius: 50% / 4%;
           box-shadow: 
-            inset 0 0 40px rgba(0,0,0,0.95),
+            inset 0 0 60px rgba(0,0,0,0.9),
             inset 0 0 0 2px rgba(255,255,255,0.02);
           background: 
-            radial-gradient(circle at 50% 50%, transparent 50%, rgba(0,0,0,0.8) 100%),
-            linear-gradient(110deg, rgba(255,255,255,0.06) 0%, transparent 35%, rgba(255,255,255,0.01) 75%, transparent 100%);
+            radial-gradient(circle at 50% 50%, transparent 60%, rgba(0,0,0,0.7) 100%),
+            radial-gradient(ellipse 150% 100% at 50% -20%, rgba(255,255,255,0.1) 0%, transparent 50%),
+            linear-gradient(105deg, transparent 20%, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.1) 35%, transparent 40%);
           pointer-events: none; z-index: 50;
         }
 
@@ -277,7 +284,7 @@ export default function CoverFlowSlider({ products, marqueeText = "SYCHOGEAR WOR
 
         .pvm-scanlines {
           position: absolute; inset: 0;
-          background: repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0px, rgba(0,0,0,0) 2px, rgba(0,0,0,0.2) 2px, rgba(0,0,0,0.2) 4px);
+          background: repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0px, rgba(0,0,0,0) 2px, rgba(0,0,0,0.25) 2px, rgba(0,0,0,0.25) 4px);
           pointer-events: none; z-index: 41; animation: scanline-drift 20s linear infinite;
         }
 
@@ -306,7 +313,7 @@ export default function CoverFlowSlider({ products, marqueeText = "SYCHOGEAR WOR
         .tv-static-noise {
           position: absolute; inset: 0; z-index: 45; pointer-events: none;
           background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><filter id="noise"><feTurbulence type="fractalNoise" baseFrequency="6" numOctaves="3" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23noise)" opacity="1"/></svg>');
-          background-size: 100px 100px; mix-blend-mode: color-dodge; opacity: 0.6;
+          background-size: 100px 100px; mix-blend-mode: color-dodge; opacity: 0.7;
           animation: static-dance 0.1s steps(2) infinite;
         }
 
@@ -337,64 +344,104 @@ export default function CoverFlowSlider({ products, marqueeText = "SYCHOGEAR WOR
         /* Control Panel (Bottom) */
         .pvm-control-panel {
           display: flex; justify-content: space-between; align-items: flex-end;
-          padding: clamp(8px, 1.5vw, 16px) clamp(16px, 2.5vw, 32px); z-index: 2; position: relative;
+          padding: clamp(12px, 2vw, 24px) clamp(16px, 3vw, 40px); z-index: 2; position: relative;
           gap: 16px; flex-wrap: wrap;
+          background: linear-gradient(180deg, #222 0%, #1a1a1a 100%);
+          border-radius: clamp(8px, 1.5vw, 16px);
+          box-shadow: inset 0 2px 4px rgba(255,255,255,0.05), inset 0 -2px 8px rgba(0,0,0,0.5), 0 4px 8px rgba(0,0,0,0.5);
+          border: 1px solid #333;
         }
 
         .pvm-brand-area {
-          display: flex; flex-direction: column; gap: 4px;
+          display: flex; flex-direction: column; gap: 4px; padding-bottom: 4px;
         }
         .pvm-brand-logo {
-          font-family: 'Arial Black', sans-serif; font-size: clamp(16px, 2.5vw, 24px); letter-spacing: 0.2em;
-          color: #b0b0b0; text-transform: uppercase;
-          text-shadow: 0 -1px 0 rgba(0,0,0,0.8), 0 1px 0 rgba(255,255,255,0.1);
+          font-family: 'Arial Black', sans-serif; font-size: clamp(18px, 2.8vw, 28px); letter-spacing: 0.15em;
+          color: #d0d0d0; text-transform: uppercase;
+          text-shadow: 0 -1px 1px rgba(0,0,0,0.9), 0 1px 1px rgba(255,255,255,0.2);
         }
         .pvm-brand-model {
           font-family: 'Arial', sans-serif; font-size: clamp(10px, 1.2vw, 12px); letter-spacing: 0.1em;
-          color: #666;
+          color: #777; text-shadow: 0 -1px 0 rgba(0,0,0,0.5);
         }
 
         .pvm-controls-right {
-          display: flex; gap: clamp(16px, 3vw, 32px); align-items: flex-end;
+          display: flex; gap: clamp(16px, 3vw, 36px); align-items: flex-end;
         }
 
-        .pvm-btn-group { display: flex; align-items: center; gap: clamp(4px, 1vw, 8px); }
-        .pvm-btn-group.column { flex-direction: column; gap: 4px; }
+        .pvm-btn-group { display: flex; align-items: center; gap: clamp(8px, 1.5vw, 12px); }
+        .pvm-btn-group.column { flex-direction: column; gap: 8px; }
         
         .pvm-btn-label {
-          font-family: var(--font-dm-mono, monospace); font-size: clamp(8px, 1vw, 10px); color: #888;
+          font-family: var(--font-dm-mono, monospace); font-size: clamp(9px, 1.1vw, 11px); color: #888;
           letter-spacing: 1px; text-transform: uppercase; text-shadow: 0 -1px 0 rgba(0,0,0,0.8);
+          font-weight: bold;
         }
 
+        /* 3D Hardware Buttons */
         .pvm-btn {
-          width: clamp(32px, 4.5vw, 44px); height: clamp(20px, 3vw, 28px); border-radius: 4px;
-          background: linear-gradient(180deg, #444 0%, #2a2a2a 100%); border: none;
-          box-shadow: 0 4px 6px rgba(0,0,0,0.9), inset 0 1px 1px rgba(255,255,255,0.15), inset 0 -1px 2px rgba(0,0,0,0.8);
+          width: clamp(36px, 5vw, 48px); height: clamp(24px, 3.5vw, 32px); border-radius: 4px;
+          background: linear-gradient(180deg, #4a4a4a 0%, #2f2f2f 100%); border: 1px solid #111;
+          box-shadow: 
+            0 4px 6px rgba(0,0,0,0.8), 
+            inset 0 2px 3px rgba(255,255,255,0.2), 
+            inset 0 -2px 3px rgba(0,0,0,0.5); 
           cursor: pointer; display: flex; align-items: center; justify-content: center;
-          color: #999; font-size: clamp(12px, 1.5vw, 16px); transition: all 0.05s;
+          color: #aaa; font-size: clamp(14px, 1.8vw, 18px); font-weight: bold;
+          transition: all 0.05s ease-out; position: relative;
         }
         .pvm-btn:active {
-          transform: translateY(2px); box-shadow: 0 1px 2px rgba(0,0,0,0.8), inset 0 2px 4px rgba(0,0,0,0.8); color: #fff; background: #222;
+          transform: translateY(3px); 
+          box-shadow: 
+            0 1px 2px rgba(0,0,0,0.8), 
+            inset 0 4px 6px rgba(0,0,0,0.6), 
+            inset 0 -1px 2px rgba(255,255,255,0.1); 
+          color: #fff; background: #2a2a2a;
         }
         
+        /* Specific Power Button - Larger, circular */
         .pvm-power-btn {
-          width: clamp(36px, 5vw, 48px); height: clamp(36px, 5vw, 48px); border-radius: 50%;
-          background: radial-gradient(circle at 30% 30%, #444 0%, #1a1a1a 100%);
-          box-shadow: 0 4px 8px rgba(0,0,0,0.9), inset 0 2px 2px rgba(255,255,255,0.15), inset 0 -2px 4px rgba(0,0,0,0.8), 0 0 0 2px #0a0a0a;
+          width: clamp(40px, 5.5vw, 54px); height: clamp(40px, 5.5vw, 54px); border-radius: 50%;
+          background: radial-gradient(circle at 30% 30%, #555 0%, #222 100%);
+          border: 1px solid #000;
+          box-shadow: 
+            0 6px 10px rgba(0,0,0,0.9), 
+            inset 0 3px 4px rgba(255,255,255,0.2), 
+            inset 0 -4px 6px rgba(0,0,0,0.7), 
+            0 0 0 3px #1a1a1a; 
+        }
+        .pvm-power-btn:active {
+          transform: translateY(4px);
+          box-shadow: 
+            0 2px 4px rgba(0,0,0,0.9), 
+            inset 0 6px 10px rgba(0,0,0,0.8), 
+            0 0 0 3px #1a1a1a;
         }
 
-        /* LED */
+        /* Realistic Glass LED */
         .pvm-led {
-          width: 6px; height: 6px; border-radius: 50%; background: #333;
-          box-shadow: inset 0 2px 4px rgba(0,0,0,0.8); margin-bottom: 8px; align-self: center;
+          width: clamp(8px, 1.2vw, 12px); height: clamp(8px, 1.2vw, 12px); border-radius: 50%; background: #222;
+          box-shadow: inset 0 2px 4px rgba(0,0,0,0.9), 0 1px 1px rgba(255,255,255,0.1); 
+          margin-bottom: 4px; align-self: center; border: 1px solid #111;
+          position: relative;
         }
-        .pvm-led.on { background: #0f0; box-shadow: 0 0 12px #0f0, inset 0 -2px 4px rgba(0,0,0,0.2); }
-        .pvm-led.standby { background: #f00; box-shadow: 0 0 8px #f00, inset 0 -2px 4px rgba(0,0,0,0.2); }
+        .pvm-led::after {
+           content: ''; position: absolute; top: 20%; left: 20%; width: 30%; height: 30%;
+           border-radius: 50%; background: rgba(255,255,255,0.4); 
+        }
+        .pvm-led.on { 
+          background: #2fff2f; 
+          box-shadow: 0 0 15px 2px #2fff2f, inset 0 -2px 6px rgba(0,100,0,0.6), 0 1px 1px rgba(255,255,255,0.1); 
+        }
+        .pvm-led.standby { 
+          background: #ff2f2f; 
+          box-shadow: 0 0 12px 2px #ff2f2f, inset 0 -2px 6px rgba(100,0,0,0.6), 0 1px 1px rgba(255,255,255,0.1); 
+        }
 
         /* Ambient Glow */
         .pvm-ambient-glow {
           position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-          width: 100vw; height: 100vh; background: radial-gradient(circle at 50% 50%, rgba(15, 255, 60, 0.04) 0%, transparent 60%);
+          width: 100vw; height: 100vh; background: radial-gradient(circle at 50% 50%, rgba(15, 255, 60, 0.05) 0%, transparent 65%);
           filter: blur(80px); pointer-events: none; z-index: 1; transition: opacity 1s; opacity: 0;
         }
         .pvm-ambient-glow.on { opacity: 1; }

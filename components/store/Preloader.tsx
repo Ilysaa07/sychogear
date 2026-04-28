@@ -2,34 +2,45 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 
 export default function Preloader() {
+  const pathname = usePathname();
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(0);
   const [exiting, setExiting] = useState(false);
 
   useEffect(() => {
-    const hasLoaded = sessionStorage.getItem("sg_preloader_shown");
-    if (hasLoaded) { setLoading(false); return; }
+    // Reset state on pathname change to trigger loading screen
+    setLoading(true);
+    setProgress(0);
+    setExiting(false);
+
+    // First visit is longer, subsequent navigations are faster
+    const isInitial = !sessionStorage.getItem("sg_preloader_shown");
+    const duration = isInitial ? 2200 : 800; 
+
+    if (isInitial) {
+      sessionStorage.setItem("sg_preloader_shown", "true");
+    }
 
     const progressInterval = setInterval(() => {
       setProgress((prev) => {
         if (prev >= 100) { clearInterval(progressInterval); return 100; }
-        return prev + Math.floor(Math.random() * 14) + 5;
+        return prev + Math.floor(Math.random() * (isInitial ? 14 : 30)) + 10;
       });
-    }, 120);
+    }, isInitial ? 120 : 60);
 
     const timeout = setTimeout(() => {
       setExiting(true);
-      sessionStorage.setItem("sg_preloader_shown", "true");
-      setTimeout(() => setLoading(false), 700);
-    }, 2200);
+      setTimeout(() => setLoading(false), 500);
+    }, duration);
 
     return () => {
       clearInterval(progressInterval);
       clearTimeout(timeout);
     };
-  }, []);
+  }, [pathname]);
 
   if (!loading) return null;
 
