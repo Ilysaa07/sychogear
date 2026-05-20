@@ -57,13 +57,6 @@ export default function HeroSlider({ images }: HeroSliderProps) {
 
   return (
     <>
-      <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes recBlink {
-          0%, 49% { opacity: 1; }
-          50%, 100% { opacity: 0; }
-        }
-      `}} />
-
       {/* Main Slider Media */}
       {images.map((img, i) => {
         const isActive = i === currentIndex;
@@ -114,15 +107,6 @@ export default function HeroSlider({ images }: HeroSliderProps) {
           </div>
         );
       })}
-
-      {/* Subtle CRT Scanlines Overlay (NO color distortion) */}
-      <div className="absolute inset-0 pointer-events-none z-10 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,255,255,0.02),rgba(0,0,0,0.02),rgba(255,255,255,0.02))] bg-[length:100%_4px,3px_100%] opacity-30 mix-blend-overlay" />
-      <div className="absolute inset-0 pointer-events-none z-10 shadow-[inset_0_0_150px_rgba(0,0,0,0.7)]" />
-
-      {/* Green CRT OSD Overlay (Sync with TV component) */}
-      <div className="absolute inset-0 pointer-events-none z-20 p-6 sm:p-10 pt-32 sm:pt-40 flex flex-col justify-between font-dm-mono text-[#0f0] font-bold text-xs sm:text-base tracking-widest uppercase" style={{ textShadow: "0 0 8px #0f0" }}>
-
-      </div>
 
       {/* Subtle Minimalist Indicators - Bottom Edge */}
       <div className="absolute bottom-8 sm:bottom-12 left-0 right-0 z-30 flex justify-center pointer-events-auto px-6 sm:px-10">

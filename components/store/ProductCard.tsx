@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { useState, useRef, useCallback } from "react";
 import { useCurrency } from "@/components/store/CurrencyProvider";
 import type { ProductWithRelations } from "@/types";
 
@@ -9,9 +10,10 @@ interface ProductCardProps {
   product: ProductWithRelations;
   idx?: number;
   heroMode?: boolean;
+  onQuickView?: (product: ProductWithRelations) => void;
 }
 
-export default function ProductCard({ product, idx = 0, heroMode = false }: ProductCardProps) {
+export default function ProductCard({ product, idx = 0, heroMode = false, onQuickView }: ProductCardProps) {
   const { formatPrice } = useCurrency();
   const mainImage  = product.images[0]?.url || "/placeholder.svg";
   const hoverImage = product.images[1]?.url || null;
@@ -22,13 +24,14 @@ export default function ProductCard({ product, idx = 0, heroMode = false }: Prod
   const finalPrice   = product.discountRate > 0 ? displayPrice * (1 - product.discountRate / 100) : displayPrice;
   const originalPrice = isOnSale || product.salePrice || product.discountRate > 0 ? product.price : null;
   const isSoldOut   = totalStock === 0;
+  const isLowStock  = !isSoldOut && totalStock > 0 && totalStock <= 3;
 
   const aspectStyle = heroMode
     ? { aspectRatio: "21 / 9" }
     : { aspectRatio: "3 / 4" };
 
   return (
-    <Link href={`/products/${product.slug}`} className="group block w-full h-full relative overflow-hidden bg-abyss">
+    <div className="group block w-full h-full relative overflow-hidden bg-abyss">
 
       {/* ─── Image ──────────────────────────────── */}
       <div
@@ -76,11 +79,39 @@ export default function ProductCard({ product, idx = 0, heroMode = false }: Prod
               Sale
             </span>
           )}
+          {/* Low Stock Badge */}
+          {isLowStock && (
+            <span 
+              className="font-dm-mono font-bold text-[9px] px-2 py-1 uppercase tracking-widest leading-none"
+              style={{ backgroundColor: "rgba(192,57,43,0.85)", color: "#fff", backdropFilter: "blur(4px)" }}
+            >
+              Only {totalStock} left
+            </span>
+          )}
         </div>
+
+        {/* Quick View Button */}
+        {onQuickView && !isSoldOut && (
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onQuickView(product);
+            }}
+            className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0 whitespace-nowrap font-dm-mono text-[10px] font-bold tracking-[0.2em] uppercase px-5 py-2.5"
+            style={{ backgroundColor: "rgba(8,8,8,0.9)", color: "#e8e4dc", border: "1px solid rgba(232,228,220,0.3)", backdropFilter: "blur(8px)" }}
+            aria-label={`Quick view ${product.name}`}
+          >
+            + Quick View
+          </button>
+        )}
       </div>
 
+      {/* Link wrapper for the info */}
+      <Link href={`/products/${product.slug}`} className="absolute inset-0 z-10" aria-label={product.name} />
+
       {/* ─── Info ──────────────────────────────── */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/90 via-black/50 to-transparent transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+      <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/90 via-black/50 to-transparent transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300 z-[5]">
         <h3 className="font-syne font-bold text-salt uppercase tracking-widest text-sm mb-1 truncate">
           {product.name}
         </h3>
@@ -91,6 +122,6 @@ export default function ProductCard({ product, idx = 0, heroMode = false }: Prod
           )}
         </div>
       </div>
-    </Link>
+    </div>
   );
 }

@@ -26,31 +26,31 @@ export default function Navbar() {
     const handleMouseMove = (e: MouseEvent) => {
       if (cursorRef.current) {
         cursorRef.current.style.left = `${e.clientX}px`;
-        cursorRef.current.style.top  = `${e.clientY}px`;
+        cursorRef.current.style.top = `${e.clientY}px`;
       }
     };
     const handleMouseDown = () => cursorRef.current?.classList.add("cursor-click");
-    const handleMouseUp   = () => cursorRef.current?.classList.remove("cursor-click");
-    const handleHoverIn   = (e: Event) => {
+    const handleMouseUp = () => cursorRef.current?.classList.remove("cursor-click");
+    const handleHoverIn = (e: Event) => {
       if ((e.target as HTMLElement).closest("a, button, [role='button']")) {
         cursorRef.current?.classList.add("cursor-hover");
       }
     };
-    const handleHoverOut  = () => cursorRef.current?.classList.remove("cursor-hover");
+    const handleHoverOut = () => cursorRef.current?.classList.remove("cursor-hover");
 
-    window.addEventListener("mousemove",  handleMouseMove, { passive: true });
-    window.addEventListener("mousedown",  handleMouseDown);
-    window.addEventListener("mouseup",    handleMouseUp);
+    window.addEventListener("mousemove", handleMouseMove, { passive: true });
+    window.addEventListener("mousedown", handleMouseDown);
+    window.addEventListener("mouseup", handleMouseUp);
     document.addEventListener("mouseover", handleHoverIn);
-    document.addEventListener("mouseout",  handleHoverOut);
+    document.addEventListener("mouseout", handleHoverOut);
 
     return () => {
-      window.removeEventListener("scroll",    handleScroll);
+      window.removeEventListener("scroll", handleScroll);
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mousedown", handleMouseDown);
-      window.removeEventListener("mouseup",   handleMouseUp);
+      window.removeEventListener("mouseup", handleMouseUp);
       document.removeEventListener("mouseover", handleHoverIn);
-      document.removeEventListener("mouseout",  handleHoverOut);
+      document.removeEventListener("mouseout", handleHoverOut);
     };
   }, []);
 
@@ -76,88 +76,110 @@ export default function Navbar() {
       {/* ─── Custom Cursor ─────────────────────────────────── */}
       <div id="sg-cursor" ref={cursorRef} aria-hidden="true" />
       {/* ─── Header ────────────────────────────────────────── */}
-      <div className="fixed top-0 left-0 right-0 z-50 flex justify-center pointer-events-none px-4 md:px-8 transition-all duration-700 ease-[cubic-bezier(0.4,0,0.2,1)]" style={{ paddingTop: scrolled ? "16px" : "0" }}>
-        <header
-          id="site-navbar"
-          className={`w-full transition-all duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] pointer-events-auto ${
-            scrolled 
-              ? "max-w-6xl bg-[#050505]/70 backdrop-blur-2xl border border-white/10 shadow-[0_20px_40px_rgba(0,0,0,0.6)]" 
-              : "max-w-full bg-transparent border-transparent"
-          }`}
-          style={{ borderRadius: scrolled ? "40px" : "0px" }}
+      <div className="fixed top-0 left-0 right-0 z-50 flex flex-col items-center pointer-events-none transition-all duration-700 ease-[cubic-bezier(0.4,0,0.2,1)]" style={{ paddingTop: scrolled ? "16px" : "0" }}>
+
+        {/* Slogan Bar (Hides on scroll) */}
+        <div
+          className="w-full flex items-center justify-center pointer-events-auto transition-all duration-500 overflow-hidden"
+          style={{
+            backgroundColor: "var(--redline, #c0392b)",
+            color: "#000000",
+            maxHeight: scrolled ? "0px" : "36px",
+            paddingTop: scrolled ? "0px" : "8px",
+            paddingBottom: scrolled ? "0px" : "8px",
+            opacity: scrolled ? 0 : 1,
+          }}
         >
-          <div className={`transition-all duration-700 ${scrolled ? "px-6 md:px-10" : "px-4 md:px-8"}`}>
-            <div className="relative flex items-center justify-between" style={{ height: scrolled ? "70px" : "80px" }}>
+          <span
+            className="font-bold tracking-[0.3em] uppercase text-center block"
+            style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "10px", color: "#000000" }}
+          >
+            VIOLENCE IS OUR AESTHETIC
+          </span>
+        </div>
 
-              {/* Left — Desktop Nav & Mobile Hamburger */}
-              <div className="flex-1 flex items-center">
-                <nav className="hidden md:flex items-center gap-8" aria-label="Primary navigation">
-                  {navLinks.map((link) => (
-                    <Link key={link.href} href={link.href} className="font-syne font-bold text-xs uppercase tracking-[0.2em] text-white/70 hover:text-white transition-colors duration-300">
-                      {link.label}
-                    </Link>
-                  ))}
-                </nav>
-                
-                {/* Mobile hamburger */}
-                <button
-                  id="mobile-menu-trigger"
-                  onClick={() => setMobileOpen(!mobileOpen)}
-                  className="md:hidden p-2 -ml-2 text-white transition-colors duration-200 flex flex-col gap-1.5 justify-center items-center w-10 h-10"
-                  aria-label={mobileOpen ? "Close menu" : "Open menu"}
-                  aria-expanded={mobileOpen}
-                >
-                  <span className={`block h-[1.5px] w-5 bg-current transition-all duration-300 origin-center ${mobileOpen ? "rotate-45 translate-y-[4.5px]" : ""}`} />
-                  <span className={`block h-[1.5px] w-5 bg-current transition-all duration-300 origin-center ${mobileOpen ? "-rotate-45 -translate-y-[4.5px]" : ""}`} />
-                </button>
-              </div>
+        <div className="w-full flex justify-center px-4 md:px-8">
+          <header
+            id="site-navbar"
+            className={`w-full transition-all duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] pointer-events-auto ${scrolled
+              ? "max-w-6xl bg-[#050505]/70 backdrop-blur-2xl border border-white/10 shadow-[0_20px_40px_rgba(0,0,0,0.6)]"
+              : "max-w-full bg-transparent border-transparent"
+              }`}
+            style={{ borderRadius: scrolled ? "40px" : "0px" }}
+          >
+            <div className={`transition-all duration-700 ${scrolled ? "px-6 md:px-10" : "px-4 md:px-8"}`}>
+              <div className="relative flex items-center justify-between" style={{ height: scrolled ? "70px" : "80px" }}>
 
-              {/* Center — Logo */}
-              <Link
-                href="/"
-                className="absolute left-1/2 -translate-x-1/2 flex items-center z-10"
-                aria-label="SYCHOGEAR — Home"
-              >
-                <Image
-                  src="/images/logo-sychogear.webp"
-                  alt="SYCHOGEAR"
-                  width={320}
-                  height={80}
-                  className="w-auto opacity-100 transition-opacity duration-300 mix-blend-screen"
-                  style={{ height: "clamp(20px, 4vw, 32px)", filter: "brightness(1.5)" }}
-                  priority
-                />
-              </Link>
+                {/* Left — Desktop Nav & Mobile Hamburger */}
+                <div className="flex-1 flex items-center">
+                  <nav className="hidden md:flex items-center gap-8" aria-label="Primary navigation">
+                    {navLinks.map((link) => (
+                      <Link key={link.href} href={link.href} className="font-syne font-bold text-xs uppercase tracking-[0.2em] text-white/70 hover:text-white transition-colors duration-300">
+                        {link.label}
+                      </Link>
+                    ))}
+                  </nav>
 
-              {/* Right — Actions */}
-              <div className="flex-1 flex items-center justify-end gap-1 sm:gap-4">
-                <div className="hidden md:block border-r border-white/20 pr-4 mr-2">
-                  <RegionCurrencySelector />
+                  {/* Mobile hamburger */}
+                  <button
+                    id="mobile-menu-trigger"
+                    onClick={() => setMobileOpen(!mobileOpen)}
+                    className="md:hidden p-2 -ml-2 text-white transition-colors duration-200 flex flex-col gap-1.5 justify-center items-center w-10 h-10"
+                    aria-label={mobileOpen ? "Close menu" : "Open menu"}
+                    aria-expanded={mobileOpen}
+                  >
+                    <span className={`block h-[1.5px] w-5 bg-current transition-all duration-300 origin-center ${mobileOpen ? "rotate-45 translate-y-[4.5px]" : ""}`} />
+                    <span className={`block h-[1.5px] w-5 bg-current transition-all duration-300 origin-center ${mobileOpen ? "-rotate-45 -translate-y-[4.5px]" : ""}`} />
+                  </button>
                 </div>
-                <div className="md:hidden scale-90 origin-right">
-                   <RegionCurrencySelector />
-                </div>
-                {/* Cart */}
-                <button
-                  id="cart-trigger"
-                  onClick={() => setCartDrawerOpen(true)}
-                  className="relative p-2 text-white/80 hover:text-white transition-colors duration-300"
-                  aria-label={`Cart${mounted && itemCount > 0 ? `, ${itemCount} items` : ""}`}
+
+                {/* Center — Logo */}
+                <Link
+                  href="/"
+                  className="absolute left-1/2 -translate-x-1/2 flex items-center z-10"
+                  aria-label="SYCHOGEAR — Home"
                 >
-                  <HiOutlineShoppingBag className="w-5 h-5" />
-                  {mounted && itemCount > 0 && (
-                    <span
-                      className="absolute top-0 right-0 w-4 h-4 flex items-center justify-center bg-white text-black text-[9px] font-bold leading-none rounded-full"
-                      aria-hidden="true"
-                    >
-                      {itemCount > 9 ? "9+" : itemCount}
-                    </span>
-                  )}
-                </button>
+                  <Image
+                    src="/images/logo-sychogear.webp"
+                    alt="SYCHOGEAR"
+                    width={320}
+                    height={80}
+                    className="w-auto opacity-100 transition-opacity duration-300 mix-blend-screen"
+                    style={{ height: "clamp(20px, 4vw, 32px)", filter: "brightness(1.5)" }}
+                    priority
+                  />
+                </Link>
+
+                {/* Right — Actions */}
+                <div className="flex-1 flex items-center justify-end gap-1 sm:gap-4">
+                  <div className="hidden md:block border-r border-white/20 pr-4 mr-2">
+                    <RegionCurrencySelector />
+                  </div>
+                  <div className="md:hidden scale-90 origin-right">
+                    <RegionCurrencySelector />
+                  </div>
+                  {/* Cart */}
+                  <button
+                    id="cart-trigger"
+                    onClick={() => setCartDrawerOpen(true)}
+                    className="relative p-2 text-white/80 hover:text-white transition-colors duration-300"
+                    aria-label={`Cart${mounted && itemCount > 0 ? `, ${itemCount} items` : ""}`}
+                  >
+                    <HiOutlineShoppingBag className="w-5 h-5" />
+                    {mounted && itemCount > 0 && (
+                      <span
+                        className="absolute top-0 right-0 w-4 h-4 flex items-center justify-center bg-white text-black text-[9px] font-bold leading-none rounded-full"
+                        aria-hidden="true"
+                      >
+                        {itemCount > 9 ? "9+" : itemCount}
+                      </span>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        </header>
+          </header>
+        </div>
       </div>
 
       {/* ─── Mobile Nav — Full Screen ──────────────────────── */}

@@ -6,6 +6,7 @@ import Link from "next/link";
 import axios from "axios";
 import { useCurrency } from "@/components/store/CurrencyProvider";
 import Image from "next/image";
+import QuickViewModal from "@/components/store/QuickViewModal";
 import type { ProductWithRelations } from "@/types";
 
 export default function ProductsPage() {
@@ -46,6 +47,7 @@ function ProductsContent() {
   const [categories, setCategories] = useState<{ id: string; name: string; slug: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalPages, setTotalPages] = useState(1);
+  const [quickViewProduct, setQuickViewProduct] = useState<ProductWithRelations | null>(null);
 
   const category = searchParams.get("category") || "";
   const page = Number(searchParams.get("page")) || 1;
@@ -99,6 +101,8 @@ function ProductsContent() {
 
   return (
     <div className="relative min-h-screen bg-void pt-32 pb-24">
+      {/* Quick View Modal */}
+      <QuickViewModal product={quickViewProduct} onClose={() => setQuickViewProduct(null)} />
       
       {/* ─── Archive Header & Navigation ─── */}
       <div className="container-main mb-16 md:mb-24 flex flex-col md:flex-row justify-between items-start md:items-end gap-8 border-b border-ember pb-8">
@@ -133,26 +137,72 @@ function ProductsContent() {
       {/* ─── Editorial Grid ─── */}
       <div className="container-main">
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="w-full aspect-[3/4] bg-dim animate-pulse" />
-            ))}
-          </div>
+          <>
+            {/* Mobile skeleton: horizontal strip */}
+            <div className="flex sm:hidden gap-4 overflow-x-auto pb-4 -mx-4 px-4" style={{ scrollSnapType: "x mandatory" }}>
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="flex-shrink-0 w-[75vw] aspect-[3/4] bg-dim animate-pulse" style={{ scrollSnapAlign: "start" }} />
+              ))}
+            </div>
+            {/* Desktop skeleton: grid */}
+            <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="w-full aspect-[3/4] bg-dim animate-pulse" />
+              ))}
+            </div>
+          </>
         ) : products.length === 0 ? (
           <div className="flex justify-center py-32 text-center">
             <p className="font-dm-mono text-xs text-ash uppercase tracking-widest">Subject not found in archive.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12 lg:gap-16">
+          <>
+            {/* ─── Mobile: Horizontal Snap Scroll ─── */}
+            <div
+              className="flex sm:hidden gap-4 overflow-x-auto pb-6 -mx-4 px-4"
+              style={{ scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}
+            >
+              {products.map((product, idx) => {
+                const isOnSale = product.flashSale?.isActive && product.flashSale.salePrice;
+                const displayPrice = isOnSale ? product.flashSale!.salePrice : product.salePrice || product.price;
+                const finalPrice = product.discountRate > 0 ? displayPrice * (1 - product.discountRate / 100) : displayPrice;
+                const totalStock = product.variants.reduce((s, v) => s + v.stock, 0);
+                const isSoldOut = totalStock === 0;
+                const isLowStock = !isSoldOut && totalStock <= 3;
+                return (
+                  <div key={product.id} className="flex-shrink-0 w-[75vw] relative group" style={{ scrollSnapAlign: "start" }}>
+                    <div className="relative w-full aspect-[3/4] overflow-hidden bg-abyss mb-3">
+                      <Link href={`/products/${product.slug}`} className="absolute inset-0 z-10" aria-label={product.name} />
+                      <Image src={product.images[0]?.url || "/placeholder.svg"} alt={product.name} fill sizes="75vw" className="object-cover" />
+                      <div className="absolute top-3 left-3 z-20 flex flex-col gap-1.5">
+                        {product.isNew && !isSoldOut && <span className="bg-salt text-void font-syne font-bold text-[9px] px-2 py-1 uppercase tracking-widest leading-none">New</span>}
+                        {isOnSale && !isSoldOut && <span className="bg-signal text-void font-syne font-bold text-[9px] px-2 py-1 uppercase tracking-widest leading-none">Sale</span>}
+                        {isLowStock && <span className="font-dm-mono font-bold text-[9px] px-2 py-1 uppercase tracking-widest leading-none" style={{ backgroundColor: "rgba(192,57,43,0.85)", color: "#fff" }}>Only {totalStock} left</span>}
+                      </div>
+                      <button onClick={() => setQuickViewProduct(product)} className="absolute bottom-2 left-1/2 -translate-x-1/2 z-20 opacity-0 group-hover:opacity-100 transition-all duration-300 whitespace-nowrap font-dm-mono text-[10px] font-bold tracking-[0.2em] uppercase px-4 py-2" style={{ backgroundColor: "rgba(8,8,8,0.9)", color: "#e8e4dc", border: "1px solid rgba(232,228,220,0.3)", backdropFilter: "blur(8px)" }}>+ Quick View</button>
+                    </div>
+                    <h3 className="font-syne font-bold text-sm text-salt uppercase tracking-tight truncate mb-1">{product.name}</h3>
+                    <p className="font-dm-mono text-xs text-salt/60">{formatPrice(finalPrice)}</p>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* ─── Desktop: Grid ─── */}
+            <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12 lg:gap-16">
             {products.map((product, idx) => {
               const isOnSale = product.flashSale?.isActive && product.flashSale.salePrice;
               const displayPrice = isOnSale ? product.flashSale!.salePrice : product.salePrice || product.price;
               const finalPrice = product.discountRate > 0 ? displayPrice * (1 - product.discountRate / 100) : displayPrice;
+              const totalStock = product.variants.reduce((s, v) => s + v.stock, 0);
+              const isSoldOut = totalStock === 0;
+              const isLowStock = !isSoldOut && totalStock <= 3;
 
               return (
                 <div key={product.id} className="w-full relative group flex flex-col">
                   {/* Image Block */}
-                  <Link href={`/products/${product.slug}`} className="block w-full relative aspect-[3/4] overflow-hidden bg-abyss border border-transparent group-hover:border-ember transition-colors duration-500 mb-5">
+                  <div className="relative w-full aspect-[3/4] overflow-hidden bg-abyss border border-transparent group-hover:border-ember transition-colors duration-500 mb-5">
+                    <Link href={`/products/${product.slug}`} className="absolute inset-0 z-10" aria-label={product.name} />
                     <Image
                       src={product.images[0]?.url || "/placeholder.svg"}
                       alt={product.name}
@@ -169,11 +219,22 @@ function ProductsContent() {
                     </div>
 
                     {/* Badges */}
-                    <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
-                      {product.isNew && <span className="bg-salt text-void font-syne font-bold text-[9px] px-2 py-1 uppercase tracking-widest leading-none">New</span>}
-                      {isOnSale && <span className="bg-signal text-void font-syne font-bold text-[9px] px-2 py-1 uppercase tracking-widest leading-none">Sale</span>}
+                    <div className="absolute top-4 left-4 z-20 flex flex-col gap-2">
+                      {product.isNew && !isSoldOut && <span className="bg-salt text-void font-syne font-bold text-[9px] px-2 py-1 uppercase tracking-widest leading-none">New</span>}
+                      {isOnSale && !isSoldOut && <span className="bg-signal text-void font-syne font-bold text-[9px] px-2 py-1 uppercase tracking-widest leading-none">Sale</span>}
+                      {isLowStock && <span className="font-dm-mono font-bold text-[9px] px-2 py-1 uppercase tracking-widest leading-none" style={{ backgroundColor: "rgba(192,57,43,0.85)", color: "#fff" }}>Only {totalStock} left</span>}
                     </div>
-                  </Link>
+
+                    {/* Quick View Button */}
+                    <button
+                      onClick={() => setQuickViewProduct(product)}
+                      className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0 whitespace-nowrap font-dm-mono text-[10px] font-bold tracking-[0.2em] uppercase px-5 py-2.5"
+                      style={{ backgroundColor: "rgba(8,8,8,0.9)", color: "#e8e4dc", border: "1px solid rgba(232,228,220,0.3)", backdropFilter: "blur(8px)" }}
+                      aria-label={`Quick view ${product.name}`}
+                    >
+                      + Quick View
+                    </button>
+                  </div>
 
                   {/* Metadata Block */}
                   <div className="flex flex-col flex-grow">
@@ -201,6 +262,7 @@ function ProductsContent() {
               );
             })}
           </div>
+          </>
         )}
 
         {/* ─── Pagination ─── */}

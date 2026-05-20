@@ -5,6 +5,7 @@ import ScrollReveal from "@/components/store/ScrollReveal";
 import VisitorTracker from "@/components/store/VisitorTracker";
 import Preloader from "@/components/store/Preloader";
 import RegionConfirmationModal from "@/components/store/RegionConfirmationModal";
+import CursorTrail from "@/components/store/CursorTrail";
 
 import { CurrencyProvider } from "@/components/store/CurrencyProvider";
 
@@ -15,6 +16,7 @@ export default function StoreLayout({
 }) {
   return (
     <CurrencyProvider>
+      <CursorTrail />
       <Preloader />
       <VisitorTracker />
       <ScrollReveal />
