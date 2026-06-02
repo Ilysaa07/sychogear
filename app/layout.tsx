@@ -64,11 +64,11 @@ const hooliganFont = localFont({
 
 export const metadata: Metadata = {
   title: {
-    default: "Sychogear — Official Archive",
+    default: "Sychogear — Official Products",
     template: "%s | SYCHOGEAR",
   },
   description:
-    "Sychogear. A curated collection of premium streetwear for those who move in silence. Explore the archive.",
+    "Sychogear. A curated collection of premium streetwear for those who move in silence. Explore the Products.",
   keywords: [
     "streetwear",
     "clothing brand",
@@ -84,7 +84,7 @@ export const metadata: Metadata = {
     locale: "id_ID",
     url: process.env.NEXT_PUBLIC_APP_URL,
     siteName: "SYCHOGEAR",
-    title: "SYCHOGEAR — Official Archive",
+    title: "SYCHOGEAR — Official Products",
     description:
       "A curated collection of premium streetwear. Designed for those who move in silence.",
   },
@@ -109,7 +109,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "SYCHOGEAR — Official Archive",
+    title: "SYCHOGEAR — Official Products",
     description: "A curated collection of premium streetwear. Designed for those who move in silence.",
     images: ["/images/og-image.jpg"],
   },
@@ -133,7 +133,7 @@ export default function RootLayout({
     "logo": `${process.env.NEXT_PUBLIC_APP_URL || "https://sychogear.com"}/images/logo.png`,
     "sameAs": [
       "https://instagram.com/sychogear",
-      "https://tiktok.com/@sychogearofficial",
+      "https://tiktok.com/@sychogear",
     ],
   };
 

@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState, useEffect, useRef } from "react";
-import { HiOutlineShoppingBag } from "react-icons/hi";
+import { useState, useEffect } from "react";
+import { HiOutlineShoppingBag, HiOutlineLocationMarker } from "react-icons/hi";
 import { useCartStore } from "@/stores/cart-store";
 import { useUIStore } from "@/stores/ui-store";
 import RegionCurrencySelector from "./RegionCurrencySelector";
@@ -12,46 +12,14 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const cursorRef = useRef<HTMLDivElement>(null);
   const itemCount = useCartStore((s) => s.getItemCount());
   const setCartDrawerOpen = useUIStore((s) => s.setCartDrawerOpen);
 
   useEffect(() => {
     setMounted(true);
-
     const handleScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener("scroll", handleScroll, { passive: true });
-
-    // Custom cursor
-    const handleMouseMove = (e: MouseEvent) => {
-      if (cursorRef.current) {
-        cursorRef.current.style.left = `${e.clientX}px`;
-        cursorRef.current.style.top = `${e.clientY}px`;
-      }
-    };
-    const handleMouseDown = () => cursorRef.current?.classList.add("cursor-click");
-    const handleMouseUp = () => cursorRef.current?.classList.remove("cursor-click");
-    const handleHoverIn = (e: Event) => {
-      if ((e.target as HTMLElement).closest("a, button, [role='button']")) {
-        cursorRef.current?.classList.add("cursor-hover");
-      }
-    };
-    const handleHoverOut = () => cursorRef.current?.classList.remove("cursor-hover");
-
-    window.addEventListener("mousemove", handleMouseMove, { passive: true });
-    window.addEventListener("mousedown", handleMouseDown);
-    window.addEventListener("mouseup", handleMouseUp);
-    document.addEventListener("mouseover", handleHoverIn);
-    document.addEventListener("mouseout", handleHoverOut);
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mousedown", handleMouseDown);
-      window.removeEventListener("mouseup", handleMouseUp);
-      document.removeEventListener("mouseover", handleHoverIn);
-      document.removeEventListener("mouseout", handleHoverOut);
-    };
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   useEffect(() => {
@@ -67,14 +35,11 @@ export default function Navbar() {
 
   const navLinks = [
     { href: "/", label: "Home" },
-    { href: "/products", label: "Archive" },
-    { href: "/order-status", label: "Track Order" },
+    { href: "/products", label: "Products" },
   ];
 
   return (
     <>
-      {/* ─── Custom Cursor ─────────────────────────────────── */}
-      <div id="sg-cursor" ref={cursorRef} aria-hidden="true" />
       {/* ─── Header ────────────────────────────────────────── */}
       <div className="fixed top-0 left-0 right-0 z-50 flex flex-col items-center pointer-events-none transition-all duration-700 ease-[cubic-bezier(0.4,0,0.2,1)]" style={{ paddingTop: scrolled ? "16px" : "0" }}>
 
@@ -158,6 +123,16 @@ export default function Navbar() {
                   <div className="md:hidden scale-90 origin-right">
                     <RegionCurrencySelector />
                   </div>
+
+                  {/* Track Order icon */}
+                  <Link
+                    href="/order-status"
+                    className="relative p-2 text-white/80 hover:text-white transition-colors duration-300"
+                    aria-label="Track Order"
+                  >
+                    <HiOutlineLocationMarker className="w-5 h-5" />
+                  </Link>
+
                   {/* Cart */}
                   <button
                     id="cart-trigger"
@@ -216,7 +191,7 @@ export default function Navbar() {
           {/* Nav links */}
           <nav className="flex-1 flex flex-col justify-center px-8 overflow-hidden" aria-label="Mobile navigation">
             <div>
-              {navLinks.map((link, i) => (
+              {[...navLinks, { href: "/order-status", label: "Track Order" }].map((link, i) => (
                 <div
                   key={link.href}
                   className="overflow-hidden border-b border-[#111]"

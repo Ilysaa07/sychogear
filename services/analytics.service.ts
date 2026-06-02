@@ -12,57 +12,49 @@ export const analyticsService = {
     const startOfPrevMonth = new Date(currentYear, currentMonth - 1, 1);
     const endOfPrevMonth = new Date(currentYear, currentMonth, 0, 23, 59, 59);
 
-    // Lifetime Revenue (Sum of all PAID orders)
-    const lifetimeRevenue = await prisma.order.aggregate({
-      where: { status: "PAID" },
-      _sum: { total: true },
-    });
-
-    // Current month revenue (for growth calculation)
-    const currentMonthRevenue = await prisma.order.aggregate({
-      where: {
-        status: "PAID",
-        createdAt: { gte: startOfMonth },
-      },
-      _sum: { total: true },
-    });
-
-    // Previous month revenue (for growth calculation)
-    const previousMonthRevenue = await prisma.order.aggregate({
-      where: {
-        status: "PAID",
-        createdAt: { gte: startOfPrevMonth, lte: endOfPrevMonth },
-      },
-      _sum: { total: true },
-    });
+    // Jalankan semua query paralel — sebelumnya 3 query pertama dijalankan serial
+    const [
+      lifetimeRevenue,
+      currentMonthRevenue,
+      previousMonthRevenue,
+      totalOrders,
+      unpaidOrders,
+      paidOrders,
+      totalCustomers,
+      yearOrders,
+    ] = await Promise.all([
+      prisma.order.aggregate({
+        where: { status: "PAID" },
+        _sum: { total: true },
+      }),
+      prisma.order.aggregate({
+        where: { status: "PAID", createdAt: { gte: startOfMonth } },
+        _sum: { total: true },
+      }),
+      prisma.order.aggregate({
+        where: { status: "PAID", createdAt: { gte: startOfPrevMonth, lte: endOfPrevMonth } },
+        _sum: { total: true },
+      }),
+      prisma.order.count(),
+      prisma.order.count({ where: { status: "UNPAID" as any } }),
+      prisma.order.count({ where: { status: "PAID" as any } }),
+      prisma.customer.count(),
+      // Batasi ke 2000 order untuk mencegah query tak terbatas saat data besar
+      prisma.order.findMany({
+        where: {
+          createdAt: {
+            gte: new Date(currentYear, 0, 1),
+            lt: new Date(currentYear + 1, 0, 1),
+          },
+        },
+        select: { createdAt: true, total: true, status: true },
+        take: 2000,
+      }),
+    ]);
 
     const totalRevenue = lifetimeRevenue._sum.total || 0;
     const currentMonthTotal = currentMonthRevenue._sum.total || 0;
     const prevMonthTotal = previousMonthRevenue._sum.total || 0;
-
-    // Counts
-    const [totalOrders, unpaidOrders, paidOrders, totalCustomers] =
-      await Promise.all([
-        prisma.order.count(),
-        prisma.order.count({ where: { status: "UNPAID" as any } }),
-        prisma.order.count({ where: { status: "PAID" as any } }),
-        prisma.customer.count(),
-      ]);
-
-    // Fetch ALL orders for current year for chart aggregation
-    const yearOrders = await prisma.order.findMany({
-      where: {
-        createdAt: {
-          gte: new Date(currentYear, 0, 1),
-          lt: new Date(currentYear + 1, 0, 1),
-        },
-      },
-      select: {
-        createdAt: true,
-        total: true,
-        status: true,
-      }
-    });
 
     // Initialize maps for all 12 months
     const revenueMap = new Map<number, number>();

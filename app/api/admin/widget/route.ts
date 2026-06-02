@@ -4,13 +4,13 @@ import type { NextRequest } from "next/server";
 
 export const dynamic = "force-dynamic";
 
-const WIDGET_API_KEY = process.env.WIDGET_API_KEY || "sychogear_default_widget_key_123";
-
 export async function GET(request: NextRequest) {
   try {
     const apiKey = request.headers.get("x-widget-key");
+    const WIDGET_API_KEY = process.env.API_KEY;
 
-    if (apiKey !== WIDGET_API_KEY) {
+    // Tolak request jika env var tidak terset atau key tidak cocok
+    if (!WIDGET_API_KEY || apiKey !== WIDGET_API_KEY) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 

@@ -47,8 +47,8 @@ export default function NewsletterSection() {
         </div>
 
         {/* Massive Typography Statement */}
-        <h2 className="font-syne font-black text-white uppercase leading-[0.8] tracking-tighter mb-20" style={{ fontSize: "clamp(60px, 14vw, 180px)" }}>
-          Rule<br/>Your<br/>Domain.
+        <h2 className="font-syne font-black text-white uppercase leading-[0.8] tracking-tighter mb-20" style={{ fontSize: "clamp(55px, 9vw, 175px)" }}>
+          Violence<br/>Is Our<br/>Aesthetic.
         </h2>
 
         {/* Sleek Form */}

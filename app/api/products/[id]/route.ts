@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/adminAuth";
 import { createSlug } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -43,19 +43,13 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
+    const authError = await requireAdmin();
+    if (authError) return authError;
 
     const { id } = await params;
     const body = await request.json();
     const slug = createSlug(body.name);
 
-    // Delete old images and variants, then recreate
     await prisma.productImage.deleteMany({ where: { productId: id } });
     await prisma.productVariant.deleteMany({ where: { productId: id } });
 
@@ -116,13 +110,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
+    const authError = await requireAdmin();
+    if (authError) return authError;
 
     const { id } = await params;
     await prisma.product.delete({ where: { id } });

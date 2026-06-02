@@ -37,6 +37,8 @@ export default async function OrderSuccessPage({
   const isShipped = ["SHIPPED", "DELIVERED"].includes(order.status);
   const isInternational = order.country && order.country !== "ID";
   const trackingNumber = (order as any).trackingNumber as string | null | undefined;
+  const isXendit = (order as any).paymentMethod === "XENDIT";
+  const xenditInvoiceUrl = order.payment?.invoiceUrl;
 
   return (
     <div className="container-main pt-32 pb-20 max-w-2xl">
@@ -135,83 +137,105 @@ export default async function OrderSuccessPage({
                         </span>
                         <CopyButton text={isInternational && order.payment?.currencyAmount ? order.payment.currencyAmount.toString() : order.totalWithCode.toString()} />
                       </div>
-                      {!isInternational && (
-                        <p className="text-[10px] text-yellow-500/80 mt-3 flex items-center gap-1.5 font-medium italic">
-                          <HiOutlineInformationCircle className="w-3 h-3 flex-shrink-0" />
-                          IMPORTANT: Transfer exactly to the last 3 digits for automatic verification.
+                    </div>
+
+                    {/* ── Xendit: tombol bayar langsung ── */}
+                    {isXendit && xenditInvoiceUrl ? (
+                      <div className="text-center space-y-4">
+                        <p className="font-dm-mono text-xs text-ash">
+                          Klik tombol di bawah untuk melanjutkan pembayaran melalui Xendit.
+                          Tersedia berbagai metode: transfer bank, e-wallet, QRIS, kartu kredit.
                         </p>
-                      )}
-                    </div>
-
-                    {/* Bank Details */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="bg-black/40 p-4 border border-white/5 rounded-xl">
-                        <p className="text-[10px] text-brand-500 uppercase tracking-widest mb-1 font-bold">Bank</p>
-                        <p className="font-bold text-lg">BCA</p>
+                        <a
+                          href={xenditInvoiceUrl}
+                          className="btn-primary w-full py-4 text-sm uppercase tracking-wider block text-center"
+                        >
+                          Bayar Sekarang →
+                        </a>
+                        <p className="font-dm-mono text-[10px] text-brand-500">
+                          Batas waktu:{" "}
+                          {new Date(order.expiredAt).toLocaleString("id-ID", {
+                            dateStyle: "medium",
+                            timeStyle: "short",
+                          })}
+                        </p>
                       </div>
-                      <div className="bg-black/40 p-4 border border-white/5 rounded-xl">
-                        <p className="text-[10px] text-brand-500 uppercase tracking-widest mb-1 font-bold">Account Name</p>
-                        <p className="font-bold text-brand-200">ILYASA MEYDIANSYAH A</p>
-                      </div>
-                    </div>
+                    ) : (
+                      /* ── Manual Transfer: detail BCA ── */
+                      <>
+                        {!isInternational && (
+                          <p className="text-[10px] text-yellow-500/80 flex items-center gap-1.5 font-medium italic">
+                            <HiOutlineInformationCircle className="w-3 h-3 flex-shrink-0" />
+                            IMPORTANT: Transfer exactly to the last 3 digits for automatic verification.
+                          </p>
+                        )}
 
-                    <div className="bg-black/40 p-4 border border-white/5 rounded-xl flex items-center justify-between">
-                      <div>
-                        <p className="text-[10px] text-brand-500 uppercase tracking-widest mb-1 font-bold">Account Number</p>
-                        <p className="text-2xl font-mono font-bold tracking-widest text-white">6768126284</p>
-                      </div>
-                      <CopyButton text="6768126284" />
-                    </div>
-
-                    {/* Price Breakdown */}
-                    <div className="pt-4 border-t border-white/5 space-y-2">
-                      <div className="flex justify-between text-xs text-brand-400">
-                        <span>Subtotal</span>
-                        <span>{formatCurrency(order.subtotal)}</span>
-                      </div>
-
-                      {order.totalDiscount > 0 && (
-                        <div className="flex justify-between text-xs text-green-400">
-                          <span>Product Discount</span>
-                          <span>-{formatCurrency(order.totalDiscount)}</span>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="bg-black/40 p-4 border border-white/5 rounded-xl">
+                            <p className="text-[10px] text-brand-500 uppercase tracking-widest mb-1 font-bold">Bank</p>
+                            <p className="font-bold text-lg">BCA</p>
+                          </div>
+                          <div className="bg-black/40 p-4 border border-white/5 rounded-xl">
+                            <p className="text-[10px] text-brand-500 uppercase tracking-widest mb-1 font-bold">Account Name</p>
+                            <p className="font-bold text-brand-200">ILYASA MEYDIANSYAH A</p>
+                          </div>
                         </div>
-                      )}
 
-                      {order.discount > 0 && (
-                        <div className="flex justify-between text-xs text-green-400">
-                          <span>Coupon Discount</span>
-                          <span>-{formatCurrency(order.discount)}</span>
+                        <div className="bg-black/40 p-4 border border-white/5 rounded-xl flex items-center justify-between">
+                          <div>
+                            <p className="text-[10px] text-brand-500 uppercase tracking-widest mb-1 font-bold">Account Number</p>
+                            <p className="text-2xl font-mono font-bold tracking-widest text-white">6768126284</p>
+                          </div>
+                          <CopyButton text="6768126284" />
                         </div>
-                      )}
 
-                      {order.taxPpn > 0 && (
-                        <div className="flex justify-between text-xs text-brand-400">
-                          <span>Tax (PPN)</span>
-                          <span>+{formatCurrency(order.taxPpn)}</span>
+                        {/* Price Breakdown */}
+                        <div className="pt-4 border-t border-white/5 space-y-2">
+                          <div className="flex justify-between text-xs text-brand-400">
+                            <span>Subtotal</span>
+                            <span>{formatCurrency(order.subtotal)}</span>
+                          </div>
+                          {order.totalDiscount > 0 && (
+                            <div className="flex justify-between text-xs text-green-400">
+                              <span>Product Discount</span>
+                              <span>-{formatCurrency(order.totalDiscount)}</span>
+                            </div>
+                          )}
+                          {order.discount > 0 && (
+                            <div className="flex justify-between text-xs text-green-400">
+                              <span>Coupon Discount</span>
+                              <span>-{formatCurrency(order.discount)}</span>
+                            </div>
+                          )}
+                          {order.taxPpn > 0 && (
+                            <div className="flex justify-between text-xs text-brand-400">
+                              <span>Tax (PPN)</span>
+                              <span>+{formatCurrency(order.taxPpn)}</span>
+                            </div>
+                          )}
+                          {!isInternational && (
+                            <div className="flex justify-between text-xs text-yellow-500/80 italic">
+                              <span>Unique Code</span>
+                              <span>+{order.uniqueCode}</span>
+                            </div>
+                          )}
                         </div>
-                      )}
-                      
-                      {!isInternational && (
-                        <div className="flex justify-between text-xs text-yellow-500/80 italic">
-                          <span>Unique Code</span>
-                          <span>+{order.uniqueCode}</span>
-                        </div>
-                      )}
-                    </div>
 
-                    <div className="pt-4 border-t border-white/5">
-                      <p className="text-[10px] text-yellow-500/80 mb-4 flex items-start gap-1.5 font-medium leading-tight">
-                        <HiOutlineInformationCircle className="w-4 h-4 flex-shrink-0" />
-                        <span>* Price does not include shipping fee. Please contact our CS via WhatsApp below to coordinate shipping costs.</span>
-                      </p>
-                      <p className="text-xs text-brand-500 mb-2 font-bold uppercase tracking-widest text-center">Payment Deadline</p>
-                      <p className="text-center text-red-400 font-bold text-lg tabular-nums">
-                        {new Date(order.expiredAt).toLocaleString("en-US", {
-                          dateStyle: "medium",
-                          timeStyle: "short",
-                        })}
-                      </p>
-                    </div>
+                        <div className="pt-4 border-t border-white/5">
+                          <p className="text-[10px] text-yellow-500/80 mb-4 flex items-start gap-1.5 font-medium leading-tight">
+                            <HiOutlineInformationCircle className="w-4 h-4 flex-shrink-0" />
+                            <span>* Price does not include shipping fee. Please contact our CS via WhatsApp to coordinate shipping costs.</span>
+                          </p>
+                          <p className="text-xs text-brand-500 mb-2 font-bold uppercase tracking-widest text-center">Payment Deadline</p>
+                          <p className="text-center text-red-400 font-bold text-lg tabular-nums">
+                            {new Date(order.expiredAt).toLocaleString("en-US", {
+                              dateStyle: "medium",
+                              timeStyle: "short",
+                            })}
+                          </p>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -219,17 +243,18 @@ export default async function OrderSuccessPage({
                   <p className="text-[11px] text-brand-500 mb-6 italic">
                     This page will update automatically once your payment is confirmed.
                   </p>
-                  
                   <div className="flex flex-col sm:flex-row gap-3">
-                    <a 
-                      href={`https://wa.me/6283190138549?text=${encodeURIComponent(`Hello SychoGear, I would like to confirm my payment for invoice ${invoiceNumber}.`)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn-primary w-full text-sm uppercase tracking-wider py-4"
-                    >
-                      Confirm via WhatsApp
-                    </a>
-                    <Link href="/products" className="btn-secondary w-full text-sm uppercase tracking-wider py-4">
+                    {!isXendit && (
+                      <a
+                        href={`https://wa.me/6283190138549?text=${encodeURIComponent(`Hello SychoGear, I would like to confirm my payment for invoice ${invoiceNumber}.`)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn-primary w-full text-sm uppercase tracking-wider py-4"
+                      >
+                        Confirm via WhatsApp
+                      </a>
+                    )}
+                    <Link href="/products" className={`btn-secondary w-full text-sm uppercase tracking-wider py-4 ${isXendit ? "sm:w-auto sm:px-10" : ""}`}>
                       Continue Shopping
                     </Link>
                   </div>

@@ -9,9 +9,15 @@ const globalForPrisma = globalThis as unknown as {
 function createPrismaClient(): PrismaClient {
   const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    max: process.env.NODE_ENV === "development" ? 2 : 10,
-    idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 2000,
+    // Serverless: setiap function instance hanya butuh 1 koneksi.
+    // Nilai max: 10 sebelumnya menyebabkan "too many connections" di Supabase
+    // karena Vercel bisa spawn banyak instance secara paralel (N instance × 10 = overflow).
+    max: 1,
+    // Tutup koneksi idle lebih cepat agar slot di Supabase cepat dibebaskan.
+    idleTimeoutMillis: 10000,
+    // Naikkan dari 2000 → 10000 ms agar tidak langsung timeout
+    // saat Supabase pooler sedang sibuk melayani request lain.
+    connectionTimeoutMillis: 10000,
   });
 
   const adapter = new PrismaPg(pool);
@@ -22,8 +28,8 @@ function createPrismaClient(): PrismaClient {
   });
 }
 
+// Cache instance di globalThis untuk semua environment (dev & production).
+// Sebelumnya hanya di-cache saat NODE_ENV !== "production", sehingga setiap
+// cold start di Vercel membuat PrismaClient baru → Pool baru → koneksi baru.
 export const prisma = globalForPrisma.prisma ?? createPrismaClient();
-
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma;
-}
+globalForPrisma.prisma = prisma;

@@ -1,14 +1,11 @@
-import { productRepository } from "@/repositories/product.repository";
 import { orderRepository } from "@/repositories/order.repository";
 import { customerRepository } from "@/repositories/customer.repository";
 import { prisma } from "@/lib/prisma";
 import { generateOrderNumber, convertIDRtoUSD } from "@/lib/utils";
-import { ManualTransferProvider } from "@/lib/paymentProvider";
+import { getPaymentProvider } from "@/lib/paymentProvider";
 import { emailService } from "@/lib/emailService";
-import { isInternationalOrder, getCountryByCode } from "@/lib/countries";
+import { isInternationalOrder } from "@/lib/countries";
 import type { CartItem } from "@/types";
-
-const manualTransferProvider = new ManualTransferProvider();
 
 export const paymentService = {
   async createOrder(data: {
@@ -21,50 +18,24 @@ export const paymentService = {
   }) {
     const country = data.country || "ID";
     const isInternational = isInternationalOrder(country);
-    const paymentMethod = "MANUAL_TRANSFER";
 
-    // Find or create customer
+    // ── 1. Find or create customer ──────────────────────────────────────────
     const customer = await customerRepository.findOrCreate(data.customer);
 
-    // Validate stock before creating order
-    for (const item of data.items) {
-      const variant = await prisma.productVariant.findUnique({
-        where: { id: item.variantId },
-        select: { stock: true },
-      });
-      if (!variant || variant.stock < item.quantity) {
-        throw new Error(`Stok tidak mencukupi untuk produk ${item.name} (ukuran ${item.size})`);
-      }
-    }
-
-    // Fetch settings from DB — single flat rate for both shipping and tax
-    let shippingCost = 0; // Forced to 0
-    let internationalTaxRate = 0; // % applied to ALL international orders
+    // ── 2. Fetch settings (tax, exchange rate) ──────────────────────────────
+    let internationalTaxRate = 0;
     let exchangeRate = Number(process.env.IDR_TO_USD_RATE) || 16000;
 
     try {
       const settings = await (prisma as any).siteSettings.findMany({
-        where: {
-          key: {
-            in: [
-              "internationalTaxEnabled",
-              "internationalTaxRate",
-              "idrToUsdRate",
-            ],
-          },
-        },
+        where: { key: { in: ["internationalTaxRate", "idrToUsdRate"] } },
       });
-
       const settingsMap: Record<string, string> = {};
-      for (const s of settings) {
-        settingsMap[s.key as string] = s.value as string;
-      }
-
+      for (const s of settings) settingsMap[s.key as string] = s.value as string;
       if (isInternational) {
-        // Global PPN rate — same for ALL countries. Forced to active as per request.
-        internationalTaxRate = settingsMap.internationalTaxRate ? parseFloat(settingsMap.internationalTaxRate) || 11 : 11;
+        internationalTaxRate = settingsMap.internationalTaxRate
+          ? parseFloat(settingsMap.internationalTaxRate) || 11 : 11;
       }
-
       if (settingsMap.idrToUsdRate) {
         exchangeRate = parseFloat(settingsMap.idrToUsdRate) || 16000;
       }
@@ -72,62 +43,70 @@ export const paymentService = {
       console.warn("[PaymentService] Failed to fetch settings:", err);
     }
 
-    // Calculate subtotals and taxes per item
+    // ── 3. Fetch products & variants in batch ───────────────────────────────
+    const variantIds = data.items.map((i) => i.variantId);
+    const productIds = data.items.map((i) => i.productId);
+
+    const [variantsFromDb, productsFromDb] = await Promise.all([
+      prisma.productVariant.findMany({
+        where: { id: { in: variantIds } },
+        select: { id: true, stock: true },
+      }),
+      prisma.product.findMany({
+        where: { id: { in: productIds } },
+        select: { id: true, ppnRate: true, pph23Rate: true, discountRate: true } as any,
+      }),
+    ]);
+
+    const variantMap = new Map(variantsFromDb.map((v: any) => [v.id, v]));
+    const productMap = new Map(productsFromDb.map((p: any) => [p.id, p]));
+
+    // ── 4. Calculate totals ─────────────────────────────────────────────────
     let subtotal = 0;
     let totalTaxPpn = 0;
     let totalTaxPph23 = 0;
     let totalProductDiscount = 0;
 
-    const itemsWithDetails = await Promise.all(
-      data.items.map(async (item) => {
-        const product = await prisma.product.findUnique({
-          where: { id: item.productId },
-          select: { ppnRate: true, pph23Rate: true, discountRate: true } as any,
-        });
+    const itemsWithDetails = data.items.map((item) => {
+      const product = productMap.get(item.productId);
+      const price = item.salePrice ?? item.price;
+      const discountRate = product ? (product as any).discountRate : 0;
+      const discountedPrice = price * (1 - discountRate / 100);
+      const discountedTotal = discountedPrice * item.quantity;
+      const originalTotal = price * item.quantity;
+      const ppnAmount = isInternational
+        ? Math.round(discountedTotal * (internationalTaxRate / 100))
+        : 0;
+      const discountAmount = originalTotal - discountedTotal;
 
-        const price = item.salePrice ?? item.price;
-        const discountRate = product ? (product as any).discountRate : 0;
+      subtotal += originalTotal;
+      totalTaxPpn += ppnAmount;
+      totalProductDiscount += discountAmount;
 
-        // Tax calculated on discounted price
-        const discountedPrice = price * (1 - discountRate / 100);
-        const discountedTotal = discountedPrice * item.quantity;
-        const originalTotal = price * item.quantity;
+      return {
+        productId: item.productId,
+        variantId: item.variantId,
+        quantity: item.quantity,
+        price,
+        size: item.size,
+        ppnAmount,
+        pph23Amount: 0,
+        discountAmount,
+      };
+    });
 
-        let ppnAmount = 0;
-        let pph23Amount = 0;
-
-        if (isInternational) {
-          // Single global PPN rate for all international orders
-          ppnAmount = Math.round(discountedTotal * (internationalTaxRate / 100));
-          // No PPH23 for international
-        } else {
-          // Domestic: PPN and PPH23 forced inactive (0)
-          ppnAmount = 0;
-          pph23Amount = 0;
-        }
-
-        const discountAmount = originalTotal - discountedTotal;
-
-        subtotal += originalTotal;
-        totalTaxPpn += ppnAmount;
-        totalTaxPph23 += pph23Amount;
-        totalProductDiscount += discountAmount;
-
-        return {
-          productId: item.productId,
-          variantId: item.variantId,
-          quantity: item.quantity,
-          price,
-          size: item.size,
-          ppnAmount,
-          pph23Amount,
-          discountAmount,
-        };
-      })
-    );
-
-    // Apply coupon on subtotal after product discounts
+    // ── 5. Validate stock + coupon + create order — all in one transaction ──
+    // FIX CRITICAL-1: stok divalidasi di dalam $transaction untuk cegah race condition
     const subtotalAfterProductDiscount = subtotal - totalProductDiscount;
+    const uniqueCode = isInternational ? 0 : Math.floor(100 + Math.random() * 900);
+    const total =
+      subtotalAfterProductDiscount + totalTaxPpn + totalTaxPph23 + uniqueCode;
+    const totalWithCode = total;
+    const invoiceNumber = generateOrderNumber().replace("SG-", "INV-");
+    const expiredAt = new Date();
+    expiredAt.setMinutes(expiredAt.getMinutes() + (isInternational ? 1440 : 15));
+
+    // Resolve coupon discount (masih di luar tx, hanya read)
     let couponDiscount = 0;
     let couponId: string | undefined;
 
@@ -141,18 +120,12 @@ export const paymentService = {
         if (coupon.usageLimit && coupon.usageCount >= coupon.usageLimit)
           return { valid: false as const, error: "Kupon sudah mencapai batas penggunaan" };
         if (subtotalAfterProductDiscount < coupon.minPurchase)
-          return {
-            valid: false as const,
-            error: `Minimal pembelian Rp ${coupon.minPurchase.toLocaleString()}`,
-          };
+          return { valid: false as const, error: `Minimal pembelian Rp ${coupon.minPurchase.toLocaleString()}` };
 
-        let discount = 0;
-        if (coupon.discountType === "PERCENTAGE") {
-          discount = (subtotalAfterProductDiscount * coupon.discountValue) / 100;
-          if (coupon.maxDiscount) discount = Math.min(discount, coupon.maxDiscount);
-        } else {
-          discount = coupon.discountValue;
-        }
+        let discount = coupon.discountType === "PERCENTAGE"
+          ? (subtotalAfterProductDiscount * coupon.discountValue) / 100
+          : coupon.discountValue;
+        if (coupon.maxDiscount) discount = Math.min(discount, coupon.maxDiscount);
 
         await tx.coupon.update({
           where: { id: coupon.id },
@@ -162,107 +135,150 @@ export const paymentService = {
         return { valid: true as const, coupon, discount };
       });
 
-      if (!couponResult.valid) {
-        throw new Error(couponResult.error || "Kupon tidak valid");
-      }
-
+      if (!couponResult.valid) throw new Error(couponResult.error || "Kupon tidak valid");
       if (couponResult.coupon) {
         couponDiscount = couponResult.discount || 0;
         couponId = couponResult.coupon.id;
       }
     }
 
-    // Unique code only for domestic (3-digit suffix for bank transfer matching)
-    const uniqueCode = isInternational ? 0 : Math.floor(100 + Math.random() * 900);
+    const finalTotal = total - couponDiscount;
+    const finalTotalWithCode = finalTotal;
 
-    // Total = (subtotal - productDiscount - couponDiscount) + tax + shipping + uniqueCode
-    const total =
-      subtotalAfterProductDiscount -
-      couponDiscount +
-      totalTaxPpn +
-      totalTaxPph23 +
-      shippingCost;
-    const totalWithCode = total + uniqueCode;
-    const invoiceNumber = generateOrderNumber().replace("SG-", "INV-");
+    // ── Atomic: validate stock + create order ───────────────────────────────
+    // FIX CRITICAL-1: Validasi stok dan pembuatan order dalam 1 transaksi
+    // untuk cegah overselling saat concurrent checkout
+    const order = await prisma.$transaction(async (tx) => {
+      // Re-validate stock inside transaction (prevents race condition)
+      for (const item of data.items) {
+        const variant = await tx.productVariant.findUnique({
+          where: { id: item.variantId },
+          select: { stock: true },
+        });
+        if (!variant || variant.stock < item.quantity) {
+          throw new Error(`Stok tidak mencukupi untuk produk ${item.name} (ukuran ${item.size})`);
+        }
+      }
 
-    // Expiry: 15 min domestic, 24 hrs international
-    const expiredAt = new Date();
-    expiredAt.setMinutes(expiredAt.getMinutes() + (isInternational ? 1440 : 15));
-
-    // Create order
-    const order = await orderRepository.create({
-      invoiceNumber,
-      customerName: customer.name,
-      customerEmail: customer.email,
-      customerId: customer.id,
-      subtotal,
-      taxPpn: totalTaxPpn,
-      taxPph23: totalTaxPph23,
-      totalDiscount: totalProductDiscount,
-      discount: couponDiscount,
-      uniqueCode,
-      totalWithCode,
-      total,
-      couponId,
-      country,
-      notes: data.orderNote,
-      paymentMethod,
-      shippingCost,
-      expiredAt,
-      items: itemsWithDetails,
+      // Create order
+      return tx.order.create({
+        data: {
+          invoiceNumber,
+          customerName: customer.name,
+          customerEmail: customer.email,
+          customerId: customer.id,
+          subtotal,
+          taxPpn: totalTaxPpn,
+          taxPph23: totalTaxPph23,
+          totalDiscount: totalProductDiscount,
+          discount: couponDiscount,
+          uniqueCode,
+          totalWithCode: finalTotalWithCode,
+          total: finalTotal,
+          couponId,
+          country,
+          notes: data.orderNote,
+          paymentMethod: "PENDING", // akan diupdate setelah provider dipilih
+          shippingCost: 0,
+          expiredAt,
+          items: {
+            create: itemsWithDetails,
+          },
+        },
+        include: {
+          items: { include: { product: { include: { images: { take: 1 } } }, variant: true } },
+          payment: true,
+          customer: true,
+          coupon: true,
+        },
+      });
     });
 
-    // All orders: Manual Transfer flow
-    const paymentResult = await manualTransferProvider.createPayment({
-      invoiceNumber,
-      amount: totalWithCode,
-      customerEmail: customer.email,
-      customerName: customer.name,
-    });
+    // ── 6. Create payment via provider ──────────────────────────────────────
+    // FIX MEDIUM-1: Jika Xendit gagal, tandai order sebagai FAILED (bukan orphan)
+    let paymentResult: {
+      externalId: string;
+      xenditId: string;
+      invoiceUrl: string;
+      status: string;
+      paymentMethod: string;
+    };
 
-    // Save payment record
-    await prisma.payment.create({
-      data: {
-        orderId: order.id,
-        externalId: paymentResult.externalId,
-        invoiceUrl: `/order-success/${invoiceNumber}`,
-        amount: totalWithCode,
-        currency: isInternational ? "USD" : "IDR",
-        currencyAmount: isInternational
-          ? convertIDRtoUSD(totalWithCode, exchangeRate)
-          : null,
-        status: "PENDING",
-        method: "MANUAL_TRANSFER",
-      },
-    });
+    try {
+      const provider = getPaymentProvider();
+      paymentResult = await provider.createPayment({
+        invoiceNumber,
+        amount: finalTotalWithCode,
+        customerEmail: customer.email,
+        customerName: customer.name,
+        expiredAt,
+        description: `SychoGear Order ${invoiceNumber}`,
+        currency: "IDR",
+      });
+    } catch (providerErr) {
+      // Xendit atau provider gagal — tandai order sebagai FAILED agar tidak orphan
+      await prisma.order.update({
+        where: { id: order.id },
+        data: { status: "FAILED", paymentMethod: "UNKNOWN" },
+      });
+      console.error("[PaymentService] Provider createPayment failed:", providerErr);
+      throw new Error("Gagal menghubungi payment gateway. Silakan coba lagi.");
+    }
 
-    // Send invoice email
+    const isXendit = paymentResult.paymentMethod === "XENDIT";
+
+    // ── 7. Update order paymentMethod + save payment record ─────────────────
+    await prisma.$transaction([
+      prisma.order.update({
+        where: { id: order.id },
+        data: { paymentMethod: paymentResult.paymentMethod },
+      }),
+      prisma.payment.create({
+        data: {
+          orderId: order.id,
+          externalId: paymentResult.externalId,
+          invoiceUrl: isXendit
+            ? paymentResult.invoiceUrl
+            : `/order-success/${invoiceNumber}`,
+          amount: finalTotalWithCode,
+          currency: isInternational ? "USD" : "IDR",
+          currencyAmount: isInternational
+            ? convertIDRtoUSD(finalTotalWithCode, exchangeRate)
+            : null,
+          status: "PENDING",
+          method: paymentResult.paymentMethod,
+          xenditId: paymentResult.xenditId || null,
+        },
+      }),
+    ]);
+
+    // ── 8. Send emails (fire-and-forget) ────────────────────────────────────
     await emailService
       .sendInvoiceEmail({
         to: customer.email,
         customerName: customer.name,
         invoiceNumber,
-        totalAmount: totalWithCode,
+        totalAmount: finalTotalWithCode,
         expiredAt,
         isInternational,
         amountUSD: isInternational
-          ? convertIDRtoUSD(totalWithCode, exchangeRate)
+          ? convertIDRtoUSD(finalTotalWithCode, exchangeRate)
           : undefined,
         country,
+        paymentUrl: isXendit ? paymentResult.invoiceUrl : undefined,
       })
-      .catch((err) => console.error("Failed sending email:", err));
+      .catch((err) => console.error("[PaymentService] Failed sending invoice email:", err));
 
-    // Send admin notification
     await emailService
       .sendAdminNotification({
         invoiceNumber,
         customerName: customer.name,
         customerEmail: customer.email,
-        totalAmount: totalWithCode,
+        totalAmount: finalTotalWithCode,
         country,
-        paymentMethod: "MANUAL_TRANSFER",
+        paymentMethod: paymentResult.paymentMethod,
         amountUSD: isInternational
-          ? convertIDRtoUSD(totalWithCode, exchangeRate)
+          ? convertIDRtoUSD(finalTotalWithCode, exchangeRate)
           : undefined,
         items: data.items.map((item) => ({
           name: item.name,
@@ -271,13 +287,15 @@ export const paymentService = {
           price: item.salePrice ?? item.price,
         })),
       })
-      .catch((err) => console.error("Failed sending admin notification:", err));
+      .catch((err) => console.error("[PaymentService] Failed sending admin notification:", err));
 
     return {
       order,
-      invoiceUrl: `/order-success/${invoiceNumber}`,
+      invoiceUrl: isXendit
+        ? paymentResult.invoiceUrl
+        : `/order-success/${invoiceNumber}`,
       invoiceNumber,
-      paymentMethod: "MANUAL_TRANSFER",
+      paymentMethod: paymentResult.paymentMethod,
     };
   },
 
@@ -287,11 +305,13 @@ export const paymentService = {
     if (order.status !== "UNPAID") throw new Error("Order is not UNPAID");
 
     const updatedOrder = await prisma.$transaction(async (tx) => {
+      // Update status ke PAID
       const paid = await tx.order.update({
         where: { id: order.id },
         data: { status: "PAID" },
       });
 
+      // Kurangi stok setiap item
       for (const item of order.items) {
         const variant = await tx.productVariant.findUnique({
           where: { id: item.variantId },
@@ -322,7 +342,7 @@ export const paymentService = {
         customerName: order.customerName,
         invoiceNumber: order.invoiceNumber,
       })
-      .catch((err) => console.error("Failed sending confirmation email:", err));
+      .catch((err) => console.error("[PaymentService] Failed sending confirmation email:", err));
 
     return { success: true, order: updatedOrder };
   },
@@ -347,7 +367,7 @@ export const paymentService = {
         customerName: order.customerName,
         invoiceNumber: order.invoiceNumber,
       })
-      .catch((err) => console.error("Failed sending email:", err));
+      .catch((err) => console.error("[PaymentService] Failed sending expired email:", err));
 
     return { success: true, order };
   },

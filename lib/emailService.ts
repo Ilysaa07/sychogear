@@ -53,6 +53,7 @@ export const emailService = {
     isInternational?: boolean;
     amountUSD?: number;
     country?: string;
+    paymentUrl?: string;  // Xendit hosted payment URL
   }) {
     const formatter = new Intl.NumberFormat("id-ID", {
       style: "currency",
@@ -93,6 +94,7 @@ export const emailService = {
         <br />
         <p>After payment, please confirm via WhatsApp so we can process your order quickly:</p>
         <p><a href="${waLink}" style="display:inline-block;padding:12px 24px;background-color:#25d366;color:white;text-decoration:none;border-radius:6px;font-weight:bold;">Confirm via WhatsApp</a></p>
+        ${data.paymentUrl ? `<br/><p><a href="${data.paymentUrl}" style="display:inline-block;padding:12px 24px;background-color:#1a1a2e;color:white;text-decoration:none;border-radius:6px;font-weight:bold;">Pay Now via Xendit →</a></p>` : ""}
         <br />
         <p>If you have any questions, feel free to contact us via WhatsApp or email.</p>
       `;

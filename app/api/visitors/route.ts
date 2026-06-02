@@ -81,7 +81,15 @@ export async function POST(req: NextRequest) {
     const ua = req.headers.get("user-agent") || "";
 
     // Parallel: geolocation + parse UA
-    const [geo] = await Promise.all([geolocate(ip)]);
+    // Geolocation dijalankan non-blocking — jika timeout/gagal, visitor tetap dicatat
+    // tanpa menahan koneksi DB lebih lama dari perlu.
+    const geoPromise = geolocate(ip);
+
+    // Simpan ke DB tanpa menunggu geo — pakai default jika belum selesai
+    const geoTimeout = new Promise<{ country: string; city: string }>((resolve) =>
+      setTimeout(() => resolve({ country: "-", city: "-" }), 2000)
+    );
+    const geo = await Promise.race([geoPromise, geoTimeout]);
 
     await prisma.visitorLog.create({
       data: {

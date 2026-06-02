@@ -1,13 +1,10 @@
 import { NextResponse } from "next/server";
 import { productRepository } from "@/repositories/product.repository";
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/lib/auth";
-import { createSlug } from "@/lib/utils";
-import { parseApiError } from "@/lib/utils";
+import { requireAdmin } from "@/lib/adminAuth";
+import { createSlug, parseApiError } from "@/lib/utils";
 import type { NextRequest } from "next/server";
 
-// Bug #5 fix: use 30-second ISR for read-heavy product listings instead of force-dynamic.
-// The POST handler (admin create) is always dynamic by nature (no caching applies to mutations).
 export const revalidate = 30;
 
 export async function GET(request: NextRequest) {
@@ -16,12 +13,8 @@ export async function GET(request: NextRequest) {
     const filters = {
       category: searchParams.get("category") || undefined,
       size: searchParams.get("size") || undefined,
-      minPrice: searchParams.get("minPrice")
-        ? Number(searchParams.get("minPrice"))
-        : undefined,
-      maxPrice: searchParams.get("maxPrice")
-        ? Number(searchParams.get("maxPrice"))
-        : undefined,
+      minPrice: searchParams.get("minPrice") ? Number(searchParams.get("minPrice")) : undefined,
+      maxPrice: searchParams.get("maxPrice") ? Number(searchParams.get("maxPrice")) : undefined,
       sort: (searchParams.get("sort") as "latest" | "price-asc" | "price-desc") || undefined,
       page: searchParams.get("page") ? Number(searchParams.get("page")) : 1,
       limit: searchParams.get("limit") ? Number(searchParams.get("limit")) : 12,
@@ -41,10 +34,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: Request) {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
+    const authError = await requireAdmin();
+    if (authError) return authError;
 
     const body = await request.json();
     const slug = createSlug(body.name);

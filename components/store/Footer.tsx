@@ -16,16 +16,8 @@ export default function Footer() {
             <div>
               <Image src="/images/logo-sychogear.webp" alt="SYCHOGEAR" width={200} height={50} className="w-32 h-auto mb-6 opacity-80 hover:opacity-100 transition-opacity" />
               <p className="font-dm-mono text-[10px] text-[#666] uppercase tracking-[0.2em] leading-relaxed max-w-xs">
-                A curated collection for those who move in silence.
+                violence is our aesthetic.
               </p>
-            </div>
-            
-            {/* Accepted Payments */}
-            <div className="mt-12 md:mt-0">
-              <p className="font-dm-mono text-[9px] text-[#444] uppercase tracking-[0.3em] mb-4">Protocols</p>
-              <div className="w-12 h-8 bg-white flex items-center justify-center p-1 rounded-[2px]">
-                <Image src="/images/bca.png" alt="BCA" width={40} height={20} className="w-full h-auto object-contain" />
-              </div>
             </div>
           </div>
 
@@ -47,7 +39,7 @@ export default function Footer() {
             <h3 className="font-dm-mono text-[9px] text-[#444] uppercase tracking-[0.3em] mb-6">Network</h3>
             <ul className="space-y-4">
               <li><a href="https://www.instagram.com/sychogear" target="_blank" rel="noopener noreferrer" className="font-syne text-[11px] font-bold uppercase tracking-widest text-[#999] hover:text-white transition-colors">Instagram ↗</a></li>
-              <li><a href="https://www.tiktok.com/@sychogearofficial" target="_blank" rel="noopener noreferrer" className="font-syne text-[11px] font-bold uppercase tracking-widest text-[#999] hover:text-white transition-colors">TikTok ↗</a></li>
+              <li><a href="https://www.tiktok.com/@sychogear" target="_blank" rel="noopener noreferrer" className="font-syne text-[11px] font-bold uppercase tracking-widest text-[#999] hover:text-white transition-colors">TikTok ↗</a></li>
               <li><a href="mailto:sychogear@gmail.com" className="font-syne text-[11px] font-bold uppercase tracking-widest text-[#999] hover:text-white transition-colors">Email ↗</a></li>
             </ul>
           </div>

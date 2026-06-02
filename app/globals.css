@@ -943,11 +943,6 @@
     to   { transform: scaleX(1); transform-origin: left; }
   }
 
-  @keyframes cursorPulse {
-    0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.7; }
-    50%       { transform: translate(-50%, -50%) scale(1.4); opacity: 1; }
-  }
-
   @keyframes bootBlink {
     0%, 100% { opacity: 1; }
     50%       { opacity: 0; }
@@ -1039,40 +1034,6 @@
     padding: 0 4px;
     height: 0.9em;
     vertical-align: middle;
-  }
-
-  /* ─── CUSTOM CURSOR ──────────────────────────────────────── */
-
-  #sg-cursor {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 20px;
-    height: 20px;
-    border: 1px solid rgba(232, 228, 220, 0.6);
-    border-radius: 50% !important;
-    pointer-events: none;
-    z-index: 99999;
-    transform: translate(-50%, -50%);
-    transition:
-      width 200ms var(--ease-compose),
-      height 200ms var(--ease-compose),
-      border-color 200ms ease,
-      background-color 200ms ease;
-    mix-blend-mode: difference;
-  }
-
-  #sg-cursor.cursor-hover {
-    width: 48px;
-    height: 48px;
-    border-color: var(--signal);
-    background: rgba(200, 169, 110, 0.1);
-  }
-
-  #sg-cursor.cursor-click {
-    width: 12px;
-    height: 12px;
-    background: var(--salt);
   }
 
   /* ─── MOSAIC PRODUCT GRID ──────────────────────────────── */

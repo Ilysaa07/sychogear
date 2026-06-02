@@ -6,11 +6,11 @@ import { prisma } from "@/lib/prisma";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Official Links, Shopee & Tokopedia | SYCHOGEAR",
-  description: "Explore SYCHOGEAR official links. Connect on WhatsApp, follow our Instagram & TikTok, and shop premium streetwear on our Shopee Mall & Tokopedia Official stores.",
+  title: "Official Links, Shopee & Tiktok | SYCHOGEAR",
+  description: "Explore SYCHOGEAR official links. Connect on WhatsApp, follow our Instagram & TikTok, and shop premium streetwear on our Shopee Mall & Tiktok Official stores.",
   openGraph: {
-    title: "Official Links, Shopee & Tokopedia | SYCHOGEAR",
-    description: "Connect on WhatsApp, follow our social media, and shop premium streetwear on our Shopee & Tokopedia Official stores.",
+    title: "Official Links, Shopee & Tiktok | SYCHOGEAR",
+    description: "Connect on WhatsApp, follow our social media, and shop premium streetwear on our Shopee & Tiktok Official stores.",
     images: ["/images/logo-sychogear.webp"], 
   },
 };
@@ -52,10 +52,9 @@ export default async function LinksPage() {
           },
           "sameAs": [
             "https://instagram.com/sychogear",
-            "https://tiktok.com/@sychogearofficial",
+            "https://tiktok.com/@sychogear",
             "https://youtube.com/@sychogear",
             "https://shopee.co.id/sychogear",
-            "https://tk.tokopedia.com/ZSHHSgote/"
           ],
           "contactPoint": {
             "@type": "ContactPoint",
@@ -75,12 +74,6 @@ export default async function LinksPage() {
             "position": 1,
             "name": "Sychogear Official Shopee Store",
             "url": "https://shopee.co.id/sychogear"
-          },
-          {
-            "@type": "ListItem",
-            "position": 2,
-            "name": "Sychogear Tokopedia Official Store",
-            "url": "https://tk.tokopedia.com/ZSHHSgote/"
           },
           {
             "@type": "ListItem",

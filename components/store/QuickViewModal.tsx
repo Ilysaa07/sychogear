@@ -43,6 +43,9 @@ export default function QuickViewModal({ product, onClose }: QuickViewModalProps
   const originalPrice = isOnSale || product.salePrice || product.discountRate > 0 ? product.price : null;
   const images = product.images ?? [];
   const sizeVariants = product.variants.filter(v => v.size);
+  const totalStock = product.variants.reduce((s, v) => s + v.stock, 0);
+  const isSoldOut = totalStock === 0;
+  const isLowStock = !isSoldOut && totalStock <= 3;
 
   const handleAddToCart = () => {
     if (sizeVariants.length > 0 && !selectedVariant) return;
@@ -123,6 +126,12 @@ export default function QuickViewModal({ product, onClose }: QuickViewModalProps
                   <span className="font-dm-mono text-xs" style={{ color: "rgba(232,228,220,0.3)" }}>NO IMAGE</span>
                 </div>
               )}
+              {/* Sold Out overlay on image */}
+              {isSoldOut && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/50 backdrop-blur-[2px]">
+                  <span className="font-syne font-bold text-white uppercase tracking-[0.3em] text-sm -rotate-12">Sold Out</span>
+                </div>
+              )}
             </div>
             {images.length > 1 && (
               <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-2">
@@ -150,7 +159,7 @@ export default function QuickViewModal({ product, onClose }: QuickViewModalProps
               <h2 className="font-syne font-bold text-xl uppercase text-white mb-4 leading-tight tracking-tight">
                 {product.name}
               </h2>
-              <div className="flex items-baseline gap-3 mb-6">
+              <div className="flex items-baseline gap-3 mb-4">
                 <span className="font-dm-mono text-lg font-bold text-white">{formatPrice(finalPrice)}</span>
                 {originalPrice && (
                   <span className="font-dm-mono text-sm line-through" style={{ color: "rgba(232,228,220,0.4)" }}>
@@ -158,6 +167,19 @@ export default function QuickViewModal({ product, onClose }: QuickViewModalProps
                   </span>
                 )}
               </div>
+
+              {/* Stock status indicator */}
+              {isSoldOut ? (
+                <p className="font-dm-mono text-[10px] uppercase tracking-[0.2em] mb-5 px-3 py-2 text-center"
+                  style={{ background: "rgba(192,57,43,0.15)", color: "#e05c4a", border: "1px solid rgba(192,57,43,0.3)" }}>
+                  — Sold Out —
+                </p>
+              ) : isLowStock ? (
+                <p className="font-dm-mono text-[10px] uppercase tracking-[0.2em] mb-5"
+                  style={{ color: "#c0392b" }}>
+                  ⚠ Only {totalStock} left
+                </p>
+              ) : <div className="mb-5" />}
 
               {sizeVariants.length > 0 && (
                 <div className="mb-6">

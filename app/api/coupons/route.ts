@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { couponRepository } from "@/repositories/coupon.repository";
-import { auth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/adminAuth";
 import { couponSchema } from "@/lib/validations";
 import { parseApiError } from "@/lib/utils";
 
@@ -8,10 +8,8 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
+    const authError = await requireAdmin();
+    if (authError) return authError;
 
     const coupons = await couponRepository.findAll();
     return NextResponse.json({ success: true, data: coupons });
@@ -26,10 +24,8 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
+    const authError = await requireAdmin();
+    if (authError) return authError;
 
     const body = await request.json();
     const validation = couponSchema.safeParse(body);

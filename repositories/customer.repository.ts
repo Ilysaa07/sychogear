@@ -2,18 +2,14 @@ import { prisma } from "@/lib/prisma";
 
 export const customerRepository = {
   async findOrCreate(data: { email: string; name: string; phone?: string; address?: string }) {
-    const existing = await prisma.customer.findUnique({
+    // Gunakan upsert atomic untuk menghindari race condition saat dua checkout
+    // terjadi bersamaan dengan email yang sama (findUnique + create terpisah
+    // bisa keduanya lolos ke create() → Unique constraint violation).
+    return prisma.customer.upsert({
       where: { email: data.email },
+      update: { name: data.name, phone: data.phone, address: data.address },
+      create: data,
     });
-
-    if (existing) {
-      return prisma.customer.update({
-        where: { id: existing.id },
-        data: { name: data.name, phone: data.phone, address: data.address },
-      });
-    }
-
-    return prisma.customer.create({ data });
   },
 
   async findAll() {

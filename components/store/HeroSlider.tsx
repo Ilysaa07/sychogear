@@ -76,10 +76,6 @@ export default function HeroSlider({ images }: HeroSliderProps) {
           >
             <div
                className="w-full h-full"
-               style={{
-                 transform: isActive ? "scale(1.05)" : "scale(1)",
-                 transition: "transform 10s ease-out", 
-               }}
             >
               {isVideo(img) ? (
                 <video

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/adminAuth";
+import { prisma } from "@/lib/prisma";
 import { orderRepository } from "@/repositories/order.repository";
 import { paymentService } from "@/services/payment.service";
 
@@ -10,13 +11,8 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
+    const authError = await requireAdmin();
+    if (authError) return authError;
 
     const { id } = await params;
     const body = await request.json();
@@ -27,8 +23,6 @@ export async function PATCH(
         { status: 400 }
       );
     }
-
-    const { prisma } = await import("@/lib/prisma");
     let order;
     const existingOrder = await orderRepository.findById(id) as any;
     if (!existingOrder) {
@@ -201,24 +195,14 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
+    const authError = await requireAdmin();
+    if (authError) return authError;
 
     const { id } = await params;
-    const { prisma } = await import("@/lib/prisma");
 
-    // Perform cascade delete safely
     await prisma.$transaction(async (tx) => {
-      // Payment table lacks onDelete: Cascade, so delete it first if it exists
-      await tx.payment.deleteMany({
-        where: { orderId: id }
-      });
-      
-      await tx.order.delete({
-        where: { id },
-      });
+      await tx.payment.deleteMany({ where: { orderId: id } });
+      await tx.order.delete({ where: { id } });
     });
 
     return NextResponse.json({ success: true });

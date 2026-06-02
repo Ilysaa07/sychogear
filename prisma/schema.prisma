@@ -55,6 +55,10 @@ model Product {
   variants    ProductVariant[]
   category    Category         @relation(fields: [categoryId], references: [id])
 
+  @@index([categoryId])
+  @@index([isActive, createdAt])
+  @@index([isActive, isNew])
+  @@index([isActive, featured])
   @@map("products")
 }
 
@@ -91,6 +95,7 @@ model Customer {
   updatedAt DateTime @updatedAt
   orders    Order[]
 
+  @@index([createdAt])
   @@map("customers")
 }
 
@@ -214,6 +219,8 @@ model VisitorLog {
 
   @@index([createdAt])
   @@index([sessionId])
+  @@index([country])
+  @@index([page])
   @@map("visitor_logs")
 }
 

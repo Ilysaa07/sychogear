@@ -105,27 +105,27 @@ export const useCartStore = create<CartStore>()(
 
       // Bug #10 fix: re-fetch live product data to clear stale flash sale prices
       // and remove items that no longer exist or are out of stock.
+      // Gunakan 1 request batch ke /api/products?ids=... bukan 1 fetch per product.
       syncItemPrices: async () => {
         const items = get().items;
         if (items.length === 0) return;
         try {
           const productIds = [...new Set(items.map((i) => i.productId))];
-          const results = await Promise.all(
-            productIds.map((id) =>
-              fetch(`/api/products/${id}`).then((r) => (r.ok ? r.json() : null))
-            )
-          );
+          // Batch fetch semua produk dalam 1 request
+          const params = productIds.map((id) => `ids=${id}`).join("&");
+          const res = await fetch(`/api/products/batch?${params}`);
+          if (!res.ok) return;
+          const json = await res.json();
+          if (!json.success || !json.data) return;
+
           const productMap = new Map(
-            results
-              .filter(Boolean)
-              .filter((r) => r?.success && r?.data)
-              .map((r) => [r.data.id, r.data])
+            json.data.map((p: any) => [p.id, p])
           );
           set({
             items: items
               .map((item) => {
-                const product = productMap.get(item.productId);
-                if (!product) return item; // keep if can't fetch
+                const product = productMap.get(item.productId) as any;
+                if (!product) return item;
                 const variant = product.variants?.find((v: { id: string }) => v.id === item.variantId);
                 return {
                   ...item,
@@ -137,7 +137,7 @@ export const useCartStore = create<CartStore>()(
                   pph23Rate: product.pph23Rate ?? 0,
                 };
               })
-              .filter((item) => item.stock > 0), // remove out-of-stock
+              .filter((item) => item.stock > 0),
           });
         } catch (err) {
           console.warn("[Cart] Failed to sync item prices:", err);

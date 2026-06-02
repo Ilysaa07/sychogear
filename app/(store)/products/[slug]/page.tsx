@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { productRepository } from "@/repositories/product.repository";
 import ProductDetailClient from "@/components/store/ProductDetailClient";
 import ProductCard from "@/components/store/ProductCard";
+import { cache } from "react";
 import type { Metadata } from "next";
 import type { ProductWithRelations } from "@/types";
 
@@ -9,9 +10,16 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
+// cache() memoize hasil per-request — generateMetadata dan page component
+// yang sama-sama memanggil findBySlug untuk slug yang sama hanya akan
+// melakukan 1 query DB, bukan 2.
+const getProduct = cache(async (slug: string) =>
+  productRepository.findBySlug(slug)
+);
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const product = await productRepository.findBySlug(slug);
+  const product = await getProduct(slug);
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://sychogear.com";
   
   if (!product) return { title: "Product Not Found" };
@@ -43,7 +51,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ProductDetailPage({ params }: Props) {
   const { slug } = await params;
-  const product = await productRepository.findBySlug(slug);
+  const product = await getProduct(slug);  // reuses cached result, no extra DB query
 
   if (!product) notFound();
 

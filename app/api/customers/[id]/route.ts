@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/adminAuth";
 
 export const dynamic = "force-dynamic";
 
@@ -9,10 +9,8 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
+    const authError = await requireAdmin();
+    if (authError) return authError;
 
     const { id } = await params;
     const body = await request.json();
@@ -29,8 +27,11 @@ export async function PUT(
 
     return NextResponse.json({ success: true, data: updated });
   } catch (error: any) {
-    if (error.code === 'P2002') {
-      return NextResponse.json({ success: false, error: "Email sudah digunakan oleh customer lain" }, { status: 400 });
+    if (error.code === "P2002") {
+      return NextResponse.json(
+        { success: false, error: "Email sudah digunakan oleh customer lain" },
+        { status: 400 }
+      );
     }
     return NextResponse.json(
       { success: false, error: "Gagal mengupdate customer" },
@@ -44,29 +45,20 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
+    const authError = await requireAdmin();
+    if (authError) return authError;
 
     const { id } = await params;
-    
-    // Check if customer has orders
-    const orderCount = await prisma.order.count({
-      where: { customerId: id }
-    });
-    
+
+    const orderCount = await prisma.order.count({ where: { customerId: id } });
     if (orderCount > 0) {
       return NextResponse.json(
-        { success: false, error: "Tidak dapat menghapus customer yang memiliki riwayat order. Hapus order mereka terlebih dahulu." },
+        { success: false, error: "Tidak dapat menghapus customer yang memiliki riwayat order." },
         { status: 400 }
       );
     }
 
-    await prisma.customer.delete({
-      where: { id },
-    });
-
+    await prisma.customer.delete({ where: { id } });
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json(

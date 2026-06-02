@@ -540,13 +540,21 @@ export default function CheckoutPage() {
                 <p className="font-syne font-bold text-salt uppercase tracking-[0.2em] text-sm">Payment Protocol</p>
               </div>
               <div className="flex items-center gap-4 p-5 bg-abyss border border-ember">
-                <div className="w-14 h-auto flex-shrink-0 bg-white p-1.5 flex items-center justify-center">
-                  <img src="/images/bca.png" alt="BCA Logo" className="w-full h-auto object-contain" />
+                <div className="w-14 h-auto flex-shrink-0 bg-white p-1.5 flex items-center justify-center rounded">
+                  <img src="/images/xendit.png" alt="Xendit" className="w-full h-auto object-contain"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                  />
+                  <span className="font-dm-mono text-[10px] font-bold text-black hidden peer-[img:not([style])]:block">XENDIT</span>
                 </div>
                 <div>
-                  <p className="font-syne font-bold text-salt text-sm tracking-widest uppercase mb-1">Bank Transfer (BCA)</p>
+                  <p className="font-syne font-bold text-salt text-sm tracking-widest uppercase mb-1">
+                    Xendit Payment Gateway
+                  </p>
                   <p className="font-dm-mono text-xs text-ash">
-                    {isInternational ? "International bank transfer · Confirm via WhatsApp" : "Domestic bank transfer · Confirm via WhatsApp"}
+                    Transfer bank · E-Wallet · QRIS · Kartu Kredit
+                  </p>
+                  <p className="font-dm-mono text-[10px] text-ash/60 mt-1">
+                    Kamu akan diarahkan ke halaman pembayaran Xendit setelah checkout.
                   </p>
                 </div>
               </div>
@@ -600,7 +608,7 @@ export default function CheckoutPage() {
                     PROCESSING_REQUEST...
                   </span>
                 ) : (
-                  `Execute Order — ${isInternational ? formatLocalCurrency(finalTotalLocal, localCurrencyCode) : formatCurrency(finalTotal)}`
+                  `Lanjut Bayar — ${isInternational ? formatLocalCurrency(finalTotalLocal, localCurrencyCode) : formatCurrency(finalTotal)}`
                 )}
               </button>
 

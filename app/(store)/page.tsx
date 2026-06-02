@@ -1,11 +1,8 @@
-import { productRepository } from "@/repositories/product.repository";
-import CoverFlowSlider from "@/components/store/CoverFlowSlider";
 import NewsletterSection from "@/components/store/NewsletterSection";
 import HeroSlider from "@/components/store/HeroSlider";
 import PromoModal from "@/components/store/PromoModal";
 import { prisma } from "@/lib/prisma";
 import type { Metadata } from "next";
-import type { ProductWithRelations } from "@/types";
 import HomePageClient from "@/components/store/HomePageClient";
 
 export const dynamic = "force-dynamic";
@@ -14,6 +11,10 @@ export const metadata: Metadata = {
   title: "Sychogear — Official Archive",
   description: "A curated collection of premium streetwear. Explore the archive.",
 };
+
+// Settings jarang berubah — cache 5 menit, revalidate saat admin save via revalidatePath.
+// Menggantikan force-dynamic yang sebelumnya menyebabkan DB query setiap request homepage.
+export const revalidate = 300;
 
 async function getHeroSettings() {
   try {
@@ -24,14 +25,8 @@ async function getHeroSettings() {
   } catch { return {}; }
 }
 
-async function getNewArrivals(): Promise<ProductWithRelations[]> {
-  try {
-    return (await productRepository.findNewArrivals(12)) as any as ProductWithRelations[];
-  } catch { return []; }
-}
-
 export default async function HomePage() {
-  const [heroSettings, newArrivals] = await Promise.all([getHeroSettings(), getNewArrivals()]);
+  const heroSettings = await getHeroSettings();
 
   let heroImages: string[] = [];
   try { heroImages = heroSettings.heroImages ? JSON.parse(heroSettings.heroImages) : []; }
@@ -43,7 +38,6 @@ export default async function HomePage() {
   const heroCtaUrl = heroSettings.heroCtaUrl || "/products";
   const heroShowContent = heroSettings.heroShowContent !== "false";
   const heroShowButtons = heroSettings.heroShowButtons !== "false";
-  const marqueeText = heroSettings.marqueeText || "SYCHOGEAR WORLDWIDE";
 
   const promoSettings = {
     active: heroSettings.promoActive === "true",
@@ -53,8 +47,6 @@ export default async function HomePage() {
     linkUrl: heroSettings.promoLinkUrl || "/products",
     linkText: heroSettings.promoLinkText || "Shop Now",
   };
-
-  const recentItems = newArrivals.slice(0, 6);
 
   return (
     <main className="w-full min-h-screen bg-[#111512] text-salt overflow-x-hidden">
@@ -89,11 +81,6 @@ export default async function HomePage() {
           />
         )}
       </section>
-
-      {/* ═══ COVER FLOW LOOKBOOK ════════════════════════════════════════ */}
-      {newArrivals.length > 0 && (
-        <CoverFlowSlider products={recentItems} marqueeText={marqueeText} />
-      )}
 
       {/* ═══ NEWSLETTER ═════════════════════════════════════════ */}
       <NewsletterSection />

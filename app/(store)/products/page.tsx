@@ -174,12 +174,18 @@ function ProductsContent() {
                     <div className="relative w-full aspect-[3/4] overflow-hidden bg-abyss mb-3">
                       <Link href={`/products/${product.slug}`} className="absolute inset-0 z-10" aria-label={product.name} />
                       <Image src={product.images[0]?.url || "/placeholder.svg"} alt={product.name} fill sizes="75vw" className="object-cover" />
+                      {/* Sold Out Overlay */}
+                      {isSoldOut && (
+                        <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/50 backdrop-blur-[2px]">
+                          <span className="font-syne font-bold text-white uppercase tracking-[0.3em] text-xs -rotate-12">Sold Out</span>
+                        </div>
+                      )}
                       <div className="absolute top-3 left-3 z-20 flex flex-col gap-1.5">
                         {product.isNew && !isSoldOut && <span className="bg-salt text-void font-syne font-bold text-[9px] px-2 py-1 uppercase tracking-widest leading-none">New</span>}
                         {isOnSale && !isSoldOut && <span className="bg-signal text-void font-syne font-bold text-[9px] px-2 py-1 uppercase tracking-widest leading-none">Sale</span>}
                         {isLowStock && <span className="font-dm-mono font-bold text-[9px] px-2 py-1 uppercase tracking-widest leading-none" style={{ backgroundColor: "rgba(192,57,43,0.85)", color: "#fff" }}>Only {totalStock} left</span>}
                       </div>
-                      <button onClick={() => setQuickViewProduct(product)} className="absolute bottom-2 left-1/2 -translate-x-1/2 z-20 opacity-0 group-hover:opacity-100 transition-all duration-300 whitespace-nowrap font-dm-mono text-[10px] font-bold tracking-[0.2em] uppercase px-4 py-2" style={{ backgroundColor: "rgba(8,8,8,0.9)", color: "#e8e4dc", border: "1px solid rgba(232,228,220,0.3)", backdropFilter: "blur(8px)" }}>+ Quick View</button>
+                      {!isSoldOut && <button onClick={() => setQuickViewProduct(product)} className="absolute bottom-2 left-1/2 -translate-x-1/2 z-20 opacity-0 group-hover:opacity-100 transition-all duration-300 whitespace-nowrap font-dm-mono text-[10px] font-bold tracking-[0.2em] uppercase px-4 py-2" style={{ backgroundColor: "rgba(8,8,8,0.9)", color: "#e8e4dc", border: "1px solid rgba(232,228,220,0.3)", backdropFilter: "blur(8px)" }}>+ Quick View</button>}
                     </div>
                     <h3 className="font-syne font-bold text-sm text-salt uppercase tracking-tight truncate mb-1">{product.name}</h3>
                     <p className="font-dm-mono text-xs text-salt/60">{formatPrice(finalPrice)}</p>
@@ -210,6 +216,13 @@ function ProductsContent() {
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                       className="object-cover group-hover:scale-[1.03] transition-transform duration-700 ease-[cubic-bezier(0.25,1,0.5,1)]"
                     />
+
+                    {/* Sold Out Overlay */}
+                    {isSoldOut && (
+                      <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/50 backdrop-blur-[2px]">
+                        <span className="font-syne font-bold text-white uppercase tracking-[0.3em] text-sm -rotate-12">Sold Out</span>
+                      </div>
+                    )}
                     
                     {/* Hover Crosshair Overlay */}
                     <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
@@ -226,6 +239,7 @@ function ProductsContent() {
                     </div>
 
                     {/* Quick View Button */}
+                    {!isSoldOut && (
                     <button
                       onClick={() => setQuickViewProduct(product)}
                       className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0 whitespace-nowrap font-dm-mono text-[10px] font-bold tracking-[0.2em] uppercase px-5 py-2.5"
@@ -234,6 +248,7 @@ function ProductsContent() {
                     >
                       + Quick View
                     </button>
+                    )}
                   </div>
 
                   {/* Metadata Block */}

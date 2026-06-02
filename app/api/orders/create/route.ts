@@ -18,11 +18,35 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!items || items.length === 0) {
+    if (!items || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json(
         { success: false, error: "Cart is empty" },
         { status: 400 }
       );
+    }
+
+    // Validasi struktur items — cegah quantity negatif, ID palsu, atau array terlalu besar
+    if (items.length > 50) {
+      return NextResponse.json(
+        { success: false, error: "Too many items in cart" },
+        { status: 400 }
+      );
+    }
+
+    for (const item of items) {
+      if (
+        typeof item.productId !== "string" ||
+        typeof item.variantId !== "string" ||
+        typeof item.quantity !== "number" ||
+        !Number.isInteger(item.quantity) ||
+        item.quantity < 1 ||
+        item.quantity > 99
+      ) {
+        return NextResponse.json(
+          { success: false, error: "Invalid cart item data" },
+          { status: 400 }
+        );
+      }
     }
 
     // Build full address string from structured fields

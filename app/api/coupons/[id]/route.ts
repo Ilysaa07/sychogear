@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/adminAuth";
 import { couponRepository } from "@/repositories/coupon.repository";
 
 export const dynamic = "force-dynamic";
@@ -9,13 +9,8 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
+    const authError = await requireAdmin();
+    if (authError) return authError;
 
     const { id } = await params;
     const body = await request.json();
@@ -46,13 +41,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
+    const authError = await requireAdmin();
+    if (authError) return authError;
 
     const { id } = await params;
     await couponRepository.delete(id);

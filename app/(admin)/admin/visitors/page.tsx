@@ -110,9 +110,10 @@ export default function AdminVisitorsPage() {
     fetchData();
   }, [fetchData]);
 
-  // Auto-refresh every 10 seconds
+  // Auto-refresh every 60 seconds — sebelumnya 10 detik menyebabkan 6 DB query
+  // setiap 10 detik selama halaman ini terbuka
   useEffect(() => {
-    const interval = setInterval(() => fetchData(), 10000);
+    const interval = setInterval(() => fetchData(), 60000);
     return () => clearInterval(interval);
   }, [fetchData]);
 

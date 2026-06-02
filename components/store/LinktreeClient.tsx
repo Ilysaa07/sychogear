@@ -20,12 +20,6 @@ const links = [
     image: "/images/shopee.webp",
   },
   {
-    title: "Tokopedia",
-    url: "https://tk.tokopedia.com/ZSHHSgote/",
-    description: "Tokopedia Official Store",
-    image: "/images/tokopedia.webp",
-  },
-  {
     title: "Instagram",
     url: "https://www.instagram.com/sychogear",
     description: "Catalogs & Latest Drop Updates",
@@ -33,7 +27,7 @@ const links = [
   },
   {
     title: "TikTok",
-    url: "https://www.tiktok.com/@sychogearofficial",
+    url: "https://www.tiktok.com/@sychogear",
     description: "Product Videos & Behind The Scenes",
     image: "/images/tiktok.webp",
   },
