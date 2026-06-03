@@ -82,10 +82,10 @@ export class XenditProvider implements PaymentProvider {
         ],
         // Xendit Invoice expiry
         ...(data.expiredAt && {
-          invoiceDuration: Math.max(
+          invoiceDuration: String(Math.max(
             60,
             Math.floor((data.expiredAt.getTime() - Date.now()) / 1000)
-          ),
+          )),
         }),
       },
     });

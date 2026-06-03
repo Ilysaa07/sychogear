@@ -115,7 +115,7 @@ export default function OrderStatusPage() {
                   </span>
                 </div>
 
-                <div className="space-y-4 border-t border-white/5 pt-6">
+                <div className="space-y-4 border-t border-salt/5 pt-6">
                   {order.items.map((item) => (
                     <div key={item.id} className="flex gap-3">
                       <div className="w-12 h-14 bg-brand-900 flex-shrink-0 overflow-hidden">
@@ -138,7 +138,7 @@ export default function OrderStatusPage() {
                   ))}
                 </div>
 
-                <div className="border-t border-white/5 pt-4 mt-4">
+                <div className="border-t border-salt/5 pt-4 mt-4">
                   <div className="flex justify-between font-bold">
                     <span>Total</span>
                     <span>{formatCurrency(order.total)}</span>

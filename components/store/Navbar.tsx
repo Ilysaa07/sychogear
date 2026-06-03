@@ -17,9 +17,6 @@ export default function Navbar() {
 
   useEffect(() => {
     setMounted(true);
-    const handleScroll = () => setScrolled(window.scrollY > 50);
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   useEffect(() => {
@@ -33,31 +30,24 @@ export default function Navbar() {
     return () => window.removeEventListener("keydown", handleKey);
   }, []);
 
-  const navLinks = [
-    { href: "/", label: "Home" },
-    { href: "/products", label: "Products" },
-  ];
+  const navLinks: { href: string; label: string }[] = [];
 
   return (
     <>
       {/* ─── Header ────────────────────────────────────────── */}
-      <div className="fixed top-0 left-0 right-0 z-50 flex flex-col items-center pointer-events-none transition-all duration-700 ease-[cubic-bezier(0.4,0,0.2,1)]" style={{ paddingTop: scrolled ? "16px" : "0" }}>
+      <div className="relative z-50 flex flex-col items-center w-full">
 
-        {/* Slogan Bar (Hides on scroll) */}
+        {/* Slogan Bar */}
         <div
-          className="w-full flex items-center justify-center pointer-events-auto transition-all duration-500 overflow-hidden"
+          className="w-full flex items-center justify-center"
           style={{
-            backgroundColor: "var(--redline, #c0392b)",
-            color: "#000000",
-            maxHeight: scrolled ? "0px" : "36px",
-            paddingTop: scrolled ? "0px" : "8px",
-            paddingBottom: scrolled ? "0px" : "8px",
-            opacity: scrolled ? 0 : 1,
+            backgroundColor: "#c0392b",
+            padding: "4px 0",
           }}
         >
           <span
-            className="font-bold tracking-[0.3em] uppercase text-center block"
-            style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "10px", color: "#000000" }}
+            className="font-sans font-bold tracking-[0.3em] uppercase text-center block"
+            style={{ fontSize: "7px", color: "#000000" }}
           >
             VIOLENCE IS OUR AESTHETIC
           </span>
@@ -65,24 +55,15 @@ export default function Navbar() {
 
         <div className="w-full flex justify-center px-4 md:px-8">
           <header
-            id="site-navbar"
-            className={`w-full transition-all duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] pointer-events-auto ${scrolled
-              ? "max-w-6xl bg-[#050505]/70 backdrop-blur-2xl border border-white/10 shadow-[0_20px_40px_rgba(0,0,0,0.6)]"
-              : "max-w-full bg-transparent border-transparent"
-              }`}
-            style={{ borderRadius: scrolled ? "40px" : "0px" }}
+            className={`w-full bg-transparent`}
           >
-            <div className={`transition-all duration-700 ${scrolled ? "px-6 md:px-10" : "px-4 md:px-8"}`}>
-              <div className="relative flex items-center justify-between" style={{ height: scrolled ? "70px" : "80px" }}>
+            <div className={`px-4 md:px-8`}>
+              <div className="relative flex items-center justify-between" style={{ height: "50px" }}>
 
                 {/* Left — Desktop Nav & Mobile Hamburger */}
                 <div className="flex-1 flex items-center">
                   <nav className="hidden md:flex items-center gap-8" aria-label="Primary navigation">
-                    {navLinks.map((link) => (
-                      <Link key={link.href} href={link.href} className="font-syne font-bold text-xs uppercase tracking-[0.2em] text-white/70 hover:text-white transition-colors duration-300">
-                        {link.label}
-                      </Link>
-                    ))}
+                    {/* Navigation removed */}
                   </nav>
 
                   {/* Mobile hamburger */}
@@ -98,26 +79,12 @@ export default function Navbar() {
                   </button>
                 </div>
 
-                {/* Center — Logo */}
-                <Link
-                  href="/"
-                  className="absolute left-1/2 -translate-x-1/2 flex items-center z-10"
-                  aria-label="SYCHOGEAR — Home"
-                >
-                  <Image
-                    src="/images/logo-sychogear.webp"
-                    alt="SYCHOGEAR"
-                    width={320}
-                    height={80}
-                    className="w-auto opacity-100 transition-opacity duration-300 mix-blend-screen"
-                    style={{ height: "clamp(20px, 4vw, 32px)", filter: "brightness(1.5)" }}
-                    priority
-                  />
-                </Link>
+                {/* Center — Logo Removed (Moved to Sidebar) */}
+                <div className="absolute left-1/2 -translate-x-1/2 flex items-center z-10" />
 
                 {/* Right — Actions */}
                 <div className="flex-1 flex items-center justify-end gap-1 sm:gap-4">
-                  <div className="hidden md:block border-r border-white/20 pr-4 mr-2">
+                  <div className="hidden md:block border-r border-salt/20 pr-4 mr-2">
                     <RegionCurrencySelector />
                   </div>
                   <div className="md:hidden scale-90 origin-right">
@@ -130,7 +97,7 @@ export default function Navbar() {
                     className="relative p-2 text-white/80 hover:text-white transition-colors duration-300"
                     aria-label="Track Order"
                   >
-                    <HiOutlineLocationMarker className="w-5 h-5" />
+                    <HiOutlineLocationMarker className="w-4 h-4" />
                   </Link>
 
                   {/* Cart */}
@@ -140,10 +107,10 @@ export default function Navbar() {
                     className="relative p-2 text-white/80 hover:text-white transition-colors duration-300"
                     aria-label={`Cart${mounted && itemCount > 0 ? `, ${itemCount} items` : ""}`}
                   >
-                    <HiOutlineShoppingBag className="w-5 h-5" />
+                    <HiOutlineShoppingBag className="w-4 h-4" />
                     {mounted && itemCount > 0 && (
                       <span
-                        className="absolute top-0 right-0 w-4 h-4 flex items-center justify-center bg-white text-black text-[9px] font-bold leading-none rounded-full"
+                        className="absolute top-0 right-0 w-3 h-3 flex items-center justify-center bg-white text-black text-[7px] font-bold leading-none rounded-full"
                         aria-hidden="true"
                       >
                         {itemCount > 9 ? "9+" : itemCount}
@@ -160,14 +127,14 @@ export default function Navbar() {
       {/* ─── Mobile Nav — Full Screen ──────────────────────── */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 z-40 bg-[#020202] flex flex-col overflow-hidden"
+          className="fixed inset-0 z-40 bg-void flex flex-col overflow-hidden"
           role="dialog"
           aria-modal="true"
           aria-label="Mobile navigation"
           style={{ animation: "fadeIn 400ms ease-out forwards" }}
         >
           {/* Close bar */}
-          <div className="flex items-center justify-between px-8 py-6 border-b border-[#111]">
+          <div className="flex items-center justify-between px-8 py-6 border-b border-ember">
             <Link href="/" onClick={() => setMobileOpen(false)} aria-label="SYCHOGEAR — Home">
               <Image
                 src="/images/logo-sychogear.webp"
@@ -180,8 +147,8 @@ export default function Navbar() {
             </Link>
             <button
               onClick={() => setMobileOpen(false)}
-              className="text-white hover:text-gray-400 transition-colors duration-200"
-              style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "2rem", lineHeight: 1 }}
+              className="text-salt hover:text-signal transition-none"
+              style={{ fontFamily: "var(--font-sans)", fontSize: "2rem", lineHeight: 1 }}
               aria-label="Close menu"
             >
               ×
@@ -194,7 +161,7 @@ export default function Navbar() {
               {[...navLinks, { href: "/order-status", label: "Track Order" }].map((link, i) => (
                 <div
                   key={link.href}
-                  className="overflow-hidden border-b border-[#111]"
+                  className="overflow-hidden border-b border-ember"
                 >
                   <Link
                     href={link.href}
@@ -203,7 +170,7 @@ export default function Navbar() {
                     style={{ animation: `clipRevealV 600ms ${i * 80}ms cubic-bezier(0.4, 0, 0.2, 1) both` }}
                   >
                     <span
-                      className="font-syne text-white group-hover:text-gray-400 transition-colors duration-300 block"
+                      className="font-sans text-salt group-hover:text-signal transition-none block"
                       style={{ fontSize: "clamp(40px, 10vw, 80px)", lineHeight: 1, fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.02em" }}
                     >
                       {link.label}
@@ -215,7 +182,7 @@ export default function Navbar() {
           </nav>
 
           {/* Bottom social strip */}
-          <div className="px-8 pb-12 pt-8 border-t border-[#111] flex justify-between items-center">
+          <div className="px-8 pb-12 pt-8 border-t border-ember flex justify-between items-center">
             <div className="flex gap-8">
               <a
                 href="https://www.instagram.com/sychogear"

@@ -156,7 +156,7 @@ export default function AdminCustomersPage() {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-white/5">
+              <tr className="border-b border-salt/5">
                 <th className="text-left text-xs text-brand-500 uppercase tracking-wider p-4">
                   Customer
                 </th>
@@ -180,7 +180,7 @@ export default function AdminCustomersPage() {
             <tbody>
               {loading ? (
                 Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={i} className="border-b border-white/5">
+                  <tr key={i} className="border-b border-salt/5">
                     {Array.from({ length: 5 }).map((_, j) => (
                       <td key={j} className="p-4">
                         <div className="h-4 skeleton w-24 rounded" />
@@ -201,7 +201,7 @@ export default function AdminCustomersPage() {
                 customers.map((customer) => (
                   <tr
                     key={customer.id}
-                    className="border-b border-white/5 hover:bg-white/[.02] transition-colors"
+                    className="border-b border-salt/5 hover:bg-white/[.02] transition-colors"
                   >
                     <td className="p-4">
                       <p className="text-sm font-medium">{customer.name}</p>

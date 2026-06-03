@@ -27,8 +27,8 @@ export default function ConfirmModal({
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/60 z-[60]" onClick={!isLoading ? onClose : undefined} />
-      <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm bg-brand-950 border border-white/10 p-6 z-[60] shadow-xl fade-in rounded-lg">
+      <div className="fixed inset-0 bg-void/60 z-[60]" onClick={!isLoading ? onClose : undefined} />
+      <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm bg-brand-950 border border-salt/10 p-6 z-[60] shadow-xl fade-in rounded-lg">
         <h3 className="text-lg font-bold mb-2">{title}</h3>
         <div className="text-sm text-brand-400 mb-6 space-y-2 whitespace-pre-wrap">{message}</div>
         

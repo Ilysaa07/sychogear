@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { productRepository } from "@/repositories/product.repository";
 import ProductDetailClient from "@/components/store/ProductDetailClient";
 import ProductCard from "@/components/store/ProductCard";
+import Sidebar from "@/components/store/Sidebar";
 import { cache } from "react";
 import type { Metadata } from "next";
 import type { ProductWithRelations } from "@/types";
@@ -111,7 +112,7 @@ export default async function ProductDetailPage({ params }: Props) {
   );
 
   return (
-    <div className="container-main pt-32 pb-12">
+    <div className="relative min-h-screen bg-void pt-0 pb-12">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
@@ -120,26 +121,34 @@ export default async function ProductDetailPage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
-      <ProductDetailClient product={product} />
+      
+      <div className="container-main flex flex-col md:flex-row gap-8 md:gap-16 -mt-4">
+        {/* ─── Sidebar Categories ─── */}
+        <Sidebar />
 
-      {/* Related Products */}
-      {relatedProducts.length > 0 && (
-        <section className="mt-32 pt-16 border-t border-white/5">
-          <div className="mb-10 text-center">
-            <p className="text-[10px] tracking-[0.4em] uppercase text-brand-500 mb-2 font-medium">
-              Explore More
-            </p>
-            <h2 className="text-3xl md:text-5xl font-semibold uppercase tracking-[0.1em] text-white">
-              You May Also Like
-            </h2>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-            {relatedProducts.map((p: ProductWithRelations) => (
-              <ProductCard key={p.id} product={p} />
-            ))}
-          </div>
-        </section>
-      )}
+        <div className="flex-1 min-w-0">
+          <ProductDetailClient product={product} />
+
+          {/* Related Products */}
+          {relatedProducts.length > 0 && (
+            <section className="mt-32 pt-16 border-t border-salt/5">
+              <div className="mb-10 text-center">
+                <p className="text-[10px] tracking-[0.4em] uppercase text-brand-500 mb-2 font-medium">
+                  Explore More
+                </p>
+                <h2 className="text-3xl md:text-5xl font-semibold uppercase tracking-[0.1em] text-white">
+                  You May Also Like
+                </h2>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+                {relatedProducts.map((p: ProductWithRelations) => (
+                  <ProductCard key={p.id} product={p} />
+                ))}
+              </div>
+            </section>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

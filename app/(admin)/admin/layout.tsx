@@ -18,7 +18,7 @@ export default function AdminLayout({
       
       <div className="flex-1 flex flex-col min-w-0">
         {/* Mobile Header */}
-        <header className="h-16 border-b border-white/5 bg-brand-950 flex items-center justify-between px-4 md:hidden sticky top-0 z-30">
+        <header className="h-16 border-b border-salt/5 bg-brand-950 flex items-center justify-between px-4 md:hidden sticky top-0 z-30">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setOpen(true)}

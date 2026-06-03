@@ -77,7 +77,7 @@ export default function QuickViewModal({ product, onClose }: QuickViewModalProps
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm"
+        className="fixed inset-0 z-[200] bg-void/80 backdrop-blur-sm"
         style={{ animation: "fadeInOverlay 300ms ease forwards" }}
         onClick={onClose}
         aria-hidden="true"
@@ -128,7 +128,7 @@ export default function QuickViewModal({ product, onClose }: QuickViewModalProps
               )}
               {/* Sold Out overlay on image */}
               {isSoldOut && (
-                <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/50 backdrop-blur-[2px]">
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-void/50 backdrop-blur-[2px]">
                   <span className="font-syne font-bold text-white uppercase tracking-[0.3em] text-sm -rotate-12">Sold Out</span>
                 </div>
               )}

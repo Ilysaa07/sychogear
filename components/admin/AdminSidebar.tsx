@@ -36,18 +36,18 @@ export default function AdminSidebar() {
       {/* Overlay for mobile */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/60 z-40 md:hidden transition-opacity duration-300"
+          className="fixed inset-0 bg-void/60 z-40 md:hidden transition-opacity duration-300"
           onClick={() => setOpen(false)}
         />
       )}
 
       <aside
-        className={`fixed left-0 top-0 h-full w-64 bg-brand-950 border-r border-white/5 flex flex-col z-50 transition-transform duration-300 ease-in-out ${
+        className={`fixed left-0 top-0 h-full w-64 bg-brand-950 border-r border-salt/5 flex flex-col z-50 transition-transform duration-300 ease-in-out ${
           isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         }`}
       >
         {/* Logo & Close Button */}
-        <div className="p-6 border-b border-white/5 flex items-center justify-between">
+        <div className="p-6 border-b border-salt/5 flex items-center justify-between">
           <div>
             <Image
               src="/images/logo-sychogear.webp"
@@ -95,7 +95,7 @@ export default function AdminSidebar() {
       </nav>
 
       {/* Back to store */}
-      <div className="p-4 border-t border-white/5">
+      <div className="p-4 border-t border-salt/5">
         <Link
           href="/"
           className="flex items-center gap-3 px-4 py-3 text-sm text-brand-500 hover:text-white transition-colors"

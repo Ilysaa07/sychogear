@@ -45,7 +45,7 @@ export default async function OrderSuccessPage({
       <OrderStatusPoller invoiceNumber={invoiceNumber} initialStatus={order.status} />
       
       <div className="fade-in">
-        <div className={`card glass border-white/5 rounded-3xl overflow-hidden shadow-2xl transition-all duration-500`}>
+        <div className={`card glass border-salt/5 rounded-3xl overflow-hidden shadow-2xl transition-all duration-500`}>
           {/* Header Status */}
           <div className={`py-12 px-8 text-center bg-gradient-to-b ${
             isPaid ? "from-green-500/10 to-transparent" : 
@@ -79,7 +79,7 @@ export default async function OrderSuccessPage({
 
             {/* Country Badge */}
             {isInternational && (
-              <div className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10">
+              <div className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-salt/10">
                 <span className="w-4 h-3 relative rounded-sm overflow-hidden inline-block flex-shrink-0">
                   <img
                     src={`https://flagcdn.com/w20/${(order.country || "ID").toLowerCase()}.png`}
@@ -116,7 +116,7 @@ export default async function OrderSuccessPage({
             ) : (
               /* Pending Payment */
               <div className="space-y-6">
-                <div className="bg-brand-900/50 border border-white/5 rounded-2xl p-6 relative overflow-hidden">
+                <div className="bg-brand-900/50 border border-salt/5 rounded-2xl p-6 relative overflow-hidden">
                   <div className="absolute top-0 right-0 p-4 opacity-10">
                     <HiOutlineInformationCircle className="w-20 h-20" />
                   </div>
@@ -129,7 +129,7 @@ export default async function OrderSuccessPage({
                   <div className="space-y-6 relative z-10">
                     <div>
                       <p className="text-xs text-brand-500 uppercase tracking-widest mb-2 font-bold">Total Amount</p>
-                      <div className="bg-black/40 p-4 border border-white/5 rounded-xl flex items-center justify-between">
+                      <div className="bg-void/40 p-4 border border-salt/5 rounded-xl flex items-center justify-between">
                         <span className="text-3xl font-bold text-white tracking-tight">
                           {isInternational && order.payment?.currencyAmount
                             ? formatUSD(order.payment.currencyAmount)
@@ -171,17 +171,17 @@ export default async function OrderSuccessPage({
                         )}
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="bg-black/40 p-4 border border-white/5 rounded-xl">
+                          <div className="bg-void/40 p-4 border border-salt/5 rounded-xl">
                             <p className="text-[10px] text-brand-500 uppercase tracking-widest mb-1 font-bold">Bank</p>
                             <p className="font-bold text-lg">BCA</p>
                           </div>
-                          <div className="bg-black/40 p-4 border border-white/5 rounded-xl">
+                          <div className="bg-void/40 p-4 border border-salt/5 rounded-xl">
                             <p className="text-[10px] text-brand-500 uppercase tracking-widest mb-1 font-bold">Account Name</p>
                             <p className="font-bold text-brand-200">ILYASA MEYDIANSYAH A</p>
                           </div>
                         </div>
 
-                        <div className="bg-black/40 p-4 border border-white/5 rounded-xl flex items-center justify-between">
+                        <div className="bg-void/40 p-4 border border-salt/5 rounded-xl flex items-center justify-between">
                           <div>
                             <p className="text-[10px] text-brand-500 uppercase tracking-widest mb-1 font-bold">Account Number</p>
                             <p className="text-2xl font-mono font-bold tracking-widest text-white">6768126284</p>
@@ -190,7 +190,7 @@ export default async function OrderSuccessPage({
                         </div>
 
                         {/* Price Breakdown */}
-                        <div className="pt-4 border-t border-white/5 space-y-2">
+                        <div className="pt-4 border-t border-salt/5 space-y-2">
                           <div className="flex justify-between text-xs text-brand-400">
                             <span>Subtotal</span>
                             <span>{formatCurrency(order.subtotal)}</span>
@@ -221,7 +221,7 @@ export default async function OrderSuccessPage({
                           )}
                         </div>
 
-                        <div className="pt-4 border-t border-white/5">
+                        <div className="pt-4 border-t border-salt/5">
                           <p className="text-[10px] text-yellow-500/80 mb-4 flex items-start gap-1.5 font-medium leading-tight">
                             <HiOutlineInformationCircle className="w-4 h-4 flex-shrink-0" />
                             <span>* Price does not include shipping fee. Please contact our CS via WhatsApp to coordinate shipping costs.</span>
@@ -272,14 +272,14 @@ export default async function OrderSuccessPage({
 
             {/* Tracking widget — shown when AWB is available (order SHIPPED or DELIVERED) */}
             {trackingNumber && (isShipped || isPaid) && (
-              <div className="border-t border-white/5 pt-6 space-y-4">
+              <div className="border-t border-salt/5 pt-6 space-y-4">
                 <TrackingWidget awb={trackingNumber} courier={order.courier} />
               </div>
             )}
 
             {/* If SHIPPED but no tracking yet */}
             {isShipped && !trackingNumber && (
-              <div className="border-t border-white/5 pt-6">
+              <div className="border-t border-salt/5 pt-6">
                 <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/20 text-center">
                   <p className="text-sm font-bold text-blue-300 mb-1">Your order has been shipped! 🚚</p>
                   <p className="text-xs text-brand-500">

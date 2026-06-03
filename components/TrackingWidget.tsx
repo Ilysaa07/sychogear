@@ -43,7 +43,7 @@ export default function TrackingWidget({ awb, courier }: Props) {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center gap-2">
-        <span className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-sm shadow-inner">
+        <span className="w-8 h-8 rounded-lg bg-white/5 border border-salt/10 flex items-center justify-center text-sm shadow-inner">
           🚚
         </span>
         <div>
@@ -66,7 +66,7 @@ export default function TrackingWidget({ awb, courier }: Props) {
             // Optional: add a tiny temporary success state here if needed
           }}
           title="Copy AWB"
-          className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 transition-all border border-white/5 hover:border-white/10 text-brand-400 hover:text-white"
+          className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 transition-all border border-salt/5 hover:border-salt/10 text-brand-400 hover:text-white"
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
@@ -76,7 +76,7 @@ export default function TrackingWidget({ awb, courier }: Props) {
       </div>
 
       {/* Info Box */}
-      <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-2.5">
+      <div className="p-4 rounded-xl bg-white/[0.02] border border-salt/5 space-y-2.5">
         <div className="flex items-center gap-2">
           <div className="w-1 h-1 bg-brand-400 rounded-full" />
           <p className="text-xs font-bold text-brand-300">Tracking Instructions:</p>

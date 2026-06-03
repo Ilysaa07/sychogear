@@ -315,7 +315,7 @@ export default function AdminCouponsPage() {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-white/5">
+              <tr className="border-b border-salt/5">
                 <th className="text-left text-xs text-brand-500 uppercase tracking-wider p-4">Code</th>
                 <th className="text-left text-xs text-brand-500 uppercase tracking-wider p-4">Discount</th>
                 <th className="text-left text-xs text-brand-500 uppercase tracking-wider p-4">Min Purchase</th>
@@ -328,7 +328,7 @@ export default function AdminCouponsPage() {
             <tbody>
               {loading ? (
                 Array.from({ length: 3 }).map((_, i) => (
-                  <tr key={i} className="border-b border-white/5">
+                  <tr key={i} className="border-b border-salt/5">
                     {Array.from({ length: 7 }).map((_, j) => (
                       <td key={j} className="p-4"><div className="h-4 skeleton w-16 rounded" /></td>
                     ))}
@@ -342,7 +342,7 @@ export default function AdminCouponsPage() {
                 </tr>
               ) : (
                 coupons.map((coupon) => (
-                  <tr key={coupon.id} className="border-b border-white/5 hover:bg-white/[.02] transition-colors">
+                  <tr key={coupon.id} className="border-b border-salt/5 hover:bg-white/[.02] transition-colors">
                     <td className="p-4 font-mono text-sm font-bold">{coupon.code}</td>
                     <td className="p-4 text-sm">
                       {coupon.discountType === "PERCENTAGE"

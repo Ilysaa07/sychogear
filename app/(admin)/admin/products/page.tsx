@@ -475,14 +475,14 @@ export default function AdminProductsPage() {
               </button>
             </div>
             
-            <div className="space-y-4 bg-white/[0.02] p-4 rounded-lg border border-white/5">
+            <div className="space-y-4 bg-white/[0.02] p-4 rounded-lg border border-salt/5">
               {formData.images.map((img, i) => {
                 const isUploading = uploadingImageIndices.includes(i);
                 
                 return (
-                  <div key={i} className="flex gap-4 items-start bg-brand-950 p-3 rounded border border-white/10">
+                  <div key={i} className="flex gap-4 items-start bg-brand-950 p-3 rounded border border-salt/10">
                     {/* Image Preview Thumbnail */}
-                    <div className="w-20 h-24 bg-brand-900 rounded overflow-hidden flex-shrink-0 border border-white/5 flex items-center justify-center relative shadow-inner">
+                    <div className="w-20 h-24 bg-brand-900 rounded overflow-hidden flex-shrink-0 border border-salt/5 flex items-center justify-center relative shadow-inner">
                       {img.url ? (
                         <img src={img.url} alt={`Preview ${i}`} className="w-full h-full object-cover" />
                       ) : (
@@ -490,8 +490,8 @@ export default function AdminProductsPage() {
                       )}
                       
                       {isUploading && (
-                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center backdrop-blur-sm">
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <div className="absolute inset-0 bg-void/50 flex items-center justify-center backdrop-blur-sm">
+                          <div className="w-4 h-4 border-2 border-salt border-t-transparent rounded-full animate-spin" />
                         </div>
                       )}
                     </div>
@@ -554,7 +554,7 @@ export default function AdminProductsPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, featured: e.target.checked })
                 }
-                className="w-4 h-4 rounded border-white/20 bg-brand-900 text-red-600 focus:ring-red-600 focus:ring-offset-brand-950"
+                className="w-4 h-4 rounded border-salt/20 bg-brand-900 text-red-600 focus:ring-red-600 focus:ring-offset-brand-950"
               />
               Featured
             </label>
@@ -565,7 +565,7 @@ export default function AdminProductsPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, isNew: e.target.checked })
                 }
-                className="w-4 h-4 rounded border-white/20 bg-brand-900 text-red-600 focus:ring-red-600 focus:ring-offset-brand-950"
+                className="w-4 h-4 rounded border-salt/20 bg-brand-900 text-red-600 focus:ring-red-600 focus:ring-offset-brand-950"
               />
               New Arrival
             </label>
@@ -576,7 +576,7 @@ export default function AdminProductsPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, isActive: e.target.checked })
                 }
-                className="w-4 h-4 rounded border-white/20 bg-brand-900 text-red-600 focus:ring-red-600 focus:ring-offset-brand-950"
+                className="w-4 h-4 rounded border-salt/20 bg-brand-900 text-red-600 focus:ring-red-600 focus:ring-offset-brand-950"
               />
               Active
             </label>
@@ -587,7 +587,7 @@ export default function AdminProductsPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, showTaxDetails: e.target.checked })
                 }
-                className="w-4 h-4 rounded border-white/20 bg-brand-900 text-red-600 focus:ring-red-600 focus:ring-offset-brand-950"
+                className="w-4 h-4 rounded border-salt/20 bg-brand-900 text-red-600 focus:ring-red-600 focus:ring-offset-brand-950"
               />
               Show Tax Details on Invoice
             </label>
@@ -621,7 +621,7 @@ export default function AdminProductsPage() {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-white/5">
+              <tr className="border-b border-salt/5">
                 <th className="text-left text-xs text-brand-500 uppercase tracking-wider p-4">
                   Product
                 </th>
@@ -642,7 +642,7 @@ export default function AdminProductsPage() {
             <tbody>
               {loading ? (
                 Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={i} className="border-b border-white/5">
+                  <tr key={i} className="border-b border-salt/5">
                     <td className="p-4"><div className="h-4 skeleton w-40 rounded" /></td>
                     <td className="p-4"><div className="h-4 skeleton w-20 rounded" /></td>
                     <td className="p-4"><div className="h-4 skeleton w-12 rounded" /></td>
@@ -665,7 +665,7 @@ export default function AdminProductsPage() {
                   return (
                     <tr
                       key={product.id}
-                      className="border-b border-white/5 hover:bg-white/[.02] transition-colors"
+                      className="border-b border-salt/5 hover:bg-white/[.02] transition-colors"
                     >
                       <td className="p-4">
                         <div className="flex items-center gap-3">

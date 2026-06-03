@@ -183,7 +183,7 @@ export default function AdminVisitorsPage() {
 
         <div className="flex items-center gap-3">
           {/* Days filter */}
-          <div className="flex rounded-lg border border-white/10 overflow-hidden">
+          <div className="flex rounded-lg border border-salt/10 overflow-hidden">
             {DAYS_OPTIONS.map((opt) => (
               <button
                 key={opt.value}
@@ -203,7 +203,7 @@ export default function AdminVisitorsPage() {
           <button
             onClick={() => fetchData(true)}
             disabled={isRefreshing}
-            className="p-2 rounded-lg border border-white/10 text-brand-400 hover:text-white hover:bg-white/5 transition-colors disabled:opacity-50"
+            className="p-2 rounded-lg border border-salt/10 text-brand-400 hover:text-white hover:bg-white/5 transition-colors disabled:opacity-50"
             title="Refresh"
           >
             <HiOutlineRefresh
@@ -304,7 +304,7 @@ export default function AdminVisitorsPage() {
 
       {/* ── Visitor Log Table ─────────────────────────────── */}
       <div className="card overflow-hidden">
-        <div className="p-5 border-b border-white/5 flex items-center justify-between">
+        <div className="p-5 border-b border-salt/5 flex items-center justify-between">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-brand-400">
             Log Kunjungan
           </h3>
@@ -314,7 +314,7 @@ export default function AdminVisitorsPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-white/5 text-left">
+              <tr className="border-b border-salt/5 text-left">
                 <th className="px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-brand-600">
                   Waktu
                 </th>

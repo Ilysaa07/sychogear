@@ -262,8 +262,8 @@ export default function AdminOrdersPage() {
             onClick={() => setStatusFilter(status)}
             className={`px-3 py-1.5 text-xs font-medium border transition-colors ${
               statusFilter === status
-                ? "border-white bg-white text-black"
-                : "border-white/10 text-brand-400 hover:border-white/30"
+                ? "border-salt bg-white text-black"
+                : "border-salt/10 text-brand-400 hover:border-salt/30"
             }`}
           >
             {status}
@@ -276,7 +276,7 @@ export default function AdminOrdersPage() {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-white/5">
+              <tr className="border-b border-salt/5">
                 <th className="text-left text-xs text-brand-500 uppercase tracking-wider p-4">Invoice</th>
                 <th className="p-4 font-semibold text-left">Customer</th>
                 <th className="p-4 font-semibold text-left">Total (Inc. Code)</th>
@@ -288,7 +288,7 @@ export default function AdminOrdersPage() {
             <tbody>
               {loading ? (
                 Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={i} className="border-b border-white/5">
+                  <tr key={i} className="border-b border-salt/5">
                     {Array.from({ length: 6 }).map((_, j) => (
                       <td key={j} className="p-4"><div className="h-4 skeleton w-24 rounded" /></td>
                     ))}
@@ -304,7 +304,7 @@ export default function AdminOrdersPage() {
                 orders.map((order) => (
                   <tr
                     key={order.id}
-                    className="border-b border-white/5 hover:bg-white/[.02] transition-colors"
+                    className="border-b border-salt/5 hover:bg-white/[.02] transition-colors"
                   >
                     <td className="p-4">
                       <p className="text-sm font-medium font-mono">
@@ -374,12 +374,12 @@ export default function AdminOrdersPage() {
       {selectedOrder && (
         <>
           <div
-            className="fixed inset-0 bg-black/60 z-50"
+            className="fixed inset-0 bg-void/60 z-50"
             onClick={() => setSelectedOrder(null)}
           />
-          <div className="fixed right-0 top-0 h-screen w-full max-w-md bg-brand-950 border-l border-white/5 z-50 flex flex-col shadow-2xl fade-in">
+          <div className="fixed right-0 top-0 h-screen w-full max-w-md bg-brand-950 border-l border-salt/5 z-50 flex flex-col shadow-2xl fade-in">
             {/* Drawer Header - Fixed at Top */}
-            <div className="p-6 border-b border-white/5 flex items-center justify-between bg-brand-950/80 backdrop-blur-md z-10">
+            <div className="p-6 border-b border-salt/5 flex items-center justify-between bg-brand-950/80 backdrop-blur-md z-10">
               <h3 className="text-lg font-bold tracking-tight text-white">{selectedOrder.invoiceNumber}</h3>
               <div className="flex items-center gap-2">
                 <button
@@ -413,7 +413,7 @@ export default function AdminOrdersPage() {
                         handleUpdateStatus(selectedOrder.id, e.target.value)
                       }
                       disabled={updatingStatus}
-                      className="input-field text-sm flex-1 bg-brand-900/50 text-white border-b border-white/10 px-2 py-2"
+                      className="input-field text-sm flex-1 bg-brand-900/50 text-white border-b border-salt/10 px-2 py-2"
                     >
                       {STATUS_OPTIONS.map((status) => (
                         <option key={status} value={status} className="bg-brand-950 text-white">
@@ -435,7 +435,7 @@ export default function AdminOrdersPage() {
                 </section>
 
                 <section>
-                  <div className="flex items-center justify-between mb-3 border-b border-white/5 pb-2">
+                  <div className="flex items-center justify-between mb-3 border-b border-salt/5 pb-2">
                     <h4 className="text-[10px] text-brand-500 uppercase tracking-[0.2em] font-black">
                       Customer Profile
                     </h4>
@@ -515,7 +515,7 @@ export default function AdminOrdersPage() {
                   <div className="space-y-4">
                     {selectedOrder.items.map((item) => (
                       <div key={item.id} className="flex gap-4 p-2 hover:bg-white/[0.02] transition-colors rounded-lg">
-                        <div className="w-12 h-16 bg-brand-900 flex-shrink-0 overflow-hidden border border-white/5">
+                        <div className="w-12 h-16 bg-brand-900 flex-shrink-0 overflow-hidden border border-salt/5">
                           <img
                             src={item.product.images[0]?.url || "/placeholder.svg"}
                             alt={item.product.name}
@@ -538,7 +538,7 @@ export default function AdminOrdersPage() {
                   </div>
                 </section>
 
-                <section className="bg-white/[0.02] p-5 border border-white/5 space-y-3">
+                <section className="bg-white/[0.02] p-5 border border-salt/5 space-y-3">
                   <div className="flex justify-between text-[11px] uppercase tracking-wider">
                     <span className="text-brand-500">Subtotal</span>
                     <span className="text-brand-300 font-mono">{formatCurrency(selectedOrder.subtotal)}</span>
@@ -567,7 +567,7 @@ export default function AdminOrdersPage() {
                       <span className="text-brand-300 font-mono">+{formatCurrency(selectedOrder.taxPph23)}</span>
                     </div>
                   )}
-                  <div className="flex justify-between font-black text-xl pt-3 border-t border-white/10">
+                  <div className="flex justify-between font-black text-xl pt-3 border-t border-salt/10">
                     <span className="text-white tracking-tight italic">GRAND TOTAL</span>
                     <span className="text-white font-mono">{formatCurrency(selectedOrder.totalWithCode)}</span>
                   </div>
@@ -578,11 +578,11 @@ export default function AdminOrdersPage() {
                 </section>
 
                 {selectedOrder.payment && (
-                  <section className="border-t border-white/5 pt-6">
+                  <section className="border-t border-salt/5 pt-6">
                     <h4 className="text-[10px] text-brand-500 uppercase tracking-[0.2em] font-black mb-4">
                       Payment Verification
                     </h4>
-                    <div className="space-y-3 bg-brand-900/20 p-4 rounded-lg border border-white/5">
+                    <div className="space-y-3 bg-brand-900/20 p-4 rounded-lg border border-salt/5">
                       <div className="flex justify-between items-center">
                         <span className="text-[10px] text-brand-600 uppercase font-black">Method</span>
                         <span className="text-xs text-white font-bold">{selectedOrder.payment.method || "-"}</span>
@@ -607,7 +607,7 @@ export default function AdminOrdersPage() {
                       )}
                     </div>
                     {(selectedOrder as any).country && (
-                       <div className="mt-4 flex items-center justify-between p-3 bg-white/[0.02] border border-white/5">
+                       <div className="mt-4 flex items-center justify-between p-3 bg-white/[0.02] border border-salt/5">
                           <span className="text-[10px] text-brand-600 uppercase font-black tracking-widest">Origin</span>
                           <div className="flex items-center gap-2">
                              <span className="w-5 h-3.5 relative rounded-[2px] overflow-hidden inline-block shadow-sm">
@@ -630,17 +630,17 @@ export default function AdminOrdersPage() {
                 )}
 
                 {/* AWB / Tracking Number */}
-                <section className="border-t border-white/5 pt-6 pb-12">
+                <section className="border-t border-salt/5 pt-6 pb-12">
                   <h4 className="text-[10px] text-brand-500 uppercase tracking-[0.2em] font-black mb-4 flex items-center gap-2">
                     🚚 Shipment Logistics
                   </h4>
-                  <div className="space-y-4 bg-brand-900/10 p-5 border border-dashed border-white/10">
+                  <div className="space-y-4 bg-brand-900/10 p-5 border border-dashed border-salt/10">
                     <div className="space-y-2">
                       <label className="text-[9px] text-brand-600 uppercase font-black tracking-widest">Courier / Ekspedisi</label>
                       <select
                         value={courierInput}
                         onChange={(e) => setCourierInput(e.target.value)}
-                        className="input-field text-xs w-full bg-brand-950 text-white border-b border-white/10 focus:border-white/40 px-0 py-2.5 transition-all outline-none"
+                        className="input-field text-xs w-full bg-brand-950 text-white border-b border-salt/10 focus:border-salt/40 px-0 py-2.5 transition-all outline-none"
                       >
                         {COURIER_OPTIONS.map(c => (
                           <option key={c} value={c} className="bg-brand-950 text-white py-2">{c}</option>
@@ -654,7 +654,7 @@ export default function AdminOrdersPage() {
                           type="text"
                           value={trackingInput}
                           onChange={(e) => setTrackingInput(e.target.value.toUpperCase())}
-                          className="input-field text-sm flex-1 font-mono bg-transparent border-b border-white/10 focus:border-white/40 px-0 transition-all outline-none"
+                          className="input-field text-sm flex-1 font-mono bg-transparent border-b border-salt/10 focus:border-salt/40 px-0 transition-all outline-none"
                           placeholder="INPUT NO. RESI..."
                         />
                         <button

@@ -57,13 +57,13 @@ export default function CartDrawer() {
           style={{ borderBottom: "1px solid var(--ember)" }}
         >
           <div>
-            <p className="font-syne font-semibold tracking-[0.2em] text-salt uppercase text-xs">
+            <p className="font-sans font-bold tracking-[0.2em] text-salt uppercase text-xs">
               Cart {" "}
               <span
                 style={{
-                  fontFamily: "var(--font-dm-mono), monospace",
+                  fontFamily: "var(--font-sans)",
                   fontSize: "0.6875rem",
-                  color: "var(--ash)",
+                  color: "var(--color-ash)",
                   fontWeight: 400,
                   letterSpacing: "0.05em",
                 }}
@@ -87,19 +87,17 @@ export default function CartDrawer() {
           {items.length === 0 ? (
             /* Empty state */
             <div className="flex flex-col items-center justify-center h-full px-8 py-16 text-center">
-              <div className="w-16 h-16 border border-ember mb-6 flex items-center justify-center blade-cut" style={{ color: "var(--ash)" }}>
-                <span style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.75rem", letterSpacing: "0.1em" }}>00</span>
+              <div className="w-16 h-16 border-2 border-salt mb-6 flex items-center justify-center text-salt">
+                <span style={{ fontFamily: "var(--font-sans)", fontSize: "0.75rem", letterSpacing: "0.1em", fontWeight: "bold" }}>00</span>
               </div>
-              <p
-                className="font-syne font-semibold tracking-[0.1em] text-salt uppercase text-sm mb-2"
-              >
+              <p className="font-sans font-bold tracking-[0.1em] text-salt uppercase text-sm mb-2">
                 Subject Not Found
               </p>
-              <p className="text-ash mb-8 max-w-[200px]" style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.6875rem", lineHeight: 1.5 }}>
+              <p className="text-ash mb-8 max-w-[200px]" style={{ fontFamily: "var(--font-sans)", fontSize: "0.6875rem", lineHeight: 1.5 }}>
                 Your archive unit is currently empty.
               </p>
               <Link 
-                href="/products" 
+                href="/" 
                 onClick={() => setOpen(false)} 
                 className="btn-ghost"
               >
@@ -141,7 +139,7 @@ export default function CartDrawer() {
                       <div>
                         <div className="flex justify-between items-start">
                           <p style={{
-                            fontFamily: "var(--font-syne), system-ui, sans-serif",
+                            fontFamily: "var(--font-sans)",
                             fontSize: "0.75rem",
                             fontWeight: 600,
                             letterSpacing: "0.08em",
@@ -161,7 +159,7 @@ export default function CartDrawer() {
                           </button>
                         </div>
                         <p style={{
-                          fontFamily: "var(--font-dm-mono), monospace",
+                          fontFamily: "var(--font-sans)",
                           fontSize: "0.625rem",
                           letterSpacing: "0.2em",
                           textTransform: "uppercase",
@@ -171,7 +169,7 @@ export default function CartDrawer() {
                           Unit / {item.size}
                         </p>
                         <div className="flex items-baseline gap-2 mt-2">
-                          <p style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.8125rem", color: "var(--signal)" }}>
+                          <p style={{ fontFamily: "var(--font-sans)", fontWeight: "bold", fontSize: "0.8125rem", color: "var(--color-signal)" }}>
                             {formatPrice(itemPrice)}
                           </p>
                           {hasDiscount && (

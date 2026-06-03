@@ -1,89 +1,241 @@
-import NewsletterSection from "@/components/store/NewsletterSection";
-import HeroSlider from "@/components/store/HeroSlider";
-import PromoModal from "@/components/store/PromoModal";
-import { prisma } from "@/lib/prisma";
-import type { Metadata } from "next";
-import HomePageClient from "@/components/store/HomePageClient";
+"use client";
 
-export const dynamic = "force-dynamic";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import axios from "axios";
+import { useCurrency } from "@/components/store/CurrencyProvider";
+import Image from "next/image";
+import QuickViewModal from "@/components/store/QuickViewModal";
+import Sidebar from "@/components/store/Sidebar";
+import type { ProductWithRelations } from "@/types";
 
-export const metadata: Metadata = {
-  title: "Sychogear — Official Archive",
-  description: "A curated collection of premium streetwear. Explore the archive.",
-};
-
-// Settings jarang berubah — cache 5 menit, revalidate saat admin save via revalidatePath.
-// Menggantikan force-dynamic yang sebelumnya menyebabkan DB query setiap request homepage.
-export const revalidate = 300;
-
-async function getHeroSettings() {
-  try {
-    const settings = await prisma.siteSettings.findMany();
-    const map: Record<string, string> = {};
-    for (const s of settings) map[s.key] = s.value;
-    return map;
-  } catch { return {}; }
-}
-
-export default async function HomePage() {
-  const heroSettings = await getHeroSettings();
-
-  let heroImages: string[] = [];
-  try { heroImages = heroSettings.heroImages ? JSON.parse(heroSettings.heroImages) : []; }
-  catch { heroImages = []; }
-
-  const heroTagline = heroSettings.heroTagline || "Collection 01 — Otoriter";
-  const heroSubtitle = heroSettings.heroSubtitle || "FORGED IN FIRE.\\nBUILT FOR\\nTHE FIRM.";
-  const heroCtaText = heroSettings.heroCtaText || "SHOP THE DROP";
-  const heroCtaUrl = heroSettings.heroCtaUrl || "/products";
-  const heroShowContent = heroSettings.heroShowContent !== "false";
-  const heroShowButtons = heroSettings.heroShowButtons !== "false";
-
-  const promoSettings = {
-    active: heroSettings.promoActive === "true",
-    image: heroSettings.promoImage || "",
-    title: heroSettings.promoTitle || "New Arrival",
-    subtitle: heroSettings.promoSubtitle || "Just dropped",
-    linkUrl: heroSettings.promoLinkUrl || "/products",
-    linkText: heroSettings.promoLinkText || "Shop Now",
+export default function HomePage() {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://sychogear.com";
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: baseUrl },
+    ],
   };
 
   return (
-    <main className="w-full min-h-screen bg-[#111512] text-salt overflow-x-hidden">
-      <PromoModal settings={promoSettings} />
-
-      {/* ═══ HERO ═══════════════════════════════════════════════ */}
-      <section
-        className="relative w-full overflow-hidden"
-        style={{ height: "100svh", minHeight: "620px" }}
-        aria-label="Hero"
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <Suspense
+        fallback={
+          <div className="min-h-screen bg-void flex items-center justify-center pt-20">
+            <p className="font-sans font-bold uppercase tracking-widest text-ash text-xs">Loading Archive...</p>
+          </div>
+        }
       >
-        {/* Background */}
-        <div className="absolute inset-0 z-0">
-          <HeroSlider images={heroImages} />
+        <ProductsContent />
+      </Suspense>
+    </>
+  );
+}
+
+function ProductsContent() {
+  const { formatPrice } = useCurrency();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const [products, setProducts] = useState<ProductWithRelations[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [totalPages, setTotalPages] = useState(1);
+  const [quickViewProduct, setQuickViewProduct] = useState<ProductWithRelations | null>(null);
+
+  const category = searchParams.get("category") || "";
+  const page = Number(searchParams.get("page")) || 1;
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setLoading(true);
+      try {
+        const params = new URLSearchParams();
+        if (category && category !== "All") params.set("category", category);
+        params.set("page", String(page));
+        const { data } = await axios.get(`/api/products?${params}`);
+        if (data.success) { setProducts(data.data); setTotalPages(data.totalPages); }
+      } catch { setProducts([]); }
+      finally { setLoading(false); }
+    };
+    fetchProducts();
+  }, [category, page]);
+
+
+
+  const updatePage = (p: number) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("page", String(p));
+    router.push(`/?${params}`);
+  };
+
+  return (
+    <div className="relative min-h-screen bg-void pt-0 pb-24">
+      {/* Quick View Modal (Optional now, but kept in case) */}
+      <QuickViewModal product={quickViewProduct} onClose={() => setQuickViewProduct(null)} />
+      
+      <div className="container-main flex flex-col md:flex-row gap-8 md:gap-16 -mt-4">
+        {/* ─── Sidebar Categories ─── */}
+        <Sidebar />
+
+        {/* ─── Editorial Grid ─── */}
+        <div className="flex-1 min-w-0">
+
+          {loading ? (
+            <>
+              {/* Mobile skeleton: horizontal strip */}
+              <div className="flex sm:hidden gap-4 overflow-x-auto pb-4 -mx-4 px-4" style={{ scrollSnapType: "x mandatory" }}>
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="flex-shrink-0 w-[75vw] aspect-[3/4] bg-dim animate-pulse" style={{ scrollSnapAlign: "start" }} />
+                ))}
+              </div>
+              {/* Desktop skeleton: grid */}
+              <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-x-8 md:gap-x-12 gap-y-6 md:gap-y-8">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="w-full aspect-[3/4] bg-dim animate-pulse" />
+                ))}
+              </div>
+            </>
+          ) : products.length === 0 ? (
+            <div className="flex justify-center py-32 text-center">
+              <p className="font-sans font-bold text-xs text-ash uppercase tracking-widest">Subject not found in archive.</p>
+            </div>
+          ) : (
+            <>
+              {/* ─── Mobile: Horizontal Snap Scroll ─── */}
+              <div
+                className="flex sm:hidden gap-4 overflow-x-auto pb-6 -mx-4 px-4"
+                style={{ scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}
+              >
+                {products.map((product) => {
+                  const isOnSale = product.flashSale?.isActive && product.flashSale.salePrice;
+                  const displayPrice = isOnSale ? product.flashSale!.salePrice : product.salePrice || product.price;
+                  const finalPrice = product.discountRate > 0 ? displayPrice * (1 - product.discountRate / 100) : displayPrice;
+                  const totalStock = product.variants.reduce((s, v) => s + v.stock, 0);
+                  const isSoldOut = totalStock === 0;
+                  return (
+                    <div key={product.id} className="flex-shrink-0 w-[75vw] relative group" style={{ scrollSnapAlign: "start" }}>
+                      <div className="relative w-full aspect-[3/4] overflow-hidden bg-void mb-3">
+                        <Link href={`/products/${product.slug}`} className="absolute inset-0 z-10" aria-label={product.name} />
+                        <Image 
+                          src={product.images[0]?.url || "/placeholder.svg"} 
+                          alt={product.name} 
+                          fill 
+                          sizes="75vw" 
+                          className={`object-cover ${product.images.length > 1 ? "group-hover:opacity-0" : ""}`} 
+                        />
+                        {product.images.length > 1 && (
+                          <Image 
+                            src={product.images[1]?.url} 
+                            alt={`${product.name} alternate`} 
+                            fill 
+                            sizes="75vw" 
+                            className="object-cover absolute inset-0 opacity-0 group-hover:opacity-100" 
+                          />
+                        )}
+                        {/* Sold Out Overlay */}
+                        {isSoldOut && (
+                          <div className="absolute inset-0 z-20 flex items-center justify-center bg-void/70">
+                            <span className="font-sans font-black text-salt uppercase tracking-[0.3em] text-xs">SOLD OUT</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex flex-col items-center text-center">
+                        <h3 className="font-sans font-bold text-xs text-salt uppercase tracking-tight truncate mb-1 hover:text-signal transition-none">
+                          <Link href={`/products/${product.slug}`}>
+                            {product.name}
+                          </Link>
+                        </h3>
+                        <p className="font-sans font-bold text-[10px] text-signal">{formatPrice(finalPrice)}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* ─── Desktop: Grid ─── */}
+              <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-x-8 md:gap-x-12 lg:gap-x-16 gap-y-6 md:gap-y-8 lg:gap-y-10">
+              {products.map((product, idx) => {
+                const isOnSale = product.flashSale?.isActive && product.flashSale.salePrice;
+                const displayPrice = isOnSale ? product.flashSale!.salePrice : product.salePrice || product.price;
+                const finalPrice = product.discountRate > 0 ? displayPrice * (1 - product.discountRate / 100) : displayPrice;
+                const totalStock = product.variants.reduce((s, v) => s + v.stock, 0);
+                const isSoldOut = totalStock === 0;
+
+                return (
+                  <div key={product.id} className="w-full relative group flex flex-col">
+                    {/* Image Block */}
+                    <div className="relative w-full aspect-[3/4] overflow-hidden bg-void mb-3">
+                      <Link href={`/products/${product.slug}`} className="absolute inset-0 z-10" aria-label={product.name} />
+                      <Image
+                        src={product.images[0]?.url || "/placeholder.svg"}
+                        alt={product.name}
+                        fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        className={`object-cover ${product.images.length > 1 ? "group-hover:opacity-0" : ""}`}
+                      />
+                      {product.images.length > 1 && (
+                        <Image 
+                          src={product.images[1]?.url} 
+                          alt={`${product.name} alternate`} 
+                          fill 
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" 
+                          className="object-cover absolute inset-0 opacity-0 group-hover:opacity-100" 
+                        />
+                      )}
+
+                      {/* Sold Out Overlay */}
+                      {isSoldOut && (
+                        <div className="absolute inset-0 z-20 flex items-center justify-center bg-void/70">
+                          <span className="font-sans font-black text-salt uppercase tracking-[0.3em] text-sm">SOLD OUT</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Metadata Block */}
+                    <div className="flex flex-col items-center text-center flex-grow">
+                      <h2 className="font-sans font-bold text-xs text-salt uppercase tracking-tight truncate hover:text-signal transition-none mb-1">
+                        <Link href={`/products/${product.slug}`}>
+                          {product.name}
+                        </Link>
+                      </h2>
+                      <p className="font-sans font-bold text-[10px] text-signal">
+                        {formatPrice(finalPrice)}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            </>
+          )}
+
+          {/* ─── Pagination ─── */}
+          {totalPages > 1 && !loading && (
+            <div className="flex items-center justify-center gap-4 mt-16 pt-8 border-t-2 border-salt">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => {
+                const isActive = page === p;
+                return (
+                  <button
+                    key={p}
+                    onClick={() => updatePage(p)}
+                    className={`font-sans font-bold text-sm uppercase tracking-widest transition-none px-3 py-1 border-2 ${
+                      isActive ? "text-void bg-salt border-salt" : "text-salt bg-void border-salt hover:bg-signal hover:border-signal"
+                    }`}
+                  >
+                    {String(p).padStart(2, "0")}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
-
-        {/* Gradient overlay */}
-        <div
-          className="absolute inset-0 z-[1] pointer-events-none"
-          style={{ background: "linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 60%)" }}
-          aria-hidden="true"
-        />
-
-        {/* Hero content with magnetic CTA */}
-        {heroShowContent && (
-          <HomePageClient
-            heroTagline={heroTagline}
-            heroSubtitle={heroSubtitle}
-            heroCtaText={heroCtaText}
-            heroCtaUrl={heroCtaUrl}
-            heroShowButtons={heroShowButtons}
-          />
-        )}
-      </section>
-
-      {/* ═══ NEWSLETTER ═════════════════════════════════════════ */}
-      <NewsletterSection />
-    </main>
+      </div>
+    </div>
   );
 }

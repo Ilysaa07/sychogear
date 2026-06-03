@@ -1,64 +1,12 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, Syne, DM_Mono, Metal_Mania, Rubik_Glitch } from "next/font/google";
+import { Inter } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
 
-/* ─── DISPLAY — Cormorant Garamond ─────────────────────────
-   Role: Hero headings, product names, editorial statements
-   Using italic at display scale — weight comes from contrast
-   ──────────────────────────────────────────────────────── */
-const cormorant = Cormorant_Garamond({
+const karla = Inter({
   subsets: ["latin"],
-  weight: ["400", "600", "700"],
-  style: ["normal", "italic"],
-  variable: "--font-display-cormorant",
-  display: "swap",
-});
-
-const metalMania = Metal_Mania({
-  subsets: ["latin"],
-  weight: "400",
-  variable: "--font-metal",
-  display: "swap",
-});
-
-const rubikGlitch = Rubik_Glitch({
-  subsets: ["latin"],
-  weight: "400",
-  variable: "--font-glitch",
-  display: "swap",
-});
-
-/* ─── LABEL / NAV — Syne ────────────────────────────────────
-   Role: Navigation, section labels, buttons, UI chrome
-   ──────────────────────────────────────────────────────── */
-const syne = Syne({
-  subsets: ["latin"],
-  weight: ["400", "600", "700", "800"],
-  variable: "--font-syne",
-  display: "swap",
-});
-
-/* ─── UTILITY / MONO — DM Mono ──────────────────────────────
-   Role: Prices, metadata, form labels, captions, order IDs
-   Cold, clinical, precise.
-   ──────────────────────────────────────────────────────── */
-const dmMono = DM_Mono({
-  subsets: ["latin"],
-  weight: ["300", "400", "500"],
-  style: ["normal", "italic"],
-  variable: "--font-dm-mono",
-  display: "swap",
-});
-
-/* ─── ACCENT — Hooligan (local) ─────────────────────────────
-   Role: Retained as a secret weapon. Use sparingly —
-   only for flash sale events and easter eggs.
-   ──────────────────────────────────────────────────────── */
-const hooliganFont = localFont({
-  src: "../public/fonts/hooligan.ttf",
-  variable: "--font-hooligan",
+  variable: "--font-karla",
   display: "swap",
 });
 
@@ -118,7 +66,7 @@ export const metadata: Metadata = {
   },
 };
 
-import LenisProvider from "@/components/store/LenisProvider";
+
 
 export default function RootLayout({
   children,
@@ -143,13 +91,8 @@ export default function RootLayout({
       <body
         className={`
           antialiased
-          ${cormorant.variable}
-          ${syne.variable}
-          ${dmMono.variable}
-          ${hooliganFont.variable}
-          ${metalMania.variable}
-          ${rubikGlitch.variable}
-          bg-void text-salt min-h-screen relative overflow-x-hidden
+          ${karla.variable}
+          bg-void text-salt min-h-screen relative overflow-x-hidden font-sans
         `}
       >
         <script
@@ -160,44 +103,24 @@ export default function RootLayout({
         {/* Global grain overlay — fixed, always on */}
         <div className="atmospheric-grain" aria-hidden="true" />
 
-        <LenisProvider>
-          {children}
-          <Toaster
-            position="bottom-right"
-            toastOptions={{
-              duration: 3000,
-              style: {
-                background: "var(--abyss)",
-                color: "var(--pale)",
-                border: "1px solid var(--ember)",
-                borderRadius: "0",
-                fontSize: "0.75rem",
-                fontFamily: "var(--font-dm-mono), monospace",
-                letterSpacing: "0.05em",
-                padding: "12px 16px",
-                boxShadow: "none",
-              },
-              success: {
-                style: {
-                  borderLeft: "2px solid var(--success)",
-                },
-                iconTheme: {
-                  primary: "var(--success)",
-                  secondary: "var(--abyss)",
-                },
-              },
-              error: {
-                style: {
-                  borderLeft: "2px solid var(--error)",
-                },
-                iconTheme: {
-                  primary: "var(--error)",
-                  secondary: "var(--abyss)",
-                },
-              },
-            }}
-          />
-        </LenisProvider>
+        {children}
+        <Toaster
+          position="bottom-right"
+          toastOptions={{
+            duration: 3000,
+            style: {
+              background: "var(--color-void)",
+              color: "var(--color-salt)",
+              border: "2px solid var(--color-salt)",
+              borderRadius: "0",
+              fontSize: "0.875rem",
+              fontFamily: "var(--font-karla), Helvetica, sans-serif",
+              letterSpacing: "0.05em",
+              padding: "16px",
+              boxShadow: "none",
+            },
+          }}
+        />
       </body>
     </html>
   );

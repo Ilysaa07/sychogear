@@ -69,17 +69,8 @@ export default function ProductDetailClient({ product }: Props) {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#111512] text-salt pb-24" style={{ paddingTop: "100px" }}>
-      
-      {/* ─── Supreme-style Top Navigation ─── */}
-      <nav className="container-main mb-8">
-        <Link href="/products" className="font-dm-mono text-xs uppercase tracking-widest text-ash hover:text-salt transition-colors">
-          &larr; Back to Archive
-        </Link>
-      </nav>
-
-      {/* Layout */}
-      <div className="container-main flex flex-col lg:flex-row gap-6 lg:gap-12 lg:items-start">
+    <>
+      <div className="flex flex-col lg:flex-row gap-6 lg:gap-12 lg:items-start text-salt pt-12 pb-24">
 
         {/* LEFT — Images Stack (No Thumbnails) */}
         <div className="w-full lg:w-[60%] flex flex-col gap-1 sm:gap-4">
@@ -97,13 +88,13 @@ export default function ProductDetailClient({ product }: Props) {
         </div>
 
         {/* RIGHT — Sticky Product Info */}
-        <div className="w-full lg:w-[40%] lg:sticky" style={{ top: "100px" }}>
+        <div className="w-full lg:w-[40%] lg:sticky top-0">
           
           <div className="mb-8">
-            <h1 className="font-syne font-bold text-3xl sm:text-4xl uppercase leading-none mb-2 tracking-tight">
+            <h1 className="font-sans font-bold text-xl uppercase leading-none mb-2 tracking-tight">
               {product.name}
             </h1>
-            <p className="font-dm-mono text-lg text-ash">
+            <p className="font-sans font-bold text-sm text-signal">
               {formatPrice(finalPrice)}
             </p>
           </div>
@@ -119,16 +110,16 @@ export default function ProductDetailClient({ product }: Props) {
                     key={variant.id}
                     onClick={() => !oos && setSelectedVariant(variant.id)}
                     disabled={oos}
-                    className={`relative flex items-center justify-center h-12 font-syne font-bold text-xs tracking-widest uppercase transition-colors ${
+                    className={`relative flex items-center justify-center h-10 font-sans font-bold text-[10px] tracking-widest uppercase transition-none ${
                       isSelected
-                        ? "bg-salt text-[#111512]"
+                        ? "bg-white text-black"
                         : oos
-                        ? "bg-transparent text-dim border border-dim cursor-not-allowed"
-                        : "bg-transparent text-salt border border-ember hover:border-salt"
+                        ? "bg-transparent text-dim border-2 border-dim cursor-not-allowed"
+                        : "bg-transparent text-white border-2 border-ember hover:bg-white hover:text-black"
                     }`}
                   >
                     {oos && (
-                      <div className="absolute inset-0 flex items-center justify-center overflow-hidden opacity-20">
+                      <div className="absolute inset-0 flex items-center justify-center overflow-hidden opacity-20 pointer-events-none">
                         <div className="w-full h-px bg-salt transform rotate-45" />
                       </div>
                     )}
@@ -138,7 +129,7 @@ export default function ProductDetailClient({ product }: Props) {
               })}
             </div>
             {selectedVariantData && selectedVariantData.stock > 0 && selectedVariantData.stock <= 3 && (
-              <p className="mt-3 font-dm-mono text-[10px] text-signal uppercase tracking-widest">
+              <p className="mt-3 font-sans font-bold text-[8px] text-signal uppercase tracking-widest">
                 Only {selectedVariantData.stock} left in {selectedVariantData.size}
               </p>
             )}
@@ -149,30 +140,29 @@ export default function ProductDetailClient({ product }: Props) {
             id="main-atc-btn"
             onClick={handleAddToCart}
             disabled={!selectedVariant || !inStock}
-            className={`w-full h-14 font-syne font-bold text-sm tracking-[0.2em] uppercase transition-transform duration-100 ${
+            className={`w-full h-12 font-sans font-bold text-[10px] tracking-[0.2em] uppercase transition-none border-2 border-transparent ${
               !selectedVariant || !inStock
                 ? "bg-dim text-ash cursor-not-allowed"
-                : "bg-salt text-[#111512] hover:bg-[#e6e6e6]"
+                : "bg-white text-black hover:bg-black hover:text-white hover:border-white"
             }`}
-            style={{ transform: addPressed ? "scale(0.98)" : "scale(1)" }}
           >
             {!selectedVariant ? "Select Size" : !inStock ? "Sold Out" : "Add to Cart"}
           </button>
 
           {/* Raw Description Block */}
-          <div className="mt-12 space-y-6 font-dm-mono text-xs text-ash leading-relaxed tracking-wide">
+          <div className="mt-12 space-y-6 font-sans font-bold text-[10px] text-ash leading-relaxed tracking-wide">
             <div dangerouslySetInnerHTML={{ __html: product.description }} />
             
             {product.careInstructions && (
-              <div className="pt-6 border-t border-ember">
-                <p className="font-syne font-bold text-salt uppercase tracking-widest mb-2 text-[10px]">Care</p>
+              <div className="pt-6 border-t-2 border-ember">
+                <p className="font-sans font-bold text-salt uppercase tracking-widest mb-2 text-[8px]">Care</p>
                 <p>{product.careInstructions}</p>
               </div>
             )}
             
             {product.materials && (
-              <div className="pt-6 border-t border-ember">
-                <p className="font-syne font-bold text-salt uppercase tracking-widest mb-2 text-[10px]">Material</p>
+              <div className="pt-6 border-t-2 border-ember">
+                <p className="font-sans font-bold text-salt uppercase tracking-widest mb-2 text-[8px]">Material</p>
                 <p>{product.materials}</p>
               </div>
             )}
@@ -182,7 +172,7 @@ export default function ProductDetailClient({ product }: Props) {
 
       {/* ─── Sticky Mobile CTA ─── */}
       {showStickyATC && (
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#111512] border-t border-ember p-4 flex items-center gap-3 fade-in">
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-void border-t-2 border-salt p-4 flex items-center gap-3">
           <div className="flex-1 flex gap-1 overflow-x-auto hide-scrollbar">
             {product.variants.map((v) => {
               const isSelected = selectedVariant === v.id;
@@ -192,12 +182,12 @@ export default function ProductDetailClient({ product }: Props) {
                   key={v.id}
                   onClick={() => !oos && setSelectedVariant(v.id)}
                   disabled={oos}
-                  className={`flex-shrink-0 h-10 px-4 font-syne font-bold text-[10px] tracking-widest uppercase transition-colors ${
+                  className={`flex-shrink-0 h-10 px-4 font-sans font-bold text-[8px] tracking-widest uppercase transition-none border-2 ${
                     isSelected
-                      ? "bg-salt text-[#111512]"
+                      ? "bg-white text-black border-white"
                       : oos
-                      ? "bg-transparent text-dim border border-dim"
-                      : "bg-transparent text-salt border border-ember"
+                      ? "bg-transparent text-dim border-dim cursor-not-allowed"
+                      : "bg-transparent text-white border-ember hover:bg-white hover:text-black"
                   }`}
                 >
                   {v.size}
@@ -208,16 +198,16 @@ export default function ProductDetailClient({ product }: Props) {
           <button
             onClick={handleAddToCart}
             disabled={!selectedVariant || !inStock}
-            className={`h-10 px-6 font-syne font-bold text-[10px] tracking-widest uppercase flex-shrink-0 ${
+            className={`h-10 px-6 font-sans font-bold text-[8px] tracking-widest uppercase flex-shrink-0 border-2 border-transparent ${
               !selectedVariant || !inStock
                 ? "bg-dim text-ash cursor-not-allowed"
-                : "bg-salt text-[#111512]"
+                : "bg-white text-black hover:bg-black hover:text-white hover:border-white"
             }`}
           >
             {inStock ? "Add" : "Out"}
           </button>
         </div>
       )}
-    </div>
+    </>
   );
 }

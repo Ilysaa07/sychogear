@@ -13,7 +13,7 @@ export default function SocialProofStrip() {
     "100% SECURE PROTOCOLS",
   ];
   return (
-    <section className="relative w-full bg-[#020202] border-t border-b border-ember py-12 overflow-hidden flex flex-col gap-6 select-none">
+    <section className="relative w-full bg-void border-t border-b border-ember py-12 overflow-hidden flex flex-col gap-6 select-none">
       {/* Background Ambience */}
       <div className="absolute inset-0 bg-radial-glow opacity-5 pointer-events-none" />
 
