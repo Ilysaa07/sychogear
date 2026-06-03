@@ -12,6 +12,7 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import Link from "next/link";
 import { useCurrency } from "@/components/store/CurrencyProvider";
+import { State, City } from "country-state-city";
 import {
   HiOutlineShoppingBag,
   HiOutlineGlobeAlt,
@@ -39,6 +40,22 @@ export default function CheckoutPage() {
   const [countryDropdownOpen, setCountryDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // Address Selector States - Indonesia
+  const [indoProvinces, setIndoProvinces] = useState<any[]>([]);
+  const [indoRegencies, setIndoRegencies] = useState<any[]>([]);
+  const [indoDistricts, setIndoDistricts] = useState<any[]>([]);
+  const [indoVillages, setIndoVillages] = useState<any[]>([]);
+
+  const [selProvince, setSelProvince] = useState<{ id: string, name: string } | null>(null);
+  const [selRegency, setSelRegency] = useState<{ id: string, name: string } | null>(null);
+  const [selDistrict, setSelDistrict] = useState<{ id: string, name: string } | null>(null);
+  const [selVillage, setSelVillage] = useState<{ id: string, name: string } | null>(null);
+
+  // Address Selector States - International
+  const [intlStates, setIntlStates] = useState<any[]>([]);
+  const [intlCities, setIntlCities] = useState<any[]>([]);
+  const [selIntlStateCode, setSelIntlStateCode] = useState<string>("");
+
   const {
     register,
     handleSubmit,
@@ -54,8 +71,33 @@ export default function CheckoutPage() {
   });
 
   const selectedCountry = watch("country");
+  const stateProvince = watch("stateProvince");
   const isInternational = selectedCountry !== "ID";
   const countryInfo = getCountryByCode(selectedCountry);
+
+  // Shipping calculation
+  const getShippingRate = (province: string, regency: string) => {
+    if (!province) return 0;
+    const p = province.toLowerCase();
+    const r = regency ? regency.toLowerCase() : "";
+    
+    // Soreang, Bandung as origin
+    if (r.includes('bandung')) return 8000;
+    if (p.includes('jakarta') || p.includes('banten') || p.includes('jabar') || p.includes('jawa barat') || p.includes('west java')) return 10000;
+    if (p.includes('jateng') || p.includes('jawa tengah') || p.includes('central java') || p.includes('yogyakarta') || p.includes('diy') || p.includes('jatim') || p.includes('jawa timur') || p.includes('east java')) return 15000;
+    if (p.includes('bali') || p.includes('sumatera') || p.includes('sumatra')) return 30000;
+    if (p.includes('kalimantan') || p.includes('sulawesi')) return 40000;
+    if (p.includes('papua') || p.includes('maluku') || p.includes('nusa tenggara') || p.includes('ntb') || p.includes('ntt')) return 60000;
+    return 25000; // default for ID
+  };
+
+  const totalWeightGrams = items.reduce((sum, item) => {
+    const isShorts = item.name.toLowerCase().includes('short');
+    return sum + ((isShorts ? 200 : 300) * item.quantity);
+  }, 0);
+  
+  const weightKg = Math.max(1, Math.ceil(totalWeightGrams / 1000));
+  const shippingCost = isInternational ? 0 : (stateProvince ? getShippingRate(stateProvince, watch("city")) * weightKg : 0);
 
   const subtotal = getSubtotal();
   const domesticTax = 0; // Forced inactive for domestic as per requirement
@@ -63,7 +105,7 @@ export default function CheckoutPage() {
   const intlTaxRate = isInternational ? (internationalTaxRates["_global"] ?? 11) : 0;
   const internationalTax = isInternational ? Math.round(subtotal * (intlTaxRate / 100)) : 0;
   const applicableTax = isInternational ? internationalTax : domesticTax;
-  const finalTotal = Math.max(0, subtotal + applicableTax - discountAmount);
+  const finalTotal = Math.max(0, subtotal + applicableTax + shippingCost - discountAmount);
   
   // Custom Dynamic Local Currency formatting
   const localCurrencyCode = countryInfo?.currency || "USD";
@@ -129,6 +171,70 @@ export default function CheckoutPage() {
     fetchSettings();
   }, []);
 
+  // Fetch API Wilayah Indonesia
+  useEffect(() => {
+    if (selectedCountry === "ID") {
+      axios.get("https://www.emsifa.com/api-wilayah-indonesia/api/provinces.json")
+        .then(res => setIndoProvinces(res.data)).catch(console.error);
+    }
+  }, [selectedCountry]);
+
+  useEffect(() => {
+    if (selProvince) {
+      axios.get(`https://www.emsifa.com/api-wilayah-indonesia/api/regencies/${selProvince.id}.json`)
+        .then(res => setIndoRegencies(res.data)).catch(console.error);
+      setValue("stateProvince", selProvince.name, { shouldValidate: true });
+    } else {
+      setIndoRegencies([]);
+      if (selectedCountry === "ID") setValue("stateProvince", "", { shouldValidate: true });
+    }
+    setSelRegency(null);
+  }, [selProvince, setValue, selectedCountry]);
+
+  useEffect(() => {
+    if (selRegency) {
+      axios.get(`https://www.emsifa.com/api-wilayah-indonesia/api/districts/${selRegency.id}.json`)
+        .then(res => setIndoDistricts(res.data)).catch(console.error);
+      setValue("city", selRegency.name, { shouldValidate: true });
+    } else {
+      setIndoDistricts([]);
+      if (selectedCountry === "ID") setValue("city", "", { shouldValidate: true });
+    }
+    setSelDistrict(null);
+  }, [selRegency, setValue, selectedCountry]);
+
+  useEffect(() => {
+    if (selDistrict) {
+      axios.get(`https://www.emsifa.com/api-wilayah-indonesia/api/villages/${selDistrict.id}.json`)
+        .then(res => setIndoVillages(res.data)).catch(console.error);
+    } else {
+      setIndoVillages([]);
+    }
+    setSelVillage(null);
+  }, [selDistrict]);
+
+  // Fetch International States/Cities
+  useEffect(() => {
+    if (isInternational) {
+      const states = State.getStatesOfCountry(selectedCountry);
+      setIntlStates(states);
+      setSelIntlStateCode("");
+      setIntlCities([]);
+      setValue("stateProvince", "", { shouldValidate: true });
+      setValue("city", "", { shouldValidate: true });
+    }
+  }, [selectedCountry, isInternational, setValue]);
+
+  useEffect(() => {
+    if (isInternational && selIntlStateCode) {
+      const cities = City.getCitiesOfState(selectedCountry, selIntlStateCode);
+      setIntlCities(cities);
+      setValue("city", "", { shouldValidate: true });
+    } else {
+      setIntlCities([]);
+    }
+  }, [selIntlStateCode, selectedCountry, isInternational, setValue]);
+
   // Fetch dynamic currency conversion rate from CDN when country changes
   useEffect(() => {
     const fetchCurrencyRate = async () => {
@@ -168,7 +274,7 @@ export default function CheckoutPage() {
         <p className="font-dm-mono text-ash mb-10 max-w-[380px] text-sm">
           Add products to your cart before proceeding to checkout.
         </p>
-        <Link href="/products" className="btn-primary py-4 px-10">
+        <Link href="/" className="btn-primary py-4 px-10">
           Explore Archive
         </Link>
       </div>
@@ -178,10 +284,18 @@ export default function CheckoutPage() {
   const onSubmit = async (formData: CheckoutFormData) => {
     setLoading(true);
     try {
+      let finalStreetAddress = formData.streetAddress;
+      if (selectedCountry === "ID" && selDistrict && selVillage) {
+        finalStreetAddress = `${formData.streetAddress}, Desa/Kel. ${selVillage.name}, Kec. ${selDistrict.name}`;
+      }
+
+      const payloadData = { ...formData, streetAddress: finalStreetAddress };
+
       const { data } = await axios.post("/api/orders/create", {
-        customer: formData,
+        customer: payloadData,
         items,
         couponCode: couponCode || undefined,
+        shippingCost: shippingCost,
       });
 
       if (data.success) {
@@ -469,23 +583,107 @@ export default function CheckoutPage() {
                 />
               </div>
 
-              {/* City + State/Province */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div>
-                  <label htmlFor="city" className="font-syne font-bold text-ash text-xs uppercase tracking-widest block mb-3">
-                    City <span className="text-signal">*</span>
-                  </label>
-                  <input {...register("city")} id="city" className="input-field" placeholder="e.g. Singapore" autoComplete="address-level2" />
-                  {errors.city && (<p className="mt-1 font-dm-mono text-xs text-signal">{errors.city.message}</p>)}
+              {/* Dynamic City + State/Province + District + Village Selector */}
+              {!isInternational ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div>
+                    <label className="font-syne font-bold text-ash text-xs uppercase tracking-widest block mb-3">Provinsi <span className="text-signal">*</span></label>
+                    <div className="relative">
+                      <select className="input-field appearance-none cursor-pointer pr-10" value={selProvince?.id || ""} onChange={e => {
+                        const p = indoProvinces.find(x => x.id === e.target.value);
+                        setSelProvince(p || null);
+                      }}>
+                        <option value="" disabled>Select Province</option>
+                        {indoProvinces.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                      </select>
+                      <HiChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-ash w-5 h-5 pointer-events-none" />
+                    </div>
+                    {errors.stateProvince && (<p className="mt-1 font-dm-mono text-xs text-signal">{errors.stateProvince.message}</p>)}
+                  </div>
+                  
+                  <div>
+                    <label className="font-syne font-bold text-ash text-xs uppercase tracking-widest block mb-3">Kabupaten / Kota <span className="text-signal">*</span></label>
+                    <div className="relative">
+                      <select className="input-field appearance-none cursor-pointer pr-10" value={selRegency?.id || ""} onChange={e => {
+                        const p = indoRegencies.find(x => x.id === e.target.value);
+                        setSelRegency(p || null);
+                      }} disabled={!selProvince}>
+                        <option value="" disabled>Select City/Regency</option>
+                        {indoRegencies.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                      </select>
+                      <HiChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-ash w-5 h-5 pointer-events-none" />
+                    </div>
+                    {errors.city && (<p className="mt-1 font-dm-mono text-xs text-signal">{errors.city.message}</p>)}
+                  </div>
+
+                  <div>
+                    <label className="font-syne font-bold text-ash text-xs uppercase tracking-widest block mb-3">Kecamatan <span className="text-signal">*</span></label>
+                    <div className="relative">
+                      <select className="input-field appearance-none cursor-pointer pr-10" value={selDistrict?.id || ""} onChange={e => {
+                        const p = indoDistricts.find(x => x.id === e.target.value);
+                        setSelDistrict(p || null);
+                      }} disabled={!selRegency}>
+                        <option value="" disabled>Select District</option>
+                        {indoDistricts.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                      </select>
+                      <HiChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-ash w-5 h-5 pointer-events-none" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="font-syne font-bold text-ash text-xs uppercase tracking-widest block mb-3">Desa / Kelurahan <span className="text-signal">*</span></label>
+                    <div className="relative">
+                      <select className="input-field appearance-none cursor-pointer pr-10" value={selVillage?.id || ""} onChange={e => {
+                        const p = indoVillages.find(x => x.id === e.target.value);
+                        setSelVillage(p || null);
+                      }} disabled={!selDistrict}>
+                        <option value="" disabled>Select Village</option>
+                        {indoVillages.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                      </select>
+                      <HiChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-ash w-5 h-5 pointer-events-none" />
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <label htmlFor="stateProvince" className="font-syne font-bold text-ash text-xs uppercase tracking-widest block mb-3">
-                    Province / State <span className="text-signal">*</span>
-                  </label>
-                  <input {...register("stateProvince")} id="stateProvince" className="input-field" placeholder="e.g. Central Region" autoComplete="address-level1" />
-                  {errors.stateProvince && (<p className="mt-1 font-dm-mono text-xs text-signal">{errors.stateProvince.message}</p>)}
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div>
+                    <label className="font-syne font-bold text-ash text-xs uppercase tracking-widest block mb-3">State / Province <span className="text-signal">*</span></label>
+                    {intlStates.length > 0 ? (
+                      <div className="relative">
+                        <select className="input-field appearance-none cursor-pointer pr-10" value={selIntlStateCode} onChange={e => {
+                          setSelIntlStateCode(e.target.value);
+                          const st = intlStates.find(x => x.isoCode === e.target.value);
+                          setValue("stateProvince", st ? st.name : e.target.value, { shouldValidate: true });
+                        }}>
+                          <option value="" disabled>Select State</option>
+                          {intlStates.map(p => <option key={p.isoCode} value={p.isoCode}>{p.name}</option>)}
+                        </select>
+                        <HiChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-ash w-5 h-5 pointer-events-none" />
+                      </div>
+                    ) : (
+                      <input {...register("stateProvince")} className="input-field" placeholder="e.g. California" />
+                    )}
+                    {errors.stateProvince && (<p className="mt-1 font-dm-mono text-xs text-signal">{errors.stateProvince.message}</p>)}
+                  </div>
+                  <div>
+                    <label className="font-syne font-bold text-ash text-xs uppercase tracking-widest block mb-3">City <span className="text-signal">*</span></label>
+                    {intlCities.length > 0 ? (
+                      <div className="relative">
+                        <select className="input-field appearance-none cursor-pointer pr-10" onChange={e => {
+                          setValue("city", e.target.value, { shouldValidate: true });
+                        }}>
+                          <option value="" disabled selected>Select City</option>
+                          {intlCities.map(p => <option key={p.name} value={p.name}>{p.name}</option>)}
+                        </select>
+                        <HiChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-ash w-5 h-5 pointer-events-none" />
+                      </div>
+                    ) : (
+                      <input {...register("city")} className="input-field" placeholder="e.g. Los Angeles" />
+                    )}
+                    {errors.city && (<p className="mt-1 font-dm-mono text-xs text-signal">{errors.city.message}</p>)}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* ZIP / Postal Code */}
               <div>
@@ -496,24 +694,65 @@ export default function CheckoutPage() {
                 {errors.zipCode && (<p className="mt-1 font-dm-mono text-xs text-signal">{errors.zipCode.message}</p>)}
               </div>
 
-              {/* Shipping Notice */}
+              {/* Shipping Notice / Calculation */}
               <div className="flex items-start gap-4 p-5 bg-transparent border border-ember relative mt-8">
                 {/* Minimalist corner accents */}
                 <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-signal" />
                 <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-signal" />
                 
-                <HiOutlineGlobeAlt className={`w-5 h-5 flex-shrink-0 mt-0.5 ${isInternational ? "text-signal" : "text-ash"}`} />
-                <div>
-                  <p className={`font-syne font-bold text-xs tracking-widest uppercase mb-1 ${isInternational ? "text-salt" : "text-ash"}`}>
-                    {isInternational ? "International Dispatch" : "Domestic Dispatch [ID]"}
-                  </p>
-                  <p className="font-dm-mono text-[10px] text-ash mb-3 uppercase tracking-widest">
-                    {isInternational ? "Transit: 3–14 days" : "Standard local delivery"}
-                  </p>
-                  <p className="font-dm-mono text-[10px] text-fog leading-relaxed uppercase">
-                    &gt; Shipping fee calculated post-checkout via WhatsApp coordinator.
-                  </p>
-                </div>
+                {isInternational ? (
+                  <>
+                    <HiOutlineGlobeAlt className="w-5 h-5 flex-shrink-0 mt-0.5 text-signal" />
+                    <div>
+                      <p className="font-syne font-bold text-xs tracking-widest uppercase mb-1 text-salt">
+                        International Dispatch
+                      </p>
+                      <p className="font-dm-mono text-[10px] text-ash mb-3 uppercase tracking-widest">
+                        Transit: 3–14 days
+                      </p>
+                      <p className="font-dm-mono text-[10px] text-fog leading-relaxed uppercase">
+                        &gt; Shipping fee calculated post-checkout via WhatsApp coordinator.
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex-shrink-0 px-3 py-1 flex items-center justify-center rounded">
+                      <img src="/images/jnt.png" alt="J&T Express" className="object-contain" style={{ width: "40px", height: "auto", minHeight: "20px" }} />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-syne font-bold text-xs tracking-widest uppercase mb-1 text-salt">
+                            J&T Express
+                          </p>
+                          <p className="font-dm-mono text-[10px] text-ash uppercase tracking-widest">
+                            Local Delivery (Indonesia)
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-dm-mono font-bold text-signal text-sm">
+                            {shippingCost > 0 ? formatCurrency(shippingCost) : "Calculate"}
+                          </p>
+                          <p className="font-dm-mono text-[10px] text-ash text-right mt-1">
+                            {weightKg} kg
+                          </p>
+                        </div>
+                      </div>
+                      <div className="mt-3">
+                        {stateProvince ? (
+                           <p className="font-dm-mono text-[10px] text-fog leading-relaxed uppercase">
+                             &gt; Rate applied for {stateProvince}.
+                           </p>
+                        ) : (
+                           <p className="font-dm-mono text-[10px] text-fog leading-relaxed uppercase">
+                             &gt; Please enter your Province/State above.
+                           </p>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
@@ -533,32 +772,29 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            {/* ── Payment Method ── */}
+            {/* ── Payment Method ──
             <div className="pt-6 mt-10">
               <div className="flex items-center gap-4 pb-4 mb-6 border-b border-ash">
                 <span className="font-dm-mono text-signal">04 //</span>
                 <p className="font-syne font-bold text-salt uppercase tracking-[0.2em] text-sm">Payment Protocol</p>
               </div>
               <div className="flex items-center gap-4 p-5 bg-abyss border border-ember">
-                <div className="w-14 h-auto flex-shrink-0 bg-white p-1.5 flex items-center justify-center rounded">
-                  <img src="/images/xendit.png" alt="Xendit" className="w-full h-auto object-contain"
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                  />
-                  <span className="font-dm-mono text-[10px] font-bold text-black hidden peer-[img:not([style])]:block">XENDIT</span>
+                <div className="flex-shrink-0 bg-white px-3 py-1.5 flex items-center justify-center rounded">
+                  <img src="/images/xendit.png" alt="Xendit" className="object-contain" style={{ width: "60px", height: "auto", minHeight: "20px" }} />
                 </div>
                 <div>
                   <p className="font-syne font-bold text-salt text-sm tracking-widest uppercase mb-1">
                     Xendit Payment Gateway
                   </p>
                   <p className="font-dm-mono text-xs text-ash">
-                    Transfer bank · E-Wallet · QRIS · Kartu Kredit
+                    Bank Transfer · E-Wallet · QRIS · Credit Card
                   </p>
                   <p className="font-dm-mono text-[10px] text-ash/60 mt-1">
-                    Kamu akan diarahkan ke halaman pembayaran Xendit setelah checkout.
+                    You will be redirected to the Xendit secure payment page after checkout.
                   </p>
                 </div>
               </div>
-            </div>
+            </div> */}
 
             {/* ── Coupon ── */}
             <div className="pt-6 mt-6">
@@ -622,31 +858,52 @@ export default function CheckoutPage() {
           </form>
         </div>
 
-          {/* ── Order Summary ── */}
-          <div className="lg:col-span-5">
+          {/* ── Order Summary (Thermal Receipt Style) ── */}
+          <div className="lg:col-span-5 flex justify-center lg:justify-end items-start">
             <div
-              className="p-8 h-fit border border-ember relative"
+              className="bg-slate-50 text-black p-8 relative w-full max-w-md shadow-[0_20px_50px_rgba(0,0,0,0.5)] font-dm-mono h-fit border-x border-slate-200"
               style={{ position: "sticky", top: "120px" }}
             >
-              {/* Receipt edge zig-zag top and bottom using CSS or just raw brutalist box */}
-              <div className="absolute top-0 left-0 w-full h-[3px] bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjMiPjxwb2x5Z29uIHBvaW50cz0iMCAwLCA0IDMsIDggMCIgZmlsbD0iIzIyMiIvPjwvc3ZnPg==')] repeat-x" />
+              {/* Receipt edge zig-zag top */}
+              <div className="absolute top-0 left-0 w-full h-[6px] bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjYiPjxwb2x5Z29uIHBvaW50cz0iMCAwLCA0IDYsIDggMCIgZmlsbD0iI2Y4ZmFmYyIvPjwvc3ZnPg==')] repeat-x" />
               
-              <div className="text-center mb-8 pb-6 border-b border-dashed border-ash">
-                <p className="font-dm-mono text-signal text-[10px] tracking-widest uppercase mb-2">Transaction Receipt</p>
-                <p className="font-syne font-bold text-salt uppercase tracking-widest text-lg">Archive Cart</p>
-                <p className="font-dm-mono text-[10px] text-ash mt-1">Terminal ID: {Math.floor(1000 + Math.random() * 9000)}-SYS</p>
+              <div className="text-center mb-6 pb-6 border-b-2 border-dashed border-gray-400/60 relative">
+                <img src="/images/logo-sychogear.webp" alt="SYCHOGEAR" className="h-10 mx-auto mb-3 object-contain opacity-90" />
+                <p className="font-syne font-bold uppercase tracking-widest text-xl mb-1">SychoGear</p>
+                <p className="text-[10px] text-gray-500 uppercase tracking-widest leading-relaxed mb-4">
+                  VIOLENCE IS OUR AESTHETIC
+                </p>
+                
+                <div className="text-left text-[10px] text-gray-600 flex flex-col gap-1 w-full bg-gray-100 p-3 rounded-sm border border-gray-200">
+                  <div className="flex justify-between">
+                    <span>DATE:</span>
+                    <span className="font-bold">{new Date().toLocaleDateString('en-GB')} {new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute:'2-digit' })}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>TERMINAL:</span>
+                    <span className="font-bold">{Math.floor(1000 + Math.random() * 9000)}-SYS</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>CASHIER:</span>
+                    <span className="font-bold">AUTO/WEB</span>
+                  </div>
+                </div>
               </div>
 
               {/* Items */}
-              <div className="space-y-4 mb-6 pb-6 border-b border-dashed border-ash">
+              <div className="space-y-4 mb-6 pb-6 border-b-2 border-dashed border-gray-400/60">
+                <div className="flex justify-between text-[10px] text-gray-500 font-bold border-b border-gray-200 pb-2 mb-4">
+                  <span>ITEM DESC</span>
+                  <span>AMOUNT</span>
+                </div>
                 {items.map((item) => (
-                  <div key={`${item.productId}-${item.variantId}`} className="flex gap-4">
+                  <div key={`${item.productId}-${item.variantId}`} className="flex gap-4 items-start">
                     <div className="flex-1 min-w-0">
-                      <p className="font-dm-mono text-salt text-xs tracking-wider uppercase truncate">{item.name}</p>
-                      <p className="font-dm-mono text-ash text-[10px] mt-1">SIZE {item.size} <span className="mx-1">|</span> QTY {item.quantity}</p>
+                      <p className="text-xs font-bold tracking-wider uppercase">{item.name}</p>
+                      <p className="text-[10px] text-gray-500 mt-1">SIZE {item.size} <span className="mx-1">|</span> QTY {item.quantity}</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-dm-mono text-salt text-xs">
+                      <p className="text-xs font-bold">
                         {formatCurrency(((item.salePrice ?? item.price) * (1 - item.discountRate / 100)) * item.quantity)}
                       </p>
                     </div>
@@ -655,19 +912,28 @@ export default function CheckoutPage() {
               </div>
 
               {/* Totals */}
-              <div className="space-y-3 font-dm-mono text-[11px] tracking-wider text-ash">
+              <div className="space-y-2 text-[11px] tracking-wider text-gray-700 mb-6 pb-6 border-b-2 border-dashed border-gray-400/60">
                 <div className="flex justify-between items-start">
                   <span className="uppercase">Subtotal</span>
                   <div className="text-right">
-                    <span className="text-salt">{formatCurrency(getSubtotal())}</span>
+                    <span className="text-black font-bold">{formatCurrency(getSubtotal())}</span>
                   </div>
                 </div>
                 
                 {discountAmount > 0 && (
                   <div className="flex justify-between items-start">
-                    <span className="uppercase text-salt">Discount</span>
+                    <span className="uppercase">Discount</span>
                     <div className="text-right">
-                      <span className="text-salt">-{formatCurrency(discountAmount)}</span>
+                      <span className="text-black font-bold">-{formatCurrency(discountAmount)}</span>
+                    </div>
+                  </div>
+                )}
+                
+                {!isInternational && shippingCost > 0 && (
+                  <div className="flex justify-between items-start">
+                    <span className="uppercase">Shipping (J&T)</span>
+                    <div className="text-right">
+                      <span className="text-black font-bold">{formatCurrency(shippingCost)}</span>
                     </div>
                   </div>
                 )}
@@ -676,44 +942,43 @@ export default function CheckoutPage() {
                   <div className="flex justify-between items-start">
                     <span className="uppercase">{isInternational ? `Tax [${intlTaxRate}%]` : "Tax"}</span>
                     <div className="text-right">
-                      <span className="text-ash">+{formatCurrency(applicableTax)}</span>
+                      <span className="text-black font-bold">+{formatCurrency(applicableTax)}</span>
                     </div>
                   </div>
                 )}
                 
-                <div className="w-full border-t border-dashed border-ash my-4" />
-
-                <div className="flex justify-between items-end">
-                  <span className="font-dm-mono text-salt uppercase tracking-widest text-xs">Total Due</span>
+                <div className="flex justify-between items-end pt-4 mt-4 border-t-2 border-black">
+                  <span className="uppercase font-black text-black text-sm">Total Due</span>
                   <div className="text-right">
-                    <span className="text-base text-signal">{formatCurrency(finalTotal)}</span>
-                    {isInternational && (<p className="text-[10px] text-ash mt-1">≈ {formatLocalCurrency(finalTotalLocal, localCurrencyCode)}</p>)}
+                    <span className="text-xl font-black text-black">{formatCurrency(finalTotal)}</span>
+                    {isInternational && (<p className="text-[10px] text-gray-500 mt-1">≈ {formatLocalCurrency(finalTotalLocal, localCurrencyCode)}</p>)}
                   </div>
                 </div>
               </div>
 
-            {/* BCA reminder */}
-              <div className="mt-8 pt-6 border-t border-dashed border-ash">
-                <p className="font-dm-mono text-ash text-[10px] uppercase tracking-widest mb-4">Payment Information</p>
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-auto flex-shrink-0 p-1.5 flex items-center justify-center border border-ash blade-cut bg-void">
-                    <img src="/images/bca.png" alt="BCA Logo" className="w-full h-auto object-contain grayscale brightness-200" />
-                  </div>
-                  <div>
-                    <p className="font-syne font-bold text-salt text-xs tracking-widest uppercase mb-2">BCA Protocol</p>
-                    <div className="space-y-1.5">
-                      <div className="flex items-center gap-2 font-dm-mono text-xs">
-                        <span className="text-ash">No:</span>
-                        <span className="text-signal">6768126284</span>
-                        <CopyButton text="6768126284" />
-                      </div>
-                      <p className="font-dm-mono text-[10px] text-ash">Name: ILYASA MEYDIANSYAH A</p>
-                    </div>
-                  </div>
+              {/* Payment Method Reminder */}
+              <div className="text-center mt-4">
+                <p className="text-[10px] uppercase tracking-widest text-gray-500 mb-2 font-bold">Payment Gateway</p>
+                <div className="flex flex-col items-center justify-center gap-2">
+                  <img src="/images/xendit.png" alt="Xendit Logo" className="h-5 opacity-80 object-contain grayscale" />
+                  <p className="text-[10px] text-gray-500 leading-relaxed max-w-[200px] mt-1">
+                    Virtual Account, QRIS & E-Wallet
+                  </p>
                 </div>
+              </div>
+
+              {/* QR Code */}
+              <div className="flex flex-col items-center justify-center mt-8 mb-2">
+                <img 
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent('https://sychogear.com/')}`} 
+                  alt="QR Code" 
+                  className="w-16 h-16 opacity-80 mix-blend-multiply"
+                />
+                <p className="text-[8px] tracking-[0.2em] mt-3 font-bold text-gray-500 uppercase text-center">Scan to<br/>Track Order</p>
               </div>
               
-              <div className="absolute bottom-0 left-0 w-full h-[3px] bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjMiPjxwb2x5Z29uIHBvaW50cz0iMCAwLCA0IDMsIDggMCIgZmlsbD0iIzIyMiIvPjwvc3ZnPg==')] repeat-x rotate-180" />
+              {/* Receipt edge zig-zag bottom */}
+              <div className="absolute bottom-0 left-0 w-full h-[6px] bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjYiPjxwb2x5Z29uIHBvaW50cz0iMCAwLCA0IDYsIDggMCIgZmlsbD0iI2Y4ZmFmYyIvPjwvc3ZnPg==')] repeat-x rotate-180" />
             </div>
           </div>
         </div>

@@ -161,32 +161,17 @@ export default async function OrderSuccessPage({
                         </p>
                       </div>
                     ) : (
-                      /* ── Manual Transfer: detail BCA ── */
+                      /* ── Manual Transfer / Alternate Payment ── */
                       <>
-                        {!isInternational && (
-                          <p className="text-[10px] text-yellow-500/80 flex items-center gap-1.5 font-medium italic">
-                            <HiOutlineInformationCircle className="w-3 h-3 flex-shrink-0" />
-                            IMPORTANT: Transfer exactly to the last 3 digits for automatic verification.
+                        <div className="bg-void/40 p-6 border border-salt/5 rounded-xl text-center">
+                          <div className="bg-white inline-block p-2 rounded mb-3">
+                            <img src="/images/xendit.png" alt="Xendit" className="h-6" />
+                          </div>
+                          <p className="text-[10px] text-brand-500 uppercase tracking-widest mb-1 font-bold">Payment Gateway</p>
+                          <p className="font-bold text-lg">Xendit</p>
+                          <p className="text-sm text-brand-400 mt-2">
+                            Automatic verification via Virtual Account, QRIS & E-Wallet.
                           </p>
-                        )}
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="bg-void/40 p-4 border border-salt/5 rounded-xl">
-                            <p className="text-[10px] text-brand-500 uppercase tracking-widest mb-1 font-bold">Bank</p>
-                            <p className="font-bold text-lg">BCA</p>
-                          </div>
-                          <div className="bg-void/40 p-4 border border-salt/5 rounded-xl">
-                            <p className="text-[10px] text-brand-500 uppercase tracking-widest mb-1 font-bold">Account Name</p>
-                            <p className="font-bold text-brand-200">ILYASA MEYDIANSYAH A</p>
-                          </div>
-                        </div>
-
-                        <div className="bg-void/40 p-4 border border-salt/5 rounded-xl flex items-center justify-between">
-                          <div>
-                            <p className="text-[10px] text-brand-500 uppercase tracking-widest mb-1 font-bold">Account Number</p>
-                            <p className="text-2xl font-mono font-bold tracking-widest text-white">6768126284</p>
-                          </div>
-                          <CopyButton text="6768126284" />
                         </div>
 
                         {/* Price Breakdown */}
@@ -243,19 +228,22 @@ export default async function OrderSuccessPage({
                   <p className="text-[11px] text-brand-500 mb-6 italic">
                     This page will update automatically once your payment is confirmed.
                   </p>
-                  <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
                     {!isXendit && (
                       <a
                         href={`https://wa.me/6283190138549?text=${encodeURIComponent(`Hello SychoGear, I would like to confirm my payment for invoice ${invoiceNumber}.`)}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="btn-primary w-full text-sm uppercase tracking-wider py-4"
+                        className="btn-primary w-full sm:w-auto px-6 py-4 text-sm uppercase tracking-wider"
                       >
-                        Confirm via WhatsApp
+                        Confirm via WA
                       </a>
                     )}
-                    <Link href="/products" className={`btn-secondary w-full text-sm uppercase tracking-wider py-4 ${isXendit ? "sm:w-auto sm:px-10" : ""}`}>
-                      Continue Shopping
+                    <Link href={`/receipt/${invoiceNumber}`} target="_blank" className="btn-secondary w-full sm:w-auto px-6 py-4 text-sm uppercase tracking-wider">
+                      Print Receipt
+                    </Link>
+                    <Link href="/products" className="btn-secondary w-full sm:w-auto px-6 py-4 text-sm uppercase tracking-wider">
+                      Shop More
                     </Link>
                   </div>
                 </div>
@@ -263,8 +251,11 @@ export default async function OrderSuccessPage({
             )}
 
             {isPaid && (
-               <div className="flex justify-center">
-                 <Link href="/products" className="btn-secondary px-12">
+               <div className="flex flex-col sm:flex-row justify-center gap-3 mt-8">
+                 <Link href={`/receipt/${invoiceNumber}`} target="_blank" className="btn-primary px-8 py-4 text-sm uppercase tracking-wider text-center">
+                   Print Receipt
+                 </Link>
+                 <Link href="/products" className="btn-secondary px-8 py-4 text-sm uppercase tracking-wider text-center">
                    Continue Shopping
                  </Link>
                </div>

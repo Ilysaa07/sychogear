@@ -136,7 +136,7 @@ export default function LinktreeClient({ heroImages = [] }: { heroImages?: strin
              <span className="text-ash mt-1 block">AESTHETIC</span>
           </p>
           <p className="font-sans font-bold text-[8px] text-dim uppercase tracking-[0.3em] mt-12">
-            &copy; 2026 SYCHOGEAR ARCHIVE
+            &copy; 2026 SYCHO FIGHT GEAR
           </p>
         </footer>
 

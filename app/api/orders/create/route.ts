@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { customer, items, couponCode } = body;
+    const { customer, items, couponCode, shippingCost } = body;
 
     // Validate customer data
     const validation = checkoutSchema.safeParse(customer);
@@ -72,6 +72,7 @@ export async function POST(request: Request) {
       couponCode,
       country: validation.data.country || "ID",
       orderNote: validation.data.orderNote,
+      shippingCost: typeof shippingCost === "number" ? shippingCost : 0,
     });
 
     return NextResponse.json({

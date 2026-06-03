@@ -14,6 +14,7 @@ export const paymentService = {
     couponCode?: string;
     country?: string;
     orderNote?: string;
+    shippingCost?: number;
     appUrl?: string;
   }) {
     const country = data.country || "ID";
@@ -99,8 +100,9 @@ export const paymentService = {
     // FIX CRITICAL-1: stok divalidasi di dalam $transaction untuk cegah race condition
     const subtotalAfterProductDiscount = subtotal - totalProductDiscount;
     const uniqueCode = isInternational ? 0 : Math.floor(100 + Math.random() * 900);
+    const shippingCost = data.shippingCost || 0;
     const total =
-      subtotalAfterProductDiscount + totalTaxPpn + totalTaxPph23 + uniqueCode;
+      subtotalAfterProductDiscount + totalTaxPpn + totalTaxPph23 + uniqueCode + shippingCost;
     const totalWithCode = total;
     const invoiceNumber = generateOrderNumber().replace("SG-", "INV-");
     const expiredAt = new Date();
@@ -179,7 +181,7 @@ export const paymentService = {
           country,
           notes: data.orderNote,
           paymentMethod: "PENDING", // akan diupdate setelah provider dipilih
-          shippingCost: 0,
+          shippingCost: shippingCost,
           expiredAt,
           items: {
             create: itemsWithDetails,

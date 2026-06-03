@@ -248,34 +248,12 @@ export default function CartDrawer() {
             <div className="px-6 py-6 space-y-4">
               {/* Totals */}
               <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.625rem", letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--ash)" }}>
-                    Subtotal
-                  </span>
-                  <span style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.8125rem", color: "var(--pale)" }}>
-                    {formatPrice(subtotal)}
-                  </span>
-                </div>
-                
-                {estimatedTax > 0 && (
-                  <div className="flex items-center justify-between">
-                    <span style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.625rem", letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--ash)" }}>
-                      Estimated Tax
-                    </span>
-                    <span style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.8125rem", color: "var(--pale)" }}>
-                      {formatPrice(estimatedTax)}
-                    </span>
-                  </div>
-                )}
-                
-                <div style={{ height: "1px", background: "var(--ember)" }} />
-                
                 <div className="flex items-center justify-between pt-1">
                   <span style={{ fontFamily: "var(--font-syne), system-ui, sans-serif", fontSize: "0.75rem", fontWeight: 600, letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--salt)" }}>
-                    Estimated Total
+                    Subtotal
                   </span>
                   <span style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "1.125rem", fontWeight: 500, color: "var(--signal)" }}>
-                    {formatPrice(subtotal + estimatedTax)}
+                    {formatPrice(subtotal)}
                   </span>
                 </div>
                 

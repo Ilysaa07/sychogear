@@ -382,6 +382,15 @@ export default function AdminOrdersPage() {
             <div className="p-6 border-b border-salt/5 flex items-center justify-between bg-brand-950/80 backdrop-blur-md z-10">
               <h3 className="text-lg font-bold tracking-tight text-white">{selectedOrder.invoiceNumber}</h3>
               <div className="flex items-center gap-2">
+                <a
+                  href={`/receipt/${selectedOrder.invoiceNumber}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-brand-200 border border-brand-500/20 hover:bg-brand-500/10 transition-colors flex items-center gap-1.5"
+                  title="Print Receipt"
+                >
+                  Print
+                </a>
                 <button
                   onClick={() => selectedOrder && setDeleteOrderId(selectedOrder.id)}
                   disabled={deleting}
@@ -508,73 +517,135 @@ export default function AdminOrdersPage() {
                   )}
                 </section>
 
-                <section>
-                  <h4 className="text-[10px] text-brand-500 uppercase tracking-[0.2em] font-black mb-4">
-                    Items Order
-                  </h4>
-                  <div className="space-y-4">
+                <section className="bg-slate-50 text-black p-8 relative w-full shadow-[0_20px_50px_rgba(0,0,0,0.5)] font-dm-mono mt-6 h-fit border-x border-slate-200">
+                  {/* Receipt edge zig-zag top */}
+                  <div className="absolute top-0 left-0 w-full h-[6px] bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjYiPjxwb2x5Z29uIHBvaW50cz0iMCAwLCA0IDYsIDggMCIgZmlsbD0iI2Y4ZmFmYyIvPjwvc3ZnPg==')] repeat-x" />
+                  
+                  <div className="text-center mb-6 pb-6 border-b-2 border-dashed border-gray-400/60 relative">
+                    <img src="/images/logo-sychogear.webp" alt="SYCHOGEAR" className="h-10 mx-auto mb-3 object-contain opacity-90" />
+                    <p className="font-syne font-bold uppercase tracking-widest text-xl mb-1">SychoGear</p>
+                    <p className="text-[10px] text-gray-500 uppercase tracking-widest leading-relaxed mb-4">
+                      Violence is our aesthetic
+                    </p>
+                    
+                    <div className="text-left text-[10px] text-gray-600 flex flex-col gap-1 w-full bg-gray-100 p-3 rounded-sm border border-gray-200">
+                      <div className="flex justify-between">
+                        <span>DATE:</span>
+                        <span className="font-bold">{new Date(selectedOrder.createdAt).toLocaleDateString('en-GB')} {new Date(selectedOrder.createdAt).toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute:'2-digit' })}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>INVOICE:</span>
+                        <span className="font-bold">{selectedOrder.invoiceNumber}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>TERMINAL:</span>
+                        <span className="font-bold">{Math.floor(1000 + Math.random() * 9000)}-SYS</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Items */}
+                  <div className="space-y-4 mb-6 pb-6 border-b-2 border-dashed border-gray-400/60">
+                    <div className="flex justify-between text-[10px] text-gray-500 font-bold border-b border-gray-200 pb-2 mb-4">
+                      <span>ITEM DESC</span>
+                      <span>AMOUNT</span>
+                    </div>
                     {selectedOrder.items.map((item) => (
-                      <div key={item.id} className="flex gap-4 p-2 hover:bg-white/[0.02] transition-colors rounded-lg">
-                        <div className="w-12 h-16 bg-brand-900 flex-shrink-0 overflow-hidden border border-salt/5">
-                          <img
-                            src={item.product.images[0]?.url || "/placeholder.svg"}
-                            alt={item.product.name}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
+                      <div key={item.id} className="flex gap-4 items-start">
                         <div className="flex-1 min-w-0">
-                          <p className="text-[13px] font-bold text-white truncate">{item.product.name}</p>
-                          <p className="text-[10px] text-brand-500 font-mono mt-1">
-                            {item.size} <span className="mx-1 opacity-30">/</span> {item.quantity} QTY
-                          </p>
+                          <p className="text-xs font-bold tracking-wider uppercase text-black">{item.product.name}</p>
+                          <p className="text-[10px] text-gray-500 mt-1">SIZE {item.size} <span className="mx-1">|</span> QTY {item.quantity}</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-[13px] font-bold text-white">
+                          <p className="text-xs font-bold text-black">
                             {formatCurrency(item.price * item.quantity)}
                           </p>
                         </div>
                       </div>
                     ))}
                   </div>
-                </section>
 
-                <section className="bg-white/[0.02] p-5 border border-salt/5 space-y-3">
-                  <div className="flex justify-between text-[11px] uppercase tracking-wider">
-                    <span className="text-brand-500">Subtotal</span>
-                    <span className="text-brand-300 font-mono">{formatCurrency(selectedOrder.subtotal)}</span>
+                  {/* Totals */}
+                  <div className="space-y-2 text-[11px] tracking-wider text-gray-700 mb-6 pb-6 border-b-2 border-dashed border-gray-400/60">
+                    <div className="flex justify-between items-start">
+                      <span className="uppercase">Subtotal</span>
+                      <div className="text-right">
+                        <span className="text-black font-bold">{formatCurrency(selectedOrder.subtotal)}</span>
+                      </div>
+                    </div>
+                    {selectedOrder.totalDiscount > 0 && (
+                      <div className="flex justify-between items-start">
+                        <span className="uppercase text-black">Product Discount</span>
+                        <div className="text-right">
+                          <span className="text-black font-bold">-{formatCurrency(selectedOrder.totalDiscount)}</span>
+                        </div>
+                      </div>
+                    )}
+                    {selectedOrder.discount > 0 && (
+                      <div className="flex justify-between items-start">
+                        <span className="uppercase text-black">Coupon Discount</span>
+                        <div className="text-right">
+                          <span className="text-black font-bold">-{formatCurrency(selectedOrder.discount)}</span>
+                        </div>
+                      </div>
+                    )}
+                    {selectedOrder.taxPpn > 0 && (
+                      <div className="flex justify-between items-start">
+                        <span className="uppercase">PPN</span>
+                        <div className="text-right">
+                          <span className="text-black font-bold">+{formatCurrency(selectedOrder.taxPpn)}</span>
+                        </div>
+                      </div>
+                    )}
+                    {selectedOrder.taxPph23 > 0 && (
+                      <div className="flex justify-between items-start">
+                        <span className="uppercase">PPH 23</span>
+                        <div className="text-right">
+                          <span className="text-black font-bold">+{formatCurrency(selectedOrder.taxPph23)}</span>
+                        </div>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-start pt-1">
+                      <span className="uppercase">Unique Code</span>
+                      <div className="text-right">
+                        <span className="text-black font-bold">+{selectedOrder.uniqueCode}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-between items-end pt-4 mt-4 border-t-2 border-black">
+                      <span className="uppercase font-black text-black text-sm">Grand Total</span>
+                      <div className="text-right">
+                        <span className="text-xl font-black text-black">{formatCurrency(selectedOrder.totalWithCode)}</span>
+                        {(selectedOrder as any).payment?.currencyAmount && (
+                          <p className="text-[10px] text-gray-500 mt-1">≈ {formatUSD((selectedOrder as any).payment.currencyAmount)}</p>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  {selectedOrder.totalDiscount > 0 && (
-                    <div className="flex justify-between text-[11px] uppercase tracking-wider text-green-500">
-                      <span>Product Discount</span>
-                      <span className="font-mono">-{formatCurrency(selectedOrder.totalDiscount)}</span>
+
+                  {/* Payment Gateway Reminder inside receipt */}
+                  <div className="text-center mt-4">
+                    <p className="text-[10px] uppercase tracking-widest text-gray-500 mb-2 font-bold">Payment Gateway</p>
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <img src="/images/xendit.png" alt="Xendit Logo" className="h-5 opacity-80 object-contain grayscale" />
+                      <p className="text-[10px] text-gray-500 leading-relaxed max-w-[200px] mt-1">
+                        Virtual Account, QRIS & E-Wallet
+                      </p>
                     </div>
-                  )}
-                  {selectedOrder.discount > 0 && (
-                    <div className="flex justify-between text-[11px] uppercase tracking-wider text-green-500">
-                      <span>Coupon Discount</span>
-                      <span className="font-mono">-{formatCurrency(selectedOrder.discount)}</span>
-                    </div>
-                  )}
-                  {selectedOrder.taxPpn > 0 && (
-                    <div className="flex justify-between text-[11px] uppercase tracking-wider">
-                      <span className="text-brand-500">PPN</span>
-                      <span className="text-brand-300 font-mono">+{formatCurrency(selectedOrder.taxPpn)}</span>
-                    </div>
-                  )}
-                  {selectedOrder.taxPph23 > 0 && (
-                    <div className="flex justify-between text-[11px] uppercase tracking-wider">
-                      <span className="text-brand-500">PPH 23</span>
-                      <span className="text-brand-300 font-mono">+{formatCurrency(selectedOrder.taxPph23)}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between font-black text-xl pt-3 border-t border-salt/10">
-                    <span className="text-white tracking-tight italic">GRAND TOTAL</span>
-                    <span className="text-white font-mono">{formatCurrency(selectedOrder.totalWithCode)}</span>
                   </div>
-                  <div className="flex justify-between text-[9px] text-brand-600 uppercase tracking-widest font-black pt-1">
-                    <span>UNIQUE CODE REDEMPTION</span>
-                    <span>+{selectedOrder.uniqueCode}</span>
+
+                  {/* QR Code */}
+                  <div className="flex flex-col items-center justify-center mt-8 mb-2">
+                    <img 
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(`https://sychogear.com/order-success/${selectedOrder.invoiceNumber}`)}`} 
+                      alt="QR Code" 
+                      className="w-16 h-16 opacity-80 mix-blend-multiply"
+                    />
+                    <p className="text-[8px] tracking-[0.2em] mt-3 font-bold text-gray-500 uppercase text-center">Scan to<br/>Track Order</p>
                   </div>
+                  
+                  {/* Receipt edge zig-zag bottom */}
+                  <div className="absolute bottom-0 left-0 w-full h-[6px] bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjYiPjxwb2x5Z29uIHBvaW50cz0iMCAwLCA0IDYsIDggMCIgZmlsbD0iI2Y4ZmFmYyIvPjwvc3ZnPg==')] repeat-x rotate-180" />
                 </section>
 
                 {selectedOrder.payment && (

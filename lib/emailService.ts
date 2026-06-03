@@ -84,13 +84,8 @@ export const emailService = {
         <p>Your order <strong>${data.invoiceNumber}</strong> has been created successfully.</p>
         <p>Please complete your payment of <strong>${amountDisplay}</strong> before <strong>${data.expiredAt.toLocaleString("en-US")}</strong>.</p>
         <br />
-        <p><strong>Payment Information:</strong></p>
-        <ul>
-          <li>Bank: BCA (Bank Central Asia)</li>
-          <li>Account Number: 883190138549</li>
-          <li>Account Name: PT SYCHOGEAR INDONESIA</li>
-        </ul>
-        <p style="color:#f59e0b;font-size:13px;">⚠️ Important: Please transfer the exact amount including all digits for automatic verification.</p>
+        <p><strong>Payment Gateway:</strong> Xendit</p>
+        <p>You can pay via Virtual Account, QRIS, E-Wallet, or Credit Card through the provided payment link.</p>
         <br />
         <p>After payment, please confirm via WhatsApp so we can process your order quickly:</p>
         <p><a href="${waLink}" style="display:inline-block;padding:12px 24px;background-color:#25d366;color:white;text-decoration:none;border-radius:6px;font-weight:bold;">Confirm via WhatsApp</a></p>
@@ -111,16 +106,12 @@ export const emailService = {
         <p>Pesanan Anda dengan nomor <strong>${data.invoiceNumber}</strong> telah berhasil dibuat.</p>
         <p>Silakan lakukan pembayaran sebesar <strong>${formatter.format(data.totalAmount)}</strong> sebelum <strong>${data.expiredAt.toLocaleString("id-ID")}</strong>.</p>
         <br />
-        <p>Detail pembayaran:</p>
-        <ul>
-          <li>Bank: BCA</li>
-          <li>No Rekening: 883190138549</li>
-          <li>Atas Nama: PT SYCHOGEAR INDONESIA</li>
-        </ul>
-        <p style="color:#f59e0b;font-size:13px;">⚠️ PENTING: Transfer tepat hingga 3 digit terakhir untuk verifikasi otomatis.</p>
+        <p><strong>Payment Gateway:</strong> Xendit</p>
+        <p>Anda dapat membayar melalui Virtual Account, QRIS, E-Wallet, atau Kartu Kredit melalui link pembayaran yang tersedia.</p>
         <br />
         <p>Setelah transfer, konfirmasi pembayaran via WhatsApp agar pesanan segera diproses:</p>
         <p><a href="${waLinkID}" style="display:inline-block;padding:12px 24px;background-color:#25d366;color:white;text-decoration:none;border-radius:6px;font-weight:bold;">Konfirmasi via WhatsApp</a></p>
+        ${data.paymentUrl ? `<br/><p><a href="${data.paymentUrl}" style="display:inline-block;padding:12px 24px;background-color:#1a1a2e;color:white;text-decoration:none;border-radius:6px;font-weight:bold;">Bayar Sekarang via Xendit →</a></p>` : ""}
       `;
     }
 

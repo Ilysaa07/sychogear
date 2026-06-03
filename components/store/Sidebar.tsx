@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
 import axios from "axios";
+import Link from "next/link";
 
 export default function Sidebar() {
   const searchParams = useSearchParams();
@@ -49,6 +50,7 @@ export default function Sidebar() {
     <aside className="w-full md:w-64 flex-shrink-0 mb-6 md:mb-0 pr-0 md:pr-8 overflow-hidden">
       <div className="sticky top-0">
         <div className="mb-8">
+          <Link href="/">
           <Image
             src="/images/logo-sychogear.webp"
             alt="SYCHOGEAR"
@@ -57,6 +59,7 @@ export default function Sidebar() {
             className="w-full h-auto max-w-[100px]"
             priority
           />
+          </Link>
         </div>
         <nav className="flex flex-row md:flex-col gap-6 md:gap-2 overflow-x-auto md:overflow-visible hide-scrollbar font-sans font-bold text-xs uppercase tracking-widest pb-1 md:pb-0">
           {[{ name: "All" }, ...categories].map((catObj) => {

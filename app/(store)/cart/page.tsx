@@ -36,7 +36,7 @@ export default function CartPage() {
           Nothing selected yet. Browse the collection and add pieces to your
           cart.
         </p>
-        <Link href="/products" className="btn-primary py-4 px-10">
+        <Link href="/" className="btn-primary py-4 px-10">
           Explore Archive ↗
         </Link>
       </div>
