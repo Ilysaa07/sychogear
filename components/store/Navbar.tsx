@@ -23,7 +23,8 @@ export default function Navbar() {
     // Fetch marquee text
     const fetchSettings = async () => {
       try {
-        const { data } = await axios.get("/api/settings");
+        const res = await fetch("/api/settings");
+        const data = await res.json();
         if (data.success && data.data.marqueeText) {
           setMarqueeText(data.data.marqueeText);
         }
