@@ -42,7 +42,7 @@ export default function LinktreeClient({ heroImages = [] }: { heroImages?: strin
     <div className="min-h-screen bg-void flex flex-col">
 
       {/* ── TOP BAR ── */}
-      <div className="border-b-2 border-salt px-6 py-4 flex items-center justify-between">
+      <div className="px-6 py-4 flex items-center justify-between">
         <Link href="/" className="font-sans font-black text-salt uppercase tracking-[0.3em] text-xs hover:text-signal">
           ← SYCHOGEAR
         </Link>
@@ -58,7 +58,7 @@ export default function LinktreeClient({ heroImages = [] }: { heroImages?: strin
         <header className="w-full mb-12">
           {/* Animated GIF Logo */}
           <div className="mb-8 flex justify-center">
-            <div className="border-2 border-salt p-4 w-28 h-28 flex items-center justify-center">
+            <div className="p-4 w-28 h-28 flex items-center justify-center">
               <img
                 src="/images/logo.gif"
                 alt="SYCHOGEAR"
