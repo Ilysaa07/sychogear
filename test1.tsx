@@ -137,5 +137,6 @@ export default function CheckoutPage() {
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
-    return (<div></div>);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  });
 }
