@@ -90,15 +90,29 @@ export default function ProductDetailClient({ product }: Props) {
         </div>
 
         {/* RIGHT — Sticky Product Info */}
-        <div className="w-full lg:w-[40%] lg:sticky top-0">
+        <div className="w-full lg:w-[40%] lg:sticky top-[102px] self-start">
           
           <div className="mb-8">
-            <h1 className="font-sans font-bold text-xl uppercase leading-none mb-2 tracking-tight">
+            <h1 className="font-sans font-bold text-xl uppercase leading-none mb-3 tracking-tight">
               {product.name}
             </h1>
-            <p className="font-sans font-bold text-sm text-signal">
-              {formatPrice(finalPrice)}
-            </p>
+            <div className="flex items-baseline gap-3">
+              <p className="font-sans font-bold text-xl text-signal">
+                {formatPrice(finalPrice)}
+              </p>
+              {/* Show original price crossed out if there's a discount */}
+              {(isOnSale || product.salePrice || product.discountRate > 0) && finalPrice < product.price && (
+                <p className="font-sans text-sm text-ash line-through">
+                  {formatPrice(product.price)}
+                </p>
+              )}
+              {/* Show discount badge */}
+              {product.discountRate > 0 && (
+                <span className="text-[10px] font-bold bg-signal text-void px-2 py-0.5 uppercase tracking-wider">
+                  -{product.discountRate}%
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Size Grid */}

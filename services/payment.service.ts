@@ -25,20 +25,19 @@ export const paymentService = {
 
     // ── 2. Fetch settings (tax, exchange rate) ──────────────────────────────
     let internationalTaxRate = 0;
-    let exchangeRate = Number(process.env.IDR_TO_USD_RATE) || 16000;
+    
+    // Automatically use real-time exchange rate for checkouts
+    let exchangeRate = await import("@/lib/utils").then(m => m.getLiveExchangeRate(16000));
 
     try {
       const settings = await (prisma as any).siteSettings.findMany({
-        where: { key: { in: ["internationalTaxRate", "idrToUsdRate"] } },
+        where: { key: { in: ["internationalTaxRate"] } },
       });
       const settingsMap: Record<string, string> = {};
       for (const s of settings) settingsMap[s.key as string] = s.value as string;
       if (isInternational) {
         internationalTaxRate = settingsMap.internationalTaxRate
           ? parseFloat(settingsMap.internationalTaxRate) || 11 : 11;
-      }
-      if (settingsMap.idrToUsdRate) {
-        exchangeRate = parseFloat(settingsMap.idrToUsdRate) || 16000;
       }
     } catch (err) {
       console.warn("[PaymentService] Failed to fetch settings:", err);

@@ -7,7 +7,7 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-void">
+    <footer className="fixed bottom-0 left-0 right-0 z-50 bg-void border-t border-salt/20 shadow-md">
       <div className="container-main py-4 px-6 md:px-12 flex flex-col md:flex-row items-center justify-between gap-4">
         <p className="font-sans font-bold text-[8px] tracking-[0.3em] uppercase text-salt">
           © {currentYear} SYCHO FIGHT GEAR.

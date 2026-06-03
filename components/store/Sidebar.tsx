@@ -50,8 +50,9 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="w-full md:w-64 flex-shrink-0 mb-6 md:mb-0 pr-0 md:pr-8 overflow-hidden">
-      <div className="sticky top-0">
+    <aside className="w-full md:w-64 flex-shrink-0 mb-6 md:mb-0 pr-0 md:pr-8">
+      {/* On desktop we use fixed to prevent any scrolling. On mobile we use sticky top-0 */}
+      <div className="sticky md:fixed top-0 md:top-24 w-full md:w-[calc(16rem-2rem)] z-30 bg-void md:bg-transparent pt-2 md:pt-0 pb-2 md:pb-0">
         <div className="mb-8">
           <Link href="/">
           <Image

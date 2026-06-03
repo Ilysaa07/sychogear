@@ -90,79 +90,19 @@ function ProductsContent() {
         <div className="flex-1 min-w-0">
 
           {loading ? (
-            <>
-              {/* Mobile skeleton: horizontal strip */}
-              <div className="flex sm:hidden gap-4 overflow-x-auto pb-4 -mx-4 px-4" style={{ scrollSnapType: "x mandatory" }}>
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="flex-shrink-0 w-[75vw] aspect-[3/4] bg-dim animate-pulse" style={{ scrollSnapAlign: "start" }} />
-                ))}
-              </div>
-              {/* Desktop skeleton: grid */}
-              <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-x-8 md:gap-x-12 gap-y-6 md:gap-y-8">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="w-full aspect-[3/4] bg-dim animate-pulse" />
-                ))}
-              </div>
-            </>
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-4 sm:gap-x-8 md:gap-x-12 gap-y-6 md:gap-y-8">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="w-full aspect-[3/4] bg-dim animate-pulse" />
+              ))}
+            </div>
           ) : products.length === 0 ? (
             <div className="flex justify-center py-32 text-center">
               <p className="font-sans font-bold text-xs text-ash uppercase tracking-widest">{t("home.empty")}</p>
             </div>
           ) : (
             <>
-              {/* ─── Mobile: Horizontal Snap Scroll ─── */}
-              <div
-                className="flex sm:hidden gap-4 overflow-x-auto pb-6 -mx-4 px-4"
-                style={{ scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}
-              >
-                {products.map((product) => {
-                  const isOnSale = product.flashSale?.isActive && product.flashSale.salePrice;
-                  const displayPrice = isOnSale ? product.flashSale!.salePrice : product.salePrice || product.price;
-                  const finalPrice = product.discountRate > 0 ? displayPrice * (1 - product.discountRate / 100) : displayPrice;
-                  const totalStock = product.variants.reduce((s, v) => s + v.stock, 0);
-                  const isSoldOut = totalStock === 0;
-                  return (
-                    <div key={product.id} className="flex-shrink-0 w-[75vw] relative group" style={{ scrollSnapAlign: "start" }}>
-                      <div className="relative w-full aspect-[3/4] overflow-hidden bg-void mb-3">
-                        <Link href={`/products/${product.slug}`} className="absolute inset-0 z-10" aria-label={product.name} />
-                        <Image 
-                          src={product.images[0]?.url || "/placeholder.svg"} 
-                          alt={product.name} 
-                          fill 
-                          sizes="75vw" 
-                          className={`object-cover ${product.images.length > 1 ? "group-hover:opacity-0" : ""}`} 
-                        />
-                        {product.images.length > 1 && (
-                          <Image 
-                            src={product.images[1]?.url} 
-                            alt={`${product.name} alternate`} 
-                            fill 
-                            sizes="75vw" 
-                            className="object-cover absolute inset-0 opacity-0 group-hover:opacity-100" 
-                          />
-                        )}
-                        {/* Sold Out Overlay */}
-                        {isSoldOut && (
-                          <div className="absolute inset-0 z-20 flex items-center justify-center bg-void/70">
-                            <span className="font-sans font-black text-salt uppercase tracking-[0.3em] text-xs">{t("product.soldOut")}</span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex flex-col items-center text-center">
-                        <h3 className="font-sans font-bold text-xs text-salt uppercase tracking-tight truncate mb-1 hover:text-signal transition-none">
-                          <Link href={`/products/${product.slug}`}>
-                            {product.name}
-                          </Link>
-                        </h3>
-                        <p className="font-sans font-bold text-[10px] text-signal">{formatPrice(finalPrice)}</p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* ─── Desktop: Grid ─── */}
-              <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-x-8 md:gap-x-12 lg:gap-x-16 gap-y-6 md:gap-y-8 lg:gap-y-10">
+              {/* ─── Grid ─── */}
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-4 sm:gap-x-8 md:gap-x-12 lg:gap-x-16 gap-y-6 md:gap-y-8 lg:gap-y-10">
               {products.map((product, idx) => {
                 const isOnSale = product.flashSale?.isActive && product.flashSale.salePrice;
                 const displayPrice = isOnSale ? product.flashSale!.salePrice : product.salePrice || product.price;

@@ -20,6 +20,20 @@ export function getExchangeRate(): number {
   return Number(process.env.IDR_TO_USD_RATE) || 16000;
 }
 
+export async function getLiveExchangeRate(fallback: number = 16000): Promise<number> {
+  try {
+    // Revalidate every 1 hour (3600 seconds)
+    const res = await fetch("https://api.exchangerate-api.com/v4/latest/USD", { next: { revalidate: 3600 } });
+    const data = await res.json();
+    if (data?.rates?.IDR) {
+      return data.rates.IDR;
+    }
+  } catch (err) {
+    console.warn("Failed to fetch live exchange rate:", err);
+  }
+  return fallback;
+}
+
 export function convertIDRtoUSD(amountIDR: number, rate?: number): number {
   const exchangeRate = rate || getExchangeRate();
   return Math.round((amountIDR / exchangeRate) * 100) / 100;

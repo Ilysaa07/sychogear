@@ -37,6 +37,18 @@ export async function GET() {
     for (const s of settings) {
       map[s.key as string] = s.value as string;
     }
+    
+    // Automatically inject the live exchange rate for all clients (frontend & checkout)
+    try {
+      const res = await fetch("https://api.exchangerate-api.com/v4/latest/USD", { next: { revalidate: 3600 } });
+      const data = await res.json();
+      if (data?.rates?.IDR) {
+        map["idrToUsdRate"] = String(data.rates.IDR);
+      }
+    } catch (e) {
+      console.warn("Failed to fetch live exchange rate in settings API:", e);
+    }
+
     return NextResponse.json({ success: true, data: map });
   } catch (error) {
     console.error("Failed to fetch settings:", error);

@@ -24,7 +24,7 @@ export default function StoreLayout({
         <Navbar />
         <CartDrawer />
         <RegionConfirmationModal />
-        <main className="min-h-screen relative z-10">{children}</main>
+        <main className="min-h-screen relative z-10 pt-[70px] pb-[120px] md:pb-[80px]">{children}</main>
         <Footer />
       </LanguageProvider>
     </CurrencyProvider>
