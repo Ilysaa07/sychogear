@@ -63,6 +63,9 @@ export default function Sidebar() {
             priority
           />
           </Link>
+          <p className="slogan-brand mt-2 text-[9px] font-bold tracking-[0.2em] uppercase select-none">
+            VIOLENCE IS OUR AESTHETIC
+          </p>
         </div>
         <nav className="flex flex-row md:flex-col gap-6 md:gap-2 overflow-x-auto md:overflow-visible hide-scrollbar font-sans font-bold text-xs uppercase tracking-widest pb-1 md:pb-0">
           {[{ name: "All", slug: "all", id: "all" }, ...categories].map((catObj) => {
