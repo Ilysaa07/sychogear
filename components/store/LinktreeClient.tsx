@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { HiOutlineArrowRight } from "react-icons/hi";
 
 const links = [
   {
@@ -40,110 +39,118 @@ const links = [
 
 export default function LinktreeClient({ heroImages = [] }: { heroImages?: string[] }) {
   return (
-    <div className="min-h-screen bg-void flex flex-col relative overflow-hidden selection:bg-salt selection:text-void">
-      
-      {/* ── BACKGROUND ── */}
-      <div className="fixed inset-0 z-0 pointer-events-none bg-void" />
+    <div className="min-h-screen bg-void flex flex-col">
 
-      {/* ── MAIN CONTENT ── */}
-      <main className="relative z-10 flex-1 flex flex-col items-center w-full max-w-lg mx-auto px-6 py-16 md:py-24">
-        
-        {/* Header Section */}
-        <header className="flex flex-col items-center mb-16 w-full">
-          <div className="relative mb-8">
-            <div className="w-32 h-32 md:w-40 md:h-40 flex items-center justify-center p-4">
+      {/* ── TOP BAR ── */}
+      <div className="border-b-2 border-salt px-6 py-4 flex items-center justify-between">
+        <Link href="/" className="font-sans font-black text-salt uppercase tracking-[0.3em] text-xs hover:text-signal">
+          ← SYCHOGEAR
+        </Link>
+        <span className="font-sans font-bold text-ash text-[9px] uppercase tracking-[0.3em]">
+          /LINKS
+        </span>
+      </div>
+
+      {/* ── MAIN ── */}
+      <main className="flex-1 flex flex-col items-center w-full max-w-xl mx-auto px-6 py-16">
+
+        {/* Header */}
+        <header className="w-full mb-12">
+          {/* Animated GIF Logo */}
+          <div className="mb-8 flex justify-center">
+            <div className="border-2 border-salt p-4 w-28 h-28 flex items-center justify-center">
               <img
                 src="/images/logo.gif"
                 alt="SYCHOGEAR"
-                className="w-full h-full "
+                className="w-full h-full object-contain"
               />
             </div>
           </div>
-          
-          <h1 
-            className="font-sans font-black text-salt uppercase leading-none tracking-[0.3em] mb-4 text-center"
-            style={{ fontSize: "clamp(24px, 5vw, 32px)" }}
-          >
+
+          {/* Brand Name */}
+          <h1 className="font-sans font-black text-salt uppercase tracking-[0.4em] text-2xl text-center leading-none mb-3">
             SYCHOGEAR
           </h1>
-          <p className="font-sans font-bold text-[10px] tracking-[0.4em] uppercase text-ash text-center">
-            The Official Archive
+
+          {/* Slogan */}
+          <p className="slogan-brand font-sans font-bold text-[9px] tracking-[0.35em] uppercase text-center">
+            VIOLENCE IS OUR AESTHETIC
           </p>
+
+          {/* Divider */}
+          <div className="w-full h-[2px] bg-salt mt-10" />
         </header>
 
-        {/* Links Section */}
-        <div className="w-full space-y-3">
+        {/* Links */}
+        <nav className="w-full flex flex-col gap-0">
           {links.map((link, i) => (
-            <div 
-              key={i} 
-              className="" 
+            <Link
+              key={i}
+              href={link.url}
+              target={link.url.startsWith("/") ? "_self" : "_blank"}
+              rel={link.url.startsWith("/") ? "" : "noopener noreferrer"}
+              className={`group flex items-center w-full px-5 py-4 border-2 border-t-0 first:border-t-2 ${
+                link.primary
+                  ? "bg-salt text-void border-salt hover:bg-signal hover:border-signal"
+                  : "bg-void text-salt border-salt hover:bg-salt hover:text-void"
+              }`}
             >
-              <Link
-                href={link.url}
-                target={link.url.startsWith("/") ? "_self" : "_blank"}
-                rel={link.url.startsWith("/") ? "" : "noopener noreferrer"}
-                className={`group relative flex items-center w-full p-5 transition-none border-2 ${
-                  link.primary
-                    ? "bg-salt border-salt text-void hover:bg-void hover:text-salt hover:border-salt"
-                    : "bg-void border-salt text-salt hover:bg-signal hover:border-signal"
-                }`}
-              >
-                {/* Logo Area */}
-                <div className={`flex-shrink-0 w-10 h-10 flex items-center justify-center transition-none ${link.primary ? 'opacity-100' : 'opacity-100'}`}>
-                  {link.image && (
-                    <div className="relative w-5 h-5">
-                      <Image
-                        src={link.image}
-                        alt={link.title}
-                        fill
-                        sizes="20px"
-                        priority={i === 0}
-                        className={`object-contain filter grayscale ${link.primary ? 'brightness-0' : 'brightness-150'}`}
-                      />
-                    </div>
-                  )}
-                </div>
+              {/* Icon */}
+              <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center mr-4">
+                {link.image && (
+                  <div className="relative w-5 h-5">
+                    <Image
+                      src={link.image}
+                      alt={link.title}
+                      fill
+                      sizes="20px"
+                      priority={i === 0}
+                      className={`object-contain ${
+                        link.primary
+                          ? "filter brightness-0 group-hover:brightness-0 group-hover:invert"
+                          : "filter grayscale brightness-150 group-hover:brightness-0"
+                      }`}
+                    />
+                  </div>
+                )}
+              </div>
 
-                {/* Text Area */}
-                <div className="flex-1 ml-4 flex flex-col justify-center">
-                  <span className={`font-sans font-black text-[12px] uppercase tracking-[0.2em] leading-none mb-1.5`}>
-                    {link.title}
+              {/* Text */}
+              <div className="flex-1 flex flex-col justify-center">
+                <span className="font-sans font-black text-[11px] uppercase tracking-[0.25em] leading-none mb-1">
+                  {link.title}
+                </span>
+                {link.description && (
+                  <span className={`font-sans font-bold text-[8px] uppercase tracking-widest leading-none ${
+                    link.primary ? "opacity-60" : "text-ash group-hover:text-void"
+                  }`}>
+                    {link.description}
                   </span>
-                  {link.description && (
-                    <span className={`font-sans font-bold text-[9px] uppercase tracking-widest ${link.primary ? "text-void/60 group-hover:text-salt/60" : "text-ash group-hover:text-salt"}`}>
-                      {link.description}
-                    </span>
-                  )}
-                </div>
+                )}
+              </div>
 
-                {/* Arrow Icon */}
-                <div className="flex-shrink-0 ml-3">
-                  <HiOutlineArrowRight className={`w-4 h-4 transition-none ${link.primary ? 'text-void group-hover:text-salt' : 'text-ash group-hover:text-salt'}`} />
-                </div>
-              </Link>
-            </div>
+              {/* Index number */}
+              <span className={`font-sans font-black text-[10px] tabular-nums opacity-30`}>
+                {String(i + 1).padStart(2, "0")}
+              </span>
+            </Link>
           ))}
-        </div>
-        
+        </nav>
+
         {/* Footer */}
-        <footer className="mt-24 w-full flex flex-col items-center">
-          <div className="w-12 h-[2px] bg-salt mb-8" />
-          <p 
-            className="font-sans font-black text-salt uppercase text-center leading-relaxed"
-            style={{ fontSize: "10px", letterSpacing: "0.5em" }}
-          >
-             VIOLENCE IS OUR <br/>
-             <span className="text-ash mt-1 block">AESTHETIC</span>
-          </p>
-          <p className="font-sans font-bold text-[8px] text-dim uppercase tracking-[0.3em] mt-12">
-            &copy; 2026 SYCHO FIGHT GEAR
-          </p>
+        <footer className="mt-16 w-full">
+          <div className="w-full h-[2px] bg-salt mb-8" />
+          <div className="flex items-center justify-between">
+            <p className="font-sans font-bold text-[8px] text-ash uppercase tracking-[0.3em]">
+              © 2026 SYCHO FIGHT GEAR
+            </p>
+            <p className="font-sans font-bold text-[8px] text-ash uppercase tracking-[0.3em]">
+              ALL RIGHTS RESERVED
+            </p>
+          </div>
         </footer>
 
       </main>
-
-
     </div>
   );
 }
-
