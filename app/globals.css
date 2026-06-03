@@ -48,48 +48,37 @@
     animation: marquee 20s linear infinite !important;
   }
 
-  @keyframes slogan-glow {
-    0%, 100% {
-      color: #ff0000;
-      text-shadow:
-        0 0 4px #ff0000,
-        0 0 12px #ff0000,
-        0 0 24px #ff2200,
-        0 0 40px #ff0000;
+  @keyframes slogan-shimmer {
+    0% {
+      background-position: -300% center;
+      filter: drop-shadow(0 0 3px #ff0000) drop-shadow(0 0 8px #ff0000);
     }
     50% {
-      color: #ff4444;
-      text-shadow:
-        0 0 8px #ff0000,
-        0 0 20px #ff0000,
-        0 0 40px #ff2200,
-        0 0 70px #ff0000,
-        0 0 90px #ff0000;
+      filter: drop-shadow(0 0 6px #ff0000) drop-shadow(0 0 18px #ff0000) drop-shadow(0 0 32px #cc0000);
     }
-  }
-
-  @keyframes slogan-shine {
-    0% { background-position: -200% center; }
-    100% { background-position: 200% center; }
+    100% {
+      background-position: 300% center;
+      filter: drop-shadow(0 0 3px #ff0000) drop-shadow(0 0 8px #ff0000);
+    }
   }
 
   .slogan-brand {
-    animation: slogan-glow 2s ease-in-out infinite !important;
+    display: block !important;
     background: linear-gradient(
       90deg,
-      #ff0000 0%,
-      #ff0000 35%,
-      #ff9999 50%,
-      #ffffff 55%,
-      #ff9999 60%,
-      #ff0000 65%,
-      #ff0000 100%
+      #aa0000 0%,
+      #ff0000 25%,
+      #ff5555 42%,
+      #ffffff 50%,
+      #ff5555 58%,
+      #ff0000 75%,
+      #aa0000 100%
     ) !important;
-    background-size: 200% auto !important;
+    background-size: 300% auto !important;
     -webkit-background-clip: text !important;
     background-clip: text !important;
     -webkit-text-fill-color: transparent !important;
-    animation: slogan-shine 3s linear infinite !important;
+    animation: slogan-shimmer 2.5s linear infinite !important;
   }
 
   body {
