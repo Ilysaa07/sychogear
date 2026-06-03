@@ -41,7 +41,7 @@ export default async function PaymentSuccessPage({ searchParams }: Props) {
           <Link href="/order-status" className="btn-secondary">
             Track Order
           </Link>
-          <Link href="/products" className="btn-ghost">
+          <Link href="/" className="btn-ghost">
             Continue Shopping
           </Link>
         </div>

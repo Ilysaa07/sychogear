@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useCartStore } from "@/stores/cart-store";
 import { useUIStore } from "@/stores/ui-store";
 import { useCurrency } from "@/components/store/CurrencyProvider";
+import { useTranslation } from "@/components/store/LanguageProvider";
 import type { ProductWithRelations } from "@/types";
 import Link from "next/link";
 import toast from "react-hot-toast";
@@ -15,6 +16,7 @@ interface Props {
 
 export default function ProductDetailClient({ product }: Props) {
   const { formatPrice } = useCurrency();
+  const { t } = useTranslation();
   const [selectedVariant, setSelectedVariant] = useState<string | null>(null);
   const [addPressed, setAddPressed] = useState(false);
   const [showStickyATC, setShowStickyATC] = useState(false);
@@ -43,10 +45,10 @@ export default function ProductDetailClient({ product }: Props) {
 
   const handleAddToCart = () => {
     if (!selectedVariant || !selectedVariantData) {
-      toast.error("Select a size.");
+      toast.error(t("product.selectSize"));
       return;
     }
-    if (!inStock) { toast.error("Sold out."); return; }
+    if (!inStock) { toast.error(t("product.soldOut")); return; }
     setAddPressed(true);
     setTimeout(() => setAddPressed(false), 150);
     addItem({
@@ -64,7 +66,7 @@ export default function ProductDetailClient({ product }: Props) {
       pph23Rate:    product.pph23Rate || 0,
       discountRate: product.discountRate || 0,
     });
-    toast.success("Added.");
+    toast.success(t("product.added"));
     setCartOpen(true);
   };
 
@@ -130,7 +132,7 @@ export default function ProductDetailClient({ product }: Props) {
             </div>
             {selectedVariantData && selectedVariantData.stock > 0 && selectedVariantData.stock <= 3 && (
               <p className="mt-3 font-sans font-bold text-[8px] text-signal uppercase tracking-widest">
-                Only {selectedVariantData.stock} left in {selectedVariantData.size}
+                {t("product.onlyLeft").replace("{count}", String(selectedVariantData.stock)).replace("{size}", selectedVariantData.size)}
               </p>
             )}
           </div>
@@ -146,7 +148,7 @@ export default function ProductDetailClient({ product }: Props) {
                 : "bg-white text-black hover:bg-black hover:text-white hover:border-white"
             }`}
           >
-            {!selectedVariant ? "Select Size" : !inStock ? "Sold Out" : "Add to Cart"}
+            {!selectedVariant ? t("product.selectSizeBtn") : !inStock ? t("product.soldOut") : t("product.addToCart")}
           </button>
 
           {/* Raw Description Block */}
@@ -155,14 +157,14 @@ export default function ProductDetailClient({ product }: Props) {
             
             {product.careInstructions && (
               <div className="pt-6 border-t-2 border-ember">
-                <p className="font-sans font-bold text-salt uppercase tracking-widest mb-2 text-[8px]">Care</p>
+                <p className="font-sans font-bold text-salt uppercase tracking-widest mb-2 text-[8px]">{t("product.care")}</p>
                 <p>{product.careInstructions}</p>
               </div>
             )}
             
             {product.materials && (
               <div className="pt-6 border-t-2 border-ember">
-                <p className="font-sans font-bold text-salt uppercase tracking-widest mb-2 text-[8px]">Material</p>
+                <p className="font-sans font-bold text-salt uppercase tracking-widest mb-2 text-[8px]">{t("product.material")}</p>
                 <p>{product.materials}</p>
               </div>
             )}
@@ -204,7 +206,7 @@ export default function ProductDetailClient({ product }: Props) {
                 : "bg-white text-black hover:bg-black hover:text-white hover:border-white"
             }`}
           >
-            {inStock ? "Add" : "Out"}
+            {inStock ? t("product.add") : t("product.out")}
           </button>
         </div>
       )}

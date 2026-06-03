@@ -333,7 +333,7 @@ export default function CartPage() {
               </Link>
 
               <Link
-                href="/products"
+                href="/"
                 className="btn-link w-full justify-center mt-5"
               >
                 ← Continue Shopping

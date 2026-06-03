@@ -8,9 +8,11 @@ import { useCurrency } from "@/components/store/CurrencyProvider";
 import Image from "next/image";
 import QuickViewModal from "@/components/store/QuickViewModal";
 import Sidebar from "@/components/store/Sidebar";
+import { useTranslation } from "@/components/store/LanguageProvider";
 import type { ProductWithRelations } from "@/types";
 
 export default function HomePage() {
+  const { t } = useTranslation();
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://sychogear.com";
   const breadcrumbJsonLd = {
     "@context": "https://schema.org",
@@ -29,7 +31,7 @@ export default function HomePage() {
       <Suspense
         fallback={
           <div className="min-h-screen bg-void flex items-center justify-center pt-20">
-            <p className="font-sans font-bold uppercase tracking-widest text-ash text-xs">Loading Archive...</p>
+            <p className="font-sans font-bold uppercase tracking-widest text-ash text-xs">{t("home.loading")}</p>
           </div>
         }
       >
@@ -41,6 +43,7 @@ export default function HomePage() {
 
 function ProductsContent() {
   const { formatPrice } = useCurrency();
+  const { t } = useTranslation();
   const searchParams = useSearchParams();
   const router = useRouter();
   const [products, setProducts] = useState<ProductWithRelations[]>([]);
@@ -56,7 +59,7 @@ function ProductsContent() {
       setLoading(true);
       try {
         const params = new URLSearchParams();
-        if (category && category !== "All") params.set("category", category);
+        if (category && category.toLowerCase() !== "all") params.set("category", category);
         params.set("page", String(page));
         const { data } = await axios.get(`/api/products?${params}`);
         if (data.success) { setProducts(data.data); setTotalPages(data.totalPages); }
@@ -103,7 +106,7 @@ function ProductsContent() {
             </>
           ) : products.length === 0 ? (
             <div className="flex justify-center py-32 text-center">
-              <p className="font-sans font-bold text-xs text-ash uppercase tracking-widest">Subject not found in archive.</p>
+              <p className="font-sans font-bold text-xs text-ash uppercase tracking-widest">{t("home.empty")}</p>
             </div>
           ) : (
             <>
@@ -141,7 +144,7 @@ function ProductsContent() {
                         {/* Sold Out Overlay */}
                         {isSoldOut && (
                           <div className="absolute inset-0 z-20 flex items-center justify-center bg-void/70">
-                            <span className="font-sans font-black text-salt uppercase tracking-[0.3em] text-xs">SOLD OUT</span>
+                            <span className="font-sans font-black text-salt uppercase tracking-[0.3em] text-xs">{t("product.soldOut")}</span>
                           </div>
                         )}
                       </div>
@@ -192,7 +195,7 @@ function ProductsContent() {
                       {/* Sold Out Overlay */}
                       {isSoldOut && (
                         <div className="absolute inset-0 z-20 flex items-center justify-center bg-void/70">
-                          <span className="font-sans font-black text-salt uppercase tracking-[0.3em] text-sm">SOLD OUT</span>
+                          <span className="font-sans font-black text-salt uppercase tracking-[0.3em] text-sm">{t("product.soldOut")}</span>
                         </div>
                       )}
                     </div>

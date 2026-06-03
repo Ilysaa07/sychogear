@@ -8,6 +8,8 @@ import RegionConfirmationModal from "@/components/store/RegionConfirmationModal"
 
 import { CurrencyProvider } from "@/components/store/CurrencyProvider";
 
+import { LanguageProvider } from "@/components/store/LanguageProvider";
+
 export default function StoreLayout({
   children,
 }: {
@@ -15,14 +17,16 @@ export default function StoreLayout({
 }) {
   return (
     <CurrencyProvider>
-      <Preloader />
-      <VisitorTracker />
+      <LanguageProvider>
+        <Preloader />
+        <VisitorTracker />
 
-      <Navbar />
-      <CartDrawer />
-      <RegionConfirmationModal />
-      <main className="min-h-screen relative z-10">{children}</main>
-      <Footer />
+        <Navbar />
+        <CartDrawer />
+        <RegionConfirmationModal />
+        <main className="min-h-screen relative z-10">{children}</main>
+        <Footer />
+      </LanguageProvider>
     </CurrencyProvider>
   );
 }

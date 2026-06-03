@@ -6,18 +6,21 @@ import Image from "next/image";
 import axios from "axios";
 import Link from "next/link";
 
+import { useTranslation } from "./LanguageProvider";
+
 export default function Sidebar() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
+  const { t } = useTranslation();
   
   const [categories, setCategories] = useState<{ id: string; name: string; slug: string }[]>([]);
 
   const category = searchParams.get("category");
-  const isActiveCat = (cat: string) => {
-    if (pathname !== "/") return false; // In product details, we usually don't highlight any category, or we can just leave it unhighlighted.
-    if (cat === "All" && !category) return true;
-    return category === cat;
+  const isActiveCat = (slug: string) => {
+    if (pathname !== "/") return false;
+    if (slug === "all" && !category) return true;
+    return category === slug;
   };
 
   useEffect(() => {
@@ -34,12 +37,12 @@ export default function Sidebar() {
     fetchCategories();
   }, []);
 
-  const updateCategory = (cat: string) => {
+  const updateCategory = (slug: string) => {
     const params = new URLSearchParams(searchParams.toString());
-    if (cat === "All") {
+    if (slug === "all") {
       params.delete("category");
     } else {
-      params.set("category", cat);
+      params.set("category", slug);
     }
     params.set("page", "1");
     // Always navigate back to homepage with category filter applied
@@ -62,20 +65,20 @@ export default function Sidebar() {
           </Link>
         </div>
         <nav className="flex flex-row md:flex-col gap-6 md:gap-2 overflow-x-auto md:overflow-visible hide-scrollbar font-sans font-bold text-xs uppercase tracking-widest pb-1 md:pb-0">
-          {[{ name: "All" }, ...categories].map((catObj) => {
-            const cat = catObj.name;
-            const active = isActiveCat(cat);
+          {[{ name: "All", slug: "all", id: "all" }, ...categories].map((catObj) => {
+            const slug = catObj.slug;
+            const active = isActiveCat(slug);
             return (
               <button
-                key={cat}
-                onClick={() => updateCategory(cat)}
+                key={slug}
+                onClick={() => updateCategory(slug)}
                 className={`text-left transition-none flex-shrink-0 ${
                   active 
                     ? "text-signal border-b-2 md:border-b-0 md:border-l-4 border-signal pb-1 md:pb-0 md:pl-3" 
                     : "text-salt hover:text-signal border-b-2 md:border-b-0 md:border-l-4 border-transparent pb-1 md:pb-0 md:pl-3"
                 }`}
               >
-                {cat}
+                {catObj.name === "All" ? t("home.all") : catObj.name}
               </button>
             );
           })}

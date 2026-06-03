@@ -240,6 +240,17 @@ model SiteSettings {
   @@map("site_settings")
 }
 
+model InternationalShippingRate {
+  id          String   @id @default(cuid())
+  countryCode String   @unique // e.g. "MY", "SG", "US"
+  baseRate    Float    // Rate for the first kg
+  nextKgRate  Float    // Rate for every subsequent kg
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("international_shipping_rates")
+}
+
 enum Role {
   ADMIN
 }

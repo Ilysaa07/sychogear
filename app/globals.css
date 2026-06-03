@@ -32,12 +32,20 @@
     box-sizing: border-box;
     border-radius: 0 !important;
     /* Brutalism: No soft transitions */
-    transition-duration: 0ms !important;
-    animation-duration: 0ms !important;
+    transition-duration: 0ms;
   }
 
   html {
     font-size: 16px;
+  }
+
+  @keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  .animate-marquee {
+    animation: marquee 20s linear infinite !important;
   }
 
   body {

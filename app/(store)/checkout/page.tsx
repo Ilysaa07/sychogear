@@ -12,6 +12,7 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import Link from "next/link";
 import { useCurrency } from "@/components/store/CurrencyProvider";
+import { useTranslation } from "@/components/store/LanguageProvider";
 import { State, City } from "country-state-city";
 import {
   HiOutlineShoppingBag,
@@ -28,6 +29,7 @@ export default function CheckoutPage() {
   const router = useRouter();
   const { items, getTotal, getSubtotal, getTotalTax, clearCart, orderNote, setOrderNote } = useCartStore();
   const { countryCode: detectedCountry, isReady: currencyReady } = useCurrency();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [couponCode, setCouponCode] = useState("");
   const [discountAmount, setDiscountAmount] = useState(0);
@@ -38,6 +40,7 @@ export default function CheckoutPage() {
   const [internationalTaxRates, setInternationalTaxRates] = useState<Record<string, number>>({});
   const [countrySearch, setCountrySearch] = useState("");
   const [countryDropdownOpen, setCountryDropdownOpen] = useState(false);
+  const [internationalShippingRates, setInternationalShippingRates] = useState<any[]>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Address Selector States - Indonesia
@@ -97,7 +100,17 @@ export default function CheckoutPage() {
   }, 0);
   
   const weightKg = Math.max(1, Math.ceil(totalWeightGrams / 1000));
-  const shippingCost = isInternational ? 0 : (stateProvince ? getShippingRate(stateProvince, watch("city")) * weightKg : 0);
+  
+  const getInternationalShippingRate = (countryCode: string, weight: number) => {
+    const rate = internationalShippingRates.find(r => r.countryCode === countryCode);
+    if (!rate) return -1; // -1 means contact via WA
+    if (weight <= 1) return rate.baseRate;
+    return rate.baseRate + (rate.nextKgRate * (weight - 1));
+  };
+
+  const shippingCost = isInternational 
+    ? getInternationalShippingRate(selectedCountry, weightKg)
+    : (stateProvince ? getShippingRate(stateProvince, watch("city")) * weightKg : 0);
 
   const subtotal = getSubtotal();
   const domesticTax = 0; // Forced inactive for domestic as per requirement
@@ -105,7 +118,8 @@ export default function CheckoutPage() {
   const intlTaxRate = isInternational ? (internationalTaxRates["_global"] ?? 11) : 0;
   const internationalTax = isInternational ? Math.round(subtotal * (intlTaxRate / 100)) : 0;
   const applicableTax = isInternational ? internationalTax : domesticTax;
-  const finalTotal = Math.max(0, subtotal + applicableTax + shippingCost - discountAmount);
+  // If shippingCost is -1, it means we don't have the rate, so we don't add it to total.
+  const finalTotal = Math.max(0, subtotal + applicableTax + (shippingCost > 0 ? shippingCost : 0) - discountAmount);
   
   // Custom Dynamic Local Currency formatting
   const localCurrencyCode = countryInfo?.currency || "USD";
@@ -168,7 +182,20 @@ export default function CheckoutPage() {
         console.warn("Failed to fetch settings");
       }
     };
+
+    const fetchShippingRates = async () => {
+      try {
+        const { data } = await axios.get("/api/shipping-rates");
+        if (data.success) {
+          setInternationalShippingRates(data.data);
+        }
+      } catch {
+        console.warn("Failed to fetch shipping rates");
+      }
+    };
+
     fetchSettings();
+    fetchShippingRates();
   }, []);
 
   // Fetch API Wilayah Indonesia
@@ -295,7 +322,7 @@ export default function CheckoutPage() {
         customer: payloadData,
         items,
         couponCode: couponCode || undefined,
-        shippingCost: shippingCost,
+        shippingCost: shippingCost > 0 ? shippingCost : 0,
       });
 
       if (data.success) {
@@ -365,166 +392,142 @@ export default function CheckoutPage() {
             className="font-syne font-bold text-salt uppercase"
             style={{ fontSize: "clamp(42px, 8vw, 80px)", lineHeight: 0.88 }}
           >
-            Checkout
+            {t("checkout.title")}
           </h1>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 xl:gap-16">
           {/* Form — 7 cols */}
           <div className="lg:col-span-7">
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+            <form id="checkout-form" onSubmit={handleSubmit(onSubmit)} className="space-y-10">
 
-            {/* ── Contact Information ── */}
-            <div className="space-y-8">
-              <div className="flex items-center gap-4 pb-4 border-b border-ash">
-                <span className="font-dm-mono text-signal">01 //</span>
-                <p className="font-syne font-bold text-salt uppercase tracking-[0.2em] text-sm">Contact Details</p>
-              </div>
-
-              {/* Full Name */}
-              <div>
-                <label htmlFor="fullName" className="font-syne font-bold text-ash text-xs uppercase tracking-widest block mb-3">
-                  Full Name <span className="text-signal">*</span>
-                </label>
-                <input
-                  {...register("fullName")}
-                  id="fullName"
-                  className="input-field"
-                  placeholder="e.g. John Doe"
-                  autoComplete="name"
-                />
-                {errors.fullName && (
-                  <p className="mt-1 font-dm-mono text-xs text-signal">{errors.fullName.message}</p>
-                )}
-              </div>
-
-              {/* Email */}
-              <div>
-                <label htmlFor="email" className="font-syne font-bold text-ash text-xs uppercase tracking-widest block mb-3">
-                  Email Address <span className="text-signal">*</span>
-                </label>
-                <input
-                  {...register("email")}
-                  id="email"
-                  type="email"
-                  className="input-field"
-                  placeholder="you@example.com"
-                  autoComplete="email"
-                />
-                {errors.email && (
-                  <p className="mt-1 font-dm-mono text-xs text-signal">{errors.email.message}</p>
-                )}
-              </div>
-
-              {/* Phone */}
-              <div>
-                <label htmlFor="phone" className="font-syne font-bold text-ash text-xs uppercase tracking-widest block mb-3">
-                  Phone Number <span className="text-signal">*</span>
-                  <span className="font-dm-mono text-[10px] text-ash normal-case tracking-normal ml-2">(WhatsApp preferred)</span>
-                </label>
-                <div className="relative">
-                  {countryInfo && (
-                    <span className="absolute top-1/2 -translate-y-1/2 left-0 font-dm-mono text-sm text-salt pointer-events-none select-none">
-                      {countryInfo.phonePrefix}
-                    </span>
-                  )}
-                  <input
-                    {...register("phone")}
-                    id="phone"
-                    className={`input-field ${countryInfo ? "pl-14" : ""}`}
-                    placeholder={isInternational ? "8123456789" : "8xxxxxxxxxx"}
-                    autoComplete="tel"
-                  />
+              {/* ── Contact Information ── */}
+              <div className="border border-ember bg-abyss p-6 md:p-8 relative">
+                <div className="flex items-center gap-4 pb-6 mb-6 border-b border-ember">
+                  <span className="font-dm-mono text-signal font-bold">01</span>
+                  <p className="font-syne font-bold text-salt uppercase tracking-[0.2em] text-sm">{t("checkout.step1")}</p>
                 </div>
-                {errors.phone && (
-                  <p className="mt-1 font-dm-mono text-xs text-signal">{errors.phone.message}</p>
-                )}
-                <p className="mt-2 font-dm-mono text-xs text-ash">
-                  We'll use this number to confirm your order via WhatsApp.
-                </p>
-              </div>
-            </div>
+                
+                <div className="space-y-6">
+                  {/* Full Name */}
+                  <div>
+                    <label htmlFor="fullName" className="font-syne font-bold text-ash text-[10px] uppercase tracking-widest block mb-2">
+                      {t("checkout.fullName")} <span className="text-signal">*</span>
+                    </label>
+                    <input
+                      {...register("fullName")}
+                      id="fullName"
+                      className="input-field bg-void"
+                      placeholder="e.g. John Doe"
+                      autoComplete="name"
+                    />
+                    {errors.fullName && (
+                      <p className="mt-1 font-dm-mono text-xs text-signal">{errors.fullName.message}</p>
+                    )}
+                  </div>
 
-            {/* ── Shipping Address ── */}
-            <div className="space-y-8 pt-6 mt-10">
-              <div className="flex items-center gap-4 pb-4 border-b border-ash">
-                <span className="font-dm-mono text-signal">02 //</span>
-                <p className="font-syne font-bold text-salt uppercase tracking-[0.2em] text-sm">Shipping Destination</p>
-              </div>
-
-              {/* Country Dropdown */}
-              <div>
-                <label className="font-syne font-bold text-ash text-xs uppercase tracking-widest block mb-3">
-                  Country <span className="text-signal">*</span>
-                </label>
-                <div className="relative" ref={dropdownRef}>
-                  <button
-                    id="country-selector"
-                    type="button"
-                    onClick={() => setCountryDropdownOpen(!countryDropdownOpen)}
-                    className={`w-full flex items-center justify-between gap-2 text-left py-3 border-b transition-colors ${countryDropdownOpen ? "border-salt" : "border-ember"}`}
-                  >
-                    <span className="flex items-center gap-2 font-dm-mono text-sm">
-                      {countryInfo ? (
-                        <>
-                          <span className="w-5 h-3.5 overflow-hidden flex-shrink-0">
-                            <img
-                              src={`https://flagcdn.com/w40/${selectedCountry.toLowerCase()}.png`}
-                              alt={countryInfo.name}
-                              className="w-full h-full object-cover"
-                            />
-                          </span>
-                          <span className="text-salt">{countryInfo.name}</span>
-                        </>
-                      ) : (
-                        <span className="text-ash">Select your country</span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    {/* Email */}
+                    <div>
+                      <label htmlFor="email" className="font-syne font-bold text-ash text-[10px] uppercase tracking-widest block mb-2">
+                        {t("checkout.email")} <span className="text-signal">*</span>
+                      </label>
+                      <input
+                        {...register("email")}
+                        id="email"
+                        type="email"
+                        className="input-field bg-void"
+                        placeholder="you@example.com"
+                        autoComplete="email"
+                      />
+                      {errors.email && (
+                        <p className="mt-1 font-dm-mono text-xs text-signal">{errors.email.message}</p>
                       )}
-                    </span>
-                    <HiChevronDown className={`w-4 h-4 text-ash transition-transform duration-200 ${countryDropdownOpen ? "rotate-180" : ""}`} />
-                  </button>
+                    </div>
 
-                  {countryDropdownOpen && (
-                    <div className="absolute z-50 top-full left-0 right-0 mt-1 overflow-hidden bg-abyss border border-ember shadow-2xl">
-                      <div className="p-3 border-b border-ember relative">
-                        <HiOutlineSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ash" />
+                    {/* Phone */}
+                    <div>
+                      <label htmlFor="phone" className="font-syne font-bold text-ash text-[10px] uppercase tracking-widest block mb-2">
+                        {t("checkout.phone")} <span className="text-signal">*</span>
+                      </label>
+                      <div className="relative">
+                        {countryInfo && (
+                          <span className="absolute top-1/2 -translate-y-1/2 left-4 font-dm-mono text-sm text-salt pointer-events-none select-none">
+                            {countryInfo.phonePrefix}
+                          </span>
+                        )}
                         <input
-                          type="text"
-                          value={countrySearch}
-                          onChange={e => setCountrySearch(e.target.value)}
-                          className="w-full pl-8 py-2 bg-transparent border-b border-ember font-dm-mono text-sm text-salt outline-none focus:border-salt transition-colors"
-                          placeholder="Search country..."
-                          autoFocus
+                          {...register("phone")}
+                          id="phone"
+                          className={`input-field bg-void ${countryInfo ? "pl-14" : ""}`}
+                          placeholder={isInternational ? "8123456789" : "8xxxxxxxxxx"}
+                          autoComplete="tel"
                         />
                       </div>
-                      <div className="max-h-56 overflow-y-auto custom-scrollbar">
-                        {countrySearch ? (
-                          filteredCountries.length > 0 ? (
-                            filteredCountries.map(c => (
-                              <button
-                                key={c.code}
-                                type="button"
-                                onClick={() => handleCountrySelect(c.code)}
-                                className="w-full flex items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-dim font-dm-mono text-sm"
-                              >
-                                <span className="w-5 h-3.5 overflow-hidden flex-shrink-0">
-                                  <img src={`https://flagcdn.com/w40/${c.code.toLowerCase()}.png`} alt={c.name} className="w-full h-full object-cover" />
-                                </span>
-                                <span className={selectedCountry === c.code ? "text-salt font-medium" : "text-ash"}>{c.name}</span>
-                                <span className="ml-auto text-xs text-ash">{c.code}</span>
-                              </button>
-                            ))
+                      {errors.phone && (
+                        <p className="mt-1 font-dm-mono text-xs text-signal">{errors.phone.message}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ── Shipping Address ── */}
+              <div className="border border-ember bg-abyss p-6 md:p-8 relative">
+                <div className="flex items-center gap-4 pb-6 mb-6 border-b border-ember">
+                  <span className="font-dm-mono text-signal font-bold">02</span>
+                  <p className="font-syne font-bold text-salt uppercase tracking-[0.2em] text-sm">{t("checkout.step2")}</p>
+                </div>
+
+                <div className="space-y-6">
+                  {/* Country Dropdown */}
+                  <div>
+                    <label className="font-syne font-bold text-ash text-[10px] uppercase tracking-widest block mb-2">
+                      {t("checkout.country")} <span className="text-signal">*</span>
+                    </label>
+                    <div className="relative" ref={dropdownRef}>
+                      <button
+                        id="country-selector"
+                        type="button"
+                        onClick={() => setCountryDropdownOpen(!countryDropdownOpen)}
+                        className={`w-full flex items-center justify-between gap-2 text-left p-4 border transition-colors bg-void ${countryDropdownOpen ? "border-salt" : "border-ember"}`}
+                      >
+                        <span className="flex items-center gap-3 font-dm-mono text-sm">
+                          {countryInfo ? (
+                            <>
+                              <span className="w-6 h-4 overflow-hidden flex-shrink-0 border border-ember">
+                                <img
+                                  src={`https://flagcdn.com/w40/${selectedCountry.toLowerCase()}.png`}
+                                  alt={countryInfo.name}
+                                  className="w-full h-full object-cover"
+                                />
+                              </span>
+                              <span className="text-salt">{countryInfo.name}</span>
+                            </>
                           ) : (
-                            <p className="text-center py-6 font-dm-mono text-sm text-ash">No countries found</p>
-                          )
-                        ) : (
-                          regions.map(region => {
-                            const regionCountries = WORLDWIDE_COUNTRIES.filter(c => c.region === region);
-                            return (
-                              <div key={region}>
-                                <p className="px-4 pt-4 pb-2 font-syne font-bold text-[10px] text-ash uppercase tracking-widest bg-dim">
-                                  {region}
-                                </p>
-                                {regionCountries.map(c => (
+                            <span className="text-ash">Select your country</span>
+                          )}
+                        </span>
+                        <HiChevronDown className={`w-5 h-5 text-ash transition-transform duration-200 ${countryDropdownOpen ? "rotate-180" : ""}`} />
+                      </button>
+
+                      {countryDropdownOpen && (
+                        <div className="absolute z-50 top-full left-0 right-0 mt-2 overflow-hidden bg-abyss border border-ember shadow-[0_10px_40px_rgba(0,0,0,0.8)]">
+                          <div className="p-3 border-b border-ember relative bg-void">
+                            <HiOutlineSearch className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-ash" />
+                            <input
+                              type="text"
+                              value={countrySearch}
+                              onChange={e => setCountrySearch(e.target.value)}
+                              className="w-full pl-10 py-2 bg-transparent border-none font-dm-mono text-sm text-salt outline-none placeholder:text-ash"
+                              placeholder="Search country..."
+                              autoFocus
+                            />
+                          </div>
+                          <div className="max-h-64 overflow-y-auto custom-scrollbar">
+                            {countrySearch ? (
+                              filteredCountries.length > 0 ? (
+                                filteredCountries.map(c => (
                                   <button
                                     key={c.code}
                                     type="button"
@@ -534,272 +537,315 @@ export default function CheckoutPage() {
                                     <span className="w-5 h-3.5 overflow-hidden flex-shrink-0">
                                       <img src={`https://flagcdn.com/w40/${c.code.toLowerCase()}.png`} alt={c.name} className="w-full h-full object-cover" />
                                     </span>
-                                    <span className={selectedCountry === c.code ? "text-salt font-medium" : "text-ash"}>{c.name}</span>
-                                    <span className="ml-auto text-xs text-ash">{c.code}</span>
+                                    <span className={selectedCountry === c.code ? "text-salt font-bold" : "text-ash"}>{c.name}</span>
+                                    <span className="ml-auto text-[10px] text-ash">{c.code}</span>
                                   </button>
-                                ))}
-                              </div>
-                            );
-                          })
+                                ))
+                              ) : (
+                                <p className="text-center py-6 font-dm-mono text-sm text-ash">No countries found</p>
+                              )
+                            ) : (
+                              regions.map(region => {
+                                const regionCountries = WORLDWIDE_COUNTRIES.filter(c => c.region === region);
+                                return (
+                                  <div key={region}>
+                                    <p className="px-4 pt-4 pb-2 font-syne font-bold text-[10px] text-fog uppercase tracking-widest bg-void">
+                                      {region}
+                                    </p>
+                                    {regionCountries.map(c => (
+                                      <button
+                                        key={c.code}
+                                        type="button"
+                                        onClick={() => handleCountrySelect(c.code)}
+                                        className="w-full flex items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-dim font-dm-mono text-sm"
+                                      >
+                                        <span className="w-5 h-3.5 overflow-hidden flex-shrink-0 border border-ember">
+                                          <img src={`https://flagcdn.com/w40/${c.code.toLowerCase()}.png`} alt={c.name} className="w-full h-full object-cover" />
+                                        </span>
+                                        <span className={selectedCountry === c.code ? "text-salt font-bold" : "text-ash"}>{c.name}</span>
+                                        <span className="ml-auto text-[10px] text-ash">{c.code}</span>
+                                      </button>
+                                    ))}
+                                  </div>
+                                );
+                              })
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      <input type="hidden" {...register("country")} />
+                    </div>
+                    {errors.country && (
+                      <p className="mt-1 font-dm-mono text-xs text-signal">{errors.country.message}</p>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    {/* Street Address */}
+                    <div className="sm:col-span-2">
+                      <label htmlFor="streetAddress" className="font-syne font-bold text-ash text-[10px] uppercase tracking-widest block mb-2">
+                        {t("checkout.street")} <span className="text-signal">*</span>
+                      </label>
+                      <input
+                        {...register("streetAddress")}
+                        id="streetAddress"
+                        className="input-field bg-void"
+                        placeholder="e.g. 123 Orchard Road"
+                        autoComplete="address-line1"
+                      />
+                      {errors.streetAddress && (
+                        <p className="mt-1 font-dm-mono text-xs text-signal">{errors.streetAddress.message}</p>
+                      )}
+                    </div>
+
+                    {/* Apartment */}
+                    <div className="sm:col-span-2">
+                      <label htmlFor="apartment" className="font-syne font-bold text-ash text-[10px] uppercase tracking-widest block mb-2">
+                        {t("checkout.apartment")}
+                      </label>
+                      <input
+                        {...register("apartment")}
+                        id="apartment"
+                        className="input-field bg-void"
+                        placeholder="e.g. Unit 12-B, Floor 3"
+                        autoComplete="address-line2"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Dynamic City + State/Province + District + Village Selector */}
+                  {!isInternational ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      <div>
+                        <label className="font-syne font-bold text-ash text-[10px] uppercase tracking-widest block mb-2">{t("checkout.province")} <span className="text-signal">*</span></label>
+                        <div className="relative">
+                          <select className="input-field bg-void appearance-none cursor-pointer pr-10" value={selProvince?.id || ""} onChange={e => {
+                            const p = indoProvinces.find(x => x.id === e.target.value);
+                            setSelProvince(p || null);
+                          }}>
+                            <option value="" disabled>Select Province</option>
+                            {indoProvinces.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                          </select>
+                          <HiChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-ash w-5 h-5 pointer-events-none" />
+                        </div>
+                        {errors.stateProvince && (<p className="mt-1 font-dm-mono text-xs text-signal">{errors.stateProvince.message}</p>)}
+                      </div>
+                      
+                      <div>
+                        <label className="font-syne font-bold text-ash text-[10px] uppercase tracking-widest block mb-2">{t("checkout.city")} <span className="text-signal">*</span></label>
+                        <div className="relative">
+                          <select className="input-field bg-void appearance-none cursor-pointer pr-10" value={selRegency?.id || ""} onChange={e => {
+                            const p = indoRegencies.find(x => x.id === e.target.value);
+                            setSelRegency(p || null);
+                          }} disabled={!selProvince}>
+                            <option value="" disabled>Select City</option>
+                            {indoRegencies.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                          </select>
+                          <HiChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-ash w-5 h-5 pointer-events-none" />
+                        </div>
+                        {errors.city && (<p className="mt-1 font-dm-mono text-xs text-signal">{errors.city.message}</p>)}
+                      </div>
+
+                      <div>
+                        <label className="font-syne font-bold text-ash text-[10px] uppercase tracking-widest block mb-2">{t("checkout.district")} <span className="text-signal">*</span></label>
+                        <div className="relative">
+                          <select className="input-field bg-void appearance-none cursor-pointer pr-10" value={selDistrict?.id || ""} onChange={e => {
+                            const p = indoDistricts.find(x => x.id === e.target.value);
+                            setSelDistrict(p || null);
+                          }} disabled={!selRegency}>
+                            <option value="" disabled>Select District</option>
+                            {indoDistricts.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                          </select>
+                          <HiChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-ash w-5 h-5 pointer-events-none" />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="font-syne font-bold text-ash text-[10px] uppercase tracking-widest block mb-2">{t("checkout.village")} <span className="text-signal">*</span></label>
+                        <div className="relative">
+                          <select className="input-field bg-void appearance-none cursor-pointer pr-10" value={selVillage?.id || ""} onChange={e => {
+                            const p = indoVillages.find(x => x.id === e.target.value);
+                            setSelVillage(p || null);
+                          }} disabled={!selDistrict}>
+                            <option value="" disabled>Select Village</option>
+                            {indoVillages.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                          </select>
+                          <HiChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-ash w-5 h-5 pointer-events-none" />
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      <div>
+                        <label className="font-syne font-bold text-ash text-[10px] uppercase tracking-widest block mb-2">{t("checkout.province")} <span className="text-signal">*</span></label>
+                        {intlStates.length > 0 ? (
+                          <div className="relative">
+                            <select className="input-field bg-void appearance-none cursor-pointer pr-10" value={selIntlStateCode} onChange={e => {
+                              setSelIntlStateCode(e.target.value);
+                              const st = intlStates.find(x => x.isoCode === e.target.value);
+                              setValue("stateProvince", st ? st.name : e.target.value, { shouldValidate: true });
+                            }}>
+                              <option value="" disabled>Select State</option>
+                              {intlStates.map(p => <option key={p.isoCode} value={p.isoCode}>{p.name}</option>)}
+                            </select>
+                            <HiChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-ash w-5 h-5 pointer-events-none" />
+                          </div>
+                        ) : (
+                          <input {...register("stateProvince")} className="input-field bg-void" placeholder="e.g. California" />
                         )}
+                        {errors.stateProvince && (<p className="mt-1 font-dm-mono text-xs text-signal">{errors.stateProvince.message}</p>)}
+                      </div>
+                      <div>
+                        <label className="font-syne font-bold text-ash text-[10px] uppercase tracking-widest block mb-2">{t("checkout.city")} <span className="text-signal">*</span></label>
+                        {intlCities.length > 0 ? (
+                          <div className="relative">
+                            <select className="input-field bg-void appearance-none cursor-pointer pr-10" defaultValue="" onChange={e => {
+                              setValue("city", e.target.value, { shouldValidate: true });
+                            }}>
+                              <option value="" disabled>Select City</option>
+                              {intlCities.map(p => <option key={p.name} value={p.name}>{p.name}</option>)}
+                            </select>
+                            <HiChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-ash w-5 h-5 pointer-events-none" />
+                          </div>
+                        ) : (
+                          <input {...register("city")} className="input-field bg-void" placeholder="e.g. Los Angeles" />
+                        )}
+                        {errors.city && (<p className="mt-1 font-dm-mono text-xs text-signal">{errors.city.message}</p>)}
                       </div>
                     </div>
                   )}
-                  <input type="hidden" {...register("country")} />
-                </div>
-                {errors.country && (
-                  <p className="mt-1 font-dm-mono text-xs text-signal">{errors.country.message}</p>
-                )}
-              </div>
 
-              {/* Street Address */}
-              <div>
-                <label htmlFor="streetAddress" className="font-syne font-bold text-ash text-xs uppercase tracking-widest block mb-3">
-                  Street Address <span className="text-signal">*</span>
-                </label>
-                <input
-                  {...register("streetAddress")}
-                  id="streetAddress"
-                  className="input-field"
-                  placeholder="e.g. 123 Orchard Road"
-                  autoComplete="address-line1"
-                />
-                {errors.streetAddress && (
-                  <p className="mt-1 font-dm-mono text-xs text-signal">{errors.streetAddress.message}</p>
-                )}
-              </div>
-
-              {/* Apartment */}
-              <div>
-                <label htmlFor="apartment" className="font-syne font-bold text-ash text-xs uppercase tracking-widest block mb-3">
-                  Apartment, suite, etc. <span className="font-dm-mono normal-case tracking-normal text-[10px] text-ash">(optional)</span>
-                </label>
-                <input
-                  {...register("apartment")}
-                  id="apartment"
-                  className="input-field"
-                  placeholder="e.g. Unit 12-B, Floor 3"
-                  autoComplete="address-line2"
-                />
-              </div>
-
-              {/* Dynamic City + State/Province + District + Village Selector */}
-              {!isInternational ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  {/* ZIP / Postal Code */}
                   <div>
-                    <label className="font-syne font-bold text-ash text-xs uppercase tracking-widest block mb-3">Provinsi <span className="text-signal">*</span></label>
-                    <div className="relative">
-                      <select className="input-field appearance-none cursor-pointer pr-10" value={selProvince?.id || ""} onChange={e => {
-                        const p = indoProvinces.find(x => x.id === e.target.value);
-                        setSelProvince(p || null);
-                      }}>
-                        <option value="" disabled>Select Province</option>
-                        {indoProvinces.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                      </select>
-                      <HiChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-ash w-5 h-5 pointer-events-none" />
-                    </div>
-                    {errors.stateProvince && (<p className="mt-1 font-dm-mono text-xs text-signal">{errors.stateProvince.message}</p>)}
-                  </div>
-                  
-                  <div>
-                    <label className="font-syne font-bold text-ash text-xs uppercase tracking-widest block mb-3">Kabupaten / Kota <span className="text-signal">*</span></label>
-                    <div className="relative">
-                      <select className="input-field appearance-none cursor-pointer pr-10" value={selRegency?.id || ""} onChange={e => {
-                        const p = indoRegencies.find(x => x.id === e.target.value);
-                        setSelRegency(p || null);
-                      }} disabled={!selProvince}>
-                        <option value="" disabled>Select City/Regency</option>
-                        {indoRegencies.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                      </select>
-                      <HiChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-ash w-5 h-5 pointer-events-none" />
-                    </div>
-                    {errors.city && (<p className="mt-1 font-dm-mono text-xs text-signal">{errors.city.message}</p>)}
+                    <label htmlFor="zipCode" className="font-syne font-bold text-ash text-[10px] uppercase tracking-widest block mb-2">
+                      {t("checkout.zip")} <span className="text-signal">*</span>
+                    </label>
+                    <input {...register("zipCode")} id="zipCode" className="input-field bg-void w-full sm:w-1/2" placeholder="e.g. 238801" autoComplete="postal-code" />
+                    {errors.zipCode && (<p className="mt-1 font-dm-mono text-xs text-signal">{errors.zipCode.message}</p>)}
                   </div>
 
-                  <div>
-                    <label className="font-syne font-bold text-ash text-xs uppercase tracking-widest block mb-3">Kecamatan <span className="text-signal">*</span></label>
-                    <div className="relative">
-                      <select className="input-field appearance-none cursor-pointer pr-10" value={selDistrict?.id || ""} onChange={e => {
-                        const p = indoDistricts.find(x => x.id === e.target.value);
-                        setSelDistrict(p || null);
-                      }} disabled={!selRegency}>
-                        <option value="" disabled>Select District</option>
-                        {indoDistricts.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                      </select>
-                      <HiChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-ash w-5 h-5 pointer-events-none" />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="font-syne font-bold text-ash text-xs uppercase tracking-widest block mb-3">Desa / Kelurahan <span className="text-signal">*</span></label>
-                    <div className="relative">
-                      <select className="input-field appearance-none cursor-pointer pr-10" value={selVillage?.id || ""} onChange={e => {
-                        const p = indoVillages.find(x => x.id === e.target.value);
-                        setSelVillage(p || null);
-                      }} disabled={!selDistrict}>
-                        <option value="" disabled>Select Village</option>
-                        {indoVillages.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                      </select>
-                      <HiChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-ash w-5 h-5 pointer-events-none" />
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div>
-                    <label className="font-syne font-bold text-ash text-xs uppercase tracking-widest block mb-3">State / Province <span className="text-signal">*</span></label>
-                    {intlStates.length > 0 ? (
-                      <div className="relative">
-                        <select className="input-field appearance-none cursor-pointer pr-10" value={selIntlStateCode} onChange={e => {
-                          setSelIntlStateCode(e.target.value);
-                          const st = intlStates.find(x => x.isoCode === e.target.value);
-                          setValue("stateProvince", st ? st.name : e.target.value, { shouldValidate: true });
-                        }}>
-                          <option value="" disabled>Select State</option>
-                          {intlStates.map(p => <option key={p.isoCode} value={p.isoCode}>{p.name}</option>)}
-                        </select>
-                        <HiChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-ash w-5 h-5 pointer-events-none" />
-                      </div>
+                  {/* Shipping Notice / Calculation */}
+                  <div className="flex items-start gap-4 p-5 bg-void border border-ember relative mt-4">
+                    {/* Minimalist corner accents */}
+                    <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-signal" />
+                    <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-signal" />
+                    
+                    {isInternational ? (
+                      shippingCost === -1 ? (
+                        <>
+                          <HiOutlineGlobeAlt className="w-6 h-6 flex-shrink-0 mt-0.5 text-signal" />
+                          <div>
+                            <p className="font-syne font-bold text-sm tracking-widest uppercase mb-1 text-salt">
+                              International Dispatch
+                            </p>
+                            <p className="font-dm-mono text-[10px] text-ash mb-3 uppercase tracking-widest">
+                              Transit: 3–14 days
+                            </p>
+                            <p className="font-dm-mono text-[10px] text-fog leading-relaxed uppercase">
+                              &gt; Shipping fee calculated post-checkout via WhatsApp coordinator.
+                            </p>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="flex-shrink-0 px-3 py-1 flex items-center justify-center rounded border border-ember bg-abyss">
+                            <span className="font-syne font-bold text-[10px] text-salt tracking-widest uppercase">LION PARCEL</span>
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <p className="font-syne font-bold text-sm tracking-widest uppercase mb-1 text-salt">
+                                  Lion Parcel Interpack
+                                </p>
+                                <p className="font-dm-mono text-[10px] text-ash uppercase tracking-widest">
+                                  International Delivery ({countryInfo?.name || selectedCountry})
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <p className="font-dm-mono font-bold text-signal text-sm">
+                                  {formatCurrency(shippingCost)}
+                                </p>
+                                <p className="font-dm-mono text-[10px] text-ash text-right mt-1">
+                                  {weightKg} kg
+                                </p>
+                              </div>
+                            </div>
+                            <div className="mt-3">
+                              <p className="font-dm-mono text-[10px] text-fog leading-relaxed uppercase border-t border-ember pt-2 mt-2">
+                                &gt; Automatic rate applied for {countryInfo?.name || selectedCountry}.
+                              </p>
+                            </div>
+                          </div>
+                        </>
+                      )
                     ) : (
-                      <input {...register("stateProvince")} className="input-field" placeholder="e.g. California" />
+                      <>
+                        <div className="flex-shrink-0 px-3 py-1 flex items-center justify-center rounded">
+                          <img src="/images/jnt.png" alt="J&T Express" className="object-contain" style={{ width: "50px", height: "auto", minHeight: "20px" }} />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <p className="font-syne font-bold text-sm tracking-widest uppercase mb-1 text-salt">
+                                J&T Express
+                              </p>
+                              <p className="font-dm-mono text-[10px] text-ash uppercase tracking-widest">
+                                Local Delivery (Indonesia)
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-dm-mono font-bold text-signal text-sm">
+                                {shippingCost > 0 ? formatCurrency(shippingCost) : "Calculate"}
+                              </p>
+                              <p className="font-dm-mono text-[10px] text-ash text-right mt-1">
+                                {weightKg} kg
+                              </p>
+                            </div>
+                          </div>
+                          <div className="mt-3">
+                            {stateProvince ? (
+                               <p className="font-dm-mono text-[10px] text-fog leading-relaxed uppercase border-t border-ember pt-2 mt-2">
+                                 &gt; Rate applied for {stateProvince}.
+                               </p>
+                            ) : (
+                               <p className="font-dm-mono text-[10px] text-fog leading-relaxed uppercase border-t border-ember pt-2 mt-2">
+                                 &gt; Please enter your Province/State above.
+                               </p>
+                            )}
+                          </div>
+                        </div>
+                      </>
                     )}
-                    {errors.stateProvince && (<p className="mt-1 font-dm-mono text-xs text-signal">{errors.stateProvince.message}</p>)}
-                  </div>
-                  <div>
-                    <label className="font-syne font-bold text-ash text-xs uppercase tracking-widest block mb-3">City <span className="text-signal">*</span></label>
-                    {intlCities.length > 0 ? (
-                      <div className="relative">
-                        <select className="input-field appearance-none cursor-pointer pr-10" onChange={e => {
-                          setValue("city", e.target.value, { shouldValidate: true });
-                        }}>
-                          <option value="" disabled selected>Select City</option>
-                          {intlCities.map(p => <option key={p.name} value={p.name}>{p.name}</option>)}
-                        </select>
-                        <HiChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-ash w-5 h-5 pointer-events-none" />
-                      </div>
-                    ) : (
-                      <input {...register("city")} className="input-field" placeholder="e.g. Los Angeles" />
-                    )}
-                    {errors.city && (<p className="mt-1 font-dm-mono text-xs text-signal">{errors.city.message}</p>)}
                   </div>
                 </div>
-              )}
-
-              {/* ZIP / Postal Code */}
-              <div>
-                <label htmlFor="zipCode" className="font-syne font-bold text-ash text-xs uppercase tracking-widest block mb-3">
-                  Postal Code <span className="text-signal">*</span>
-                </label>
-                <input {...register("zipCode")} id="zipCode" className="input-field" style={{ maxWidth: "200px" }} placeholder="e.g. 238801" autoComplete="postal-code" />
-                {errors.zipCode && (<p className="mt-1 font-dm-mono text-xs text-signal">{errors.zipCode.message}</p>)}
               </div>
 
-              {/* Shipping Notice / Calculation */}
-              <div className="flex items-start gap-4 p-5 bg-transparent border border-ember relative mt-8">
-                {/* Minimalist corner accents */}
-                <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-signal" />
-                <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-signal" />
-                
-                {isInternational ? (
-                  <>
-                    <HiOutlineGlobeAlt className="w-5 h-5 flex-shrink-0 mt-0.5 text-signal" />
-                    <div>
-                      <p className="font-syne font-bold text-xs tracking-widest uppercase mb-1 text-salt">
-                        International Dispatch
-                      </p>
-                      <p className="font-dm-mono text-[10px] text-ash mb-3 uppercase tracking-widest">
-                        Transit: 3–14 days
-                      </p>
-                      <p className="font-dm-mono text-[10px] text-fog leading-relaxed uppercase">
-                        &gt; Shipping fee calculated post-checkout via WhatsApp coordinator.
-                      </p>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="flex-shrink-0 px-3 py-1 flex items-center justify-center rounded">
-                      <img src="/images/jnt.png" alt="J&T Express" className="object-contain" style={{ width: "40px", height: "auto", minHeight: "20px" }} />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-syne font-bold text-xs tracking-widest uppercase mb-1 text-salt">
-                            J&T Express
-                          </p>
-                          <p className="font-dm-mono text-[10px] text-ash uppercase tracking-widest">
-                            Local Delivery (Indonesia)
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-dm-mono font-bold text-signal text-sm">
-                            {shippingCost > 0 ? formatCurrency(shippingCost) : "Calculate"}
-                          </p>
-                          <p className="font-dm-mono text-[10px] text-ash text-right mt-1">
-                            {weightKg} kg
-                          </p>
-                        </div>
-                      </div>
-                      <div className="mt-3">
-                        {stateProvince ? (
-                           <p className="font-dm-mono text-[10px] text-fog leading-relaxed uppercase">
-                             &gt; Rate applied for {stateProvince}.
-                           </p>
-                        ) : (
-                           <p className="font-dm-mono text-[10px] text-fog leading-relaxed uppercase">
-                             &gt; Please enter your Province/State above.
-                           </p>
-                        )}
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-
-            {/* ── Order Notes ── */}
-            <div className="pt-6 mt-10">
-              <div className="flex items-center gap-4 pb-4 mb-6 border-b border-ash">
-                <span className="font-dm-mono text-signal">03 //</span>
-                <p className="font-syne font-bold text-salt uppercase tracking-[0.2em] text-sm">Special Instructions</p>
-              </div>
-              <div>
-                <textarea
-                  {...register("orderNote")}
-                  id="orderNote"
-                  className="w-full h-24 bg-transparent border-b border-ember text-salt py-3 resize-none focus:border-signal transition-colors font-dm-mono text-xs placeholder:text-fog"
-                  placeholder="Enter any notes or special instructions for this order..."
-                />
-              </div>
-            </div>
-
-            {/* ── Payment Method ──
-            <div className="pt-6 mt-10">
-              <div className="flex items-center gap-4 pb-4 mb-6 border-b border-ash">
-                <span className="font-dm-mono text-signal">04 //</span>
-                <p className="font-syne font-bold text-salt uppercase tracking-[0.2em] text-sm">Payment Protocol</p>
-              </div>
-              <div className="flex items-center gap-4 p-5 bg-abyss border border-ember">
-                <div className="flex-shrink-0 bg-white px-3 py-1.5 flex items-center justify-center rounded">
-                  <img src="/images/xendit.png" alt="Xendit" className="object-contain" style={{ width: "60px", height: "auto", minHeight: "20px" }} />
+              {/* ── Order Notes ── */}
+              <div className="border border-ember bg-abyss p-6 md:p-8 relative">
+                <div className="flex items-center gap-4 pb-6 mb-6 border-b border-ember">
+                  <span className="font-dm-mono text-signal font-bold">03</span>
+                  <p className="font-syne font-bold text-salt uppercase tracking-[0.2em] text-sm">{t("checkout.step3")}</p>
                 </div>
                 <div>
-                  <p className="font-syne font-bold text-salt text-sm tracking-widest uppercase mb-1">
-                    Xendit Payment Gateway
-                  </p>
-                  <p className="font-dm-mono text-xs text-ash">
-                    Bank Transfer · E-Wallet · QRIS · Credit Card
-                  </p>
-                  <p className="font-dm-mono text-[10px] text-ash/60 mt-1">
-                    You will be redirected to the Xendit secure payment page after checkout.
-                  </p>
+                  <textarea
+                    {...register("orderNote")}
+                    id="orderNote"
+                    className="input-field bg-void w-full h-28 resize-none text-sm placeholder:text-fog"
+                    placeholder="Enter any notes or special instructions for this order..."
+                  />
                 </div>
               </div>
-            </div> */}
 
-            {/* ── Coupon ── */}
-            <div className="pt-6 mt-6">
-              <p className="font-syne font-bold text-salt uppercase tracking-widest text-sm mb-4">Coupon Code</p>
-              <div className="flex gap-4">
+            </form>
+          </div>
+
+          {/* ── Order Summary (Right Column) ── */}
+          <div className="lg:col-span-5 flex flex-col gap-8">
+            
+            {/* Coupon Section (Moved Here) */}
+            <div className="border border-ember bg-abyss p-6 relative">
+              <p className="font-syne font-bold text-salt uppercase tracking-widest text-sm mb-4">{t("checkout.coupon")}</p>
+              <div className="flex gap-2">
                 <input
                   value={couponCode}
                   onChange={(e) => {
@@ -810,175 +856,157 @@ export default function CheckoutPage() {
                     }
                   }}
                   disabled={!!appliedCoupon || validatingCoupon}
-                  className="input-field flex-1"
+                  className="input-field bg-void flex-1 py-3 text-sm"
                   placeholder="Enter code"
                 />
                 {!appliedCoupon ? (
-                  <button type="button" onClick={handleApplyCoupon} disabled={!couponCode || validatingCoupon} className="btn-ghost px-6 py-0 disabled:opacity-40 uppercase tracking-widest font-syne font-bold text-xs">
-                    {validatingCoupon ? "..." : "Apply"}
+                  <button type="button" onClick={handleApplyCoupon} disabled={!couponCode || validatingCoupon} className="btn-base bg-salt text-void border-salt hover:bg-void hover:text-salt px-6 py-0 disabled:opacity-40 uppercase tracking-widest font-syne font-bold text-[10px]">
+                    {validatingCoupon ? "..." : t("checkout.apply")}
                   </button>
                 ) : (
-                  <button type="button" onClick={handleRemoveCoupon} className="btn-ghost px-6 py-0 uppercase tracking-widest font-syne font-bold text-xs text-signal border-signal hover:bg-signal hover:text-void">
-                    Remove
+                  <button type="button" onClick={handleRemoveCoupon} className="btn-base bg-transparent text-signal border-signal hover:bg-signal hover:text-void px-6 py-0 uppercase tracking-widest font-syne font-bold text-[10px]">
+                    {t("checkout.remove")}
                   </button>
                 )}
               </div>
               {appliedCoupon && (
-                <p className="mt-3 font-dm-mono text-xs text-salt bg-abyss border border-salt px-3 py-2 inline-block">
-                  ✓ Coupon applied: -{formatCurrency(discountAmount)}
+                <p className="mt-4 font-dm-mono text-[10px] text-salt bg-void border border-salt px-3 py-2 inline-block">
+                  ✓ Applied: -{formatCurrency(discountAmount)}
                 </p>
               )}
             </div>
 
-            {/* ── Submit ── */}
-            <div className="pt-8">
-              <button
-                type="submit"
-                id="place-order-btn"
-                disabled={loading}
-                className="btn-primary blade-cut w-full py-5 text-xs tracking-[0.2em] uppercase transition-transform active:scale-[0.98] mt-8"
+            {/* Thermal Receipt Summary */}
+            <div className="sticky top-28 mb-10">
+              <div
+                className="bg-slate-50 text-black p-8 relative w-full shadow-[0_20px_50px_rgba(0,0,0,0.5)] font-dm-mono border-x border-slate-200"
               >
-                {loading ? (
-                  <span className="flex items-center justify-center gap-3">
-                    <span className="font-dm-mono text-signal">[]</span>
-                    PROCESSING_REQUEST...
-                  </span>
-                ) : (
-                  `Lanjut Bayar — ${isInternational ? formatLocalCurrency(finalTotalLocal, localCurrencyCode) : formatCurrency(finalTotal)}`
-                )}
-              </button>
-
-              <p className="text-center mt-6 font-dm-mono text-[10px] text-ash leading-relaxed max-w-sm mx-auto">
-                By placing your order you agree to our{" "}
-                <Link href="/terms" className="text-salt underline underline-offset-4 hover:text-ash">Terms</Link>
-                {" "}and{" "}
-                <Link href="/privacy" className="text-salt underline underline-offset-4 hover:text-ash">Privacy Policy</Link>.
-              </p>
-            </div>
-          </form>
-        </div>
-
-          {/* ── Order Summary (Thermal Receipt Style) ── */}
-          <div className="lg:col-span-5 flex justify-center lg:justify-end items-start">
-            <div
-              className="bg-slate-50 text-black p-8 relative w-full max-w-md shadow-[0_20px_50px_rgba(0,0,0,0.5)] font-dm-mono h-fit border-x border-slate-200"
-              style={{ position: "sticky", top: "120px" }}
-            >
-              {/* Receipt edge zig-zag top */}
-              <div className="absolute top-0 left-0 w-full h-[6px] bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjYiPjxwb2x5Z29uIHBvaW50cz0iMCAwLCA0IDYsIDggMCIgZmlsbD0iI2Y4ZmFmYyIvPjwvc3ZnPg==')] repeat-x" />
-              
-              <div className="text-center mb-6 pb-6 border-b-2 border-dashed border-gray-400/60 relative">
-                <img src="/images/logo-sychogear.webp" alt="SYCHOGEAR" className="h-10 mx-auto mb-3 object-contain opacity-90" />
-                <p className="font-syne font-bold uppercase tracking-widest text-xl mb-1">SychoGear</p>
-                <p className="text-[10px] text-gray-500 uppercase tracking-widest leading-relaxed mb-4">
-                  VIOLENCE IS OUR AESTHETIC
-                </p>
+                {/* Receipt edge zig-zag top */}
+                <div className="absolute top-0 left-0 w-full h-[6px] bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjYiPjxwb2x5Z29uIHBvaW50cz0iMCAwLCA0IDYsIDggMCIgZmlsbD0iI2Y4ZmFmYyIvPjwvc3ZnPg==')] repeat-x" />
                 
-                <div className="text-left text-[10px] text-gray-600 flex flex-col gap-1 w-full bg-gray-100 p-3 rounded-sm border border-gray-200">
-                  <div className="flex justify-between">
-                    <span>DATE:</span>
-                    <span className="font-bold">{new Date().toLocaleDateString('en-GB')} {new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute:'2-digit' })}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>TERMINAL:</span>
-                    <span className="font-bold">{Math.floor(1000 + Math.random() * 9000)}-SYS</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>CASHIER:</span>
-                    <span className="font-bold">AUTO/WEB</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Items */}
-              <div className="space-y-4 mb-6 pb-6 border-b-2 border-dashed border-gray-400/60">
-                <div className="flex justify-between text-[10px] text-gray-500 font-bold border-b border-gray-200 pb-2 mb-4">
-                  <span>ITEM DESC</span>
-                  <span>AMOUNT</span>
-                </div>
-                {items.map((item) => (
-                  <div key={`${item.productId}-${item.variantId}`} className="flex gap-4 items-start">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold tracking-wider uppercase">{item.name}</p>
-                      <p className="text-[10px] text-gray-500 mt-1">SIZE {item.size} <span className="mx-1">|</span> QTY {item.quantity}</p>
+                <div className="text-center mb-6 pb-6 border-b-2 border-dashed border-gray-400/60 relative">
+                  <img src="/images/logo-sychogear.webp" alt="SYCHOGEAR" className="h-10 mx-auto mb-3 object-contain opacity-90" />
+                  <p className="font-syne font-bold uppercase tracking-widest text-xl mb-1">SychoGear</p>
+                  <p className="text-[10px] text-gray-500 uppercase tracking-widest leading-relaxed mb-4">
+                    VIOLENCE IS OUR AESTHETIC
+                  </p>
+                  
+                  <div className="text-left text-[10px] text-gray-600 flex flex-col gap-1 w-full bg-gray-100 p-3 rounded-sm border border-gray-200">
+                    <div className="flex justify-between">
+                      <span>{t("receipt.date")}</span>
+                      <span className="font-bold">{new Date().toLocaleDateString('en-GB')} {new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute:'2-digit' })}</span>
                     </div>
-                    <div className="text-right">
-                      <p className="text-xs font-bold">
-                        {formatCurrency(((item.salePrice ?? item.price) * (1 - item.discountRate / 100)) * item.quantity)}
-                      </p>
+                    <div className="flex justify-between">
+                      <span>{t("receipt.terminal")}</span>
+                      <span className="font-bold">{Math.floor(1000 + Math.random() * 9000)}-SYS</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>{t("receipt.cashier")}</span>
+                      <span className="font-bold">AUTO/WEB</span>
                     </div>
                   </div>
-                ))}
-              </div>
-
-              {/* Totals */}
-              <div className="space-y-2 text-[11px] tracking-wider text-gray-700 mb-6 pb-6 border-b-2 border-dashed border-gray-400/60">
-                <div className="flex justify-between items-start">
-                  <span className="uppercase">Subtotal</span>
-                  <div className="text-right">
-                    <span className="text-black font-bold">{formatCurrency(getSubtotal())}</span>
-                  </div>
                 </div>
-                
-                {discountAmount > 0 && (
+
+                {/* Items */}
+                <div className="space-y-4 mb-6 pb-6 border-b-2 border-dashed border-gray-400/60">
+                  <div className="flex justify-between text-[10px] text-gray-500 font-bold border-b border-gray-200 pb-2 mb-4">
+                    <span>{t("receipt.itemDesc")}</span>
+                    <span>{t("receipt.amount")}</span>
+                  </div>
+                  {items.map((item) => (
+                    <div key={`${item.productId}-${item.variantId}`} className="flex gap-4 items-start">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-bold tracking-wider uppercase">{item.name}</p>
+                        <p className="text-[10px] text-gray-500 mt-1">SIZE {item.size} <span className="mx-1">|</span> QTY {item.quantity}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs font-bold">
+                          {formatCurrency(((item.salePrice ?? item.price) * (1 - item.discountRate / 100)) * item.quantity)}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Totals */}
+                <div className="space-y-2 text-[11px] tracking-wider text-gray-700 mb-6 pb-6 border-b-2 border-dashed border-gray-400/60">
                   <div className="flex justify-between items-start">
-                    <span className="uppercase">Discount</span>
+                    <span className="uppercase">{t("receipt.subtotal")}</span>
                     <div className="text-right">
-                      <span className="text-black font-bold">-{formatCurrency(discountAmount)}</span>
+                      <span className="text-black font-bold">{formatCurrency(getSubtotal())}</span>
                     </div>
                   </div>
-                )}
-                
-                {!isInternational && shippingCost > 0 && (
-                  <div className="flex justify-between items-start">
-                    <span className="uppercase">Shipping (J&T)</span>
-                    <div className="text-right">
-                      <span className="text-black font-bold">{formatCurrency(shippingCost)}</span>
+                  
+                  {discountAmount > 0 && (
+                    <div className="flex justify-between items-start">
+                      <span className="uppercase text-green-700">{t("receipt.discount")}</span>
+                      <div className="text-right">
+                        <span className="text-green-700 font-bold">-{formatCurrency(discountAmount)}</span>
+                      </div>
                     </div>
-                  </div>
-                )}
-                
-                {applicableTax > 0 && (
-                  <div className="flex justify-between items-start">
-                    <span className="uppercase">{isInternational ? `Tax [${intlTaxRate}%]` : "Tax"}</span>
-                    <div className="text-right">
-                      <span className="text-black font-bold">+{formatCurrency(applicableTax)}</span>
+                  )}
+                  
+                  {shippingCost > 0 && (
+                    <div className="flex justify-between items-start">
+                      <span className="uppercase">{t("receipt.shipping")}</span>
+                      <div className="text-right">
+                        <span className="text-black font-bold">{formatCurrency(shippingCost)}</span>
+                      </div>
                     </div>
-                  </div>
-                )}
-                
-                <div className="flex justify-between items-end pt-4 mt-4 border-t-2 border-black">
-                  <span className="uppercase font-black text-black text-sm">Total Due</span>
-                  <div className="text-right">
-                    <span className="text-xl font-black text-black">{formatCurrency(finalTotal)}</span>
-                    {isInternational && (<p className="text-[10px] text-gray-500 mt-1">≈ {formatLocalCurrency(finalTotalLocal, localCurrencyCode)}</p>)}
+                  )}
+                  
+                  {applicableTax > 0 && (
+                    <div className="flex justify-between items-start">
+                      <span className="uppercase">{isInternational ? `${t("receipt.tax")} [${intlTaxRate}%]` : t("receipt.tax")}</span>
+                      <div className="text-right">
+                        <span className="text-black font-bold">+{formatCurrency(applicableTax)}</span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="flex justify-between items-end pt-4 mt-4 border-t-2 border-black">
+                    <span className="uppercase font-black text-black text-sm">{t("receipt.total")}</span>
+                    <div className="text-right">
+                      <span className="text-xl font-black text-black">{formatCurrency(finalTotal)}</span>
+                      {isInternational && (<p className="text-[10px] text-gray-500 mt-1">≈ {formatLocalCurrency(finalTotalLocal, localCurrencyCode)}</p>)}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Payment Method Reminder */}
-              <div className="text-center mt-4">
-                <p className="text-[10px] uppercase tracking-widest text-gray-500 mb-2 font-bold">Payment Gateway</p>
-                <div className="flex flex-col items-center justify-center gap-2">
-                  <img src="/images/xendit.png" alt="Xendit Logo" className="h-5 opacity-80 object-contain grayscale" />
-                  <p className="text-[10px] text-gray-500 leading-relaxed max-w-[200px] mt-1">
-                    Virtual Account, QRIS & E-Wallet
+                {/* Submit Action within Receipt Container for cohesion */}
+                <div className="mt-8 pt-4">
+                  <button
+                    type="submit"
+                    form="checkout-form"
+                    disabled={loading}
+                    className="w-full bg-black text-white hover:bg-neutral-800 border-none py-4 text-xs tracking-[0.2em] uppercase font-syne font-bold disabled:opacity-50 transition-colors"
+                  >
+                    {loading ? (
+                      <span className="flex items-center justify-center gap-3">
+                        <span className="font-dm-mono text-signal">[]</span>
+                        {t("checkout.processing")}
+                      </span>
+                    ) : (
+                      t("checkout.pay")
+                    )}
+                  </button>
+                  <p className="text-center mt-4 font-dm-mono text-[9px] text-gray-500 leading-relaxed">
+                    {t("checkout.terms")}
                   </p>
                 </div>
-              </div>
 
-              {/* QR Code */}
-              <div className="flex flex-col items-center justify-center mt-8 mb-2">
-                <img 
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent('https://sychogear.com/')}`} 
-                  alt="QR Code" 
-                  className="w-16 h-16 opacity-80 mix-blend-multiply"
-                />
-                <p className="text-[8px] tracking-[0.2em] mt-3 font-bold text-gray-500 uppercase text-center">Scan to<br/>Track Order</p>
+                <div className="flex flex-col items-center justify-center mt-6">
+                  <img 
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent('https://sychogear.com/')}`} 
+                    alt="QR Code" 
+                    className="w-12 h-12 opacity-80 mix-blend-multiply"
+                  />
+                  <p className="text-[7px] tracking-[0.2em] mt-2 font-bold text-gray-400 uppercase text-center">Scan to<br/>Track Order</p>
+                </div>
+                
+                {/* Receipt edge zig-zag bottom */}
+                <div className="absolute bottom-0 left-0 w-full h-[6px] bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjYiPjxwb2x5Z29uIHBvaW50cz0iMCAwLCA0IDYsIDggMCIgZmlsbD0iI2Y4ZmFmYyIvPjwvc3ZnPg==')] repeat-x rotate-180" />
               </div>
-              
-              {/* Receipt edge zig-zag bottom */}
-              <div className="absolute bottom-0 left-0 w-full h-[6px] bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjYiPjxwb2x5Z29uIHBvaW50cz0iMCAwLCA0IDYsIDggMCIgZmlsbD0iI2Y4ZmFmYyIvPjwvc3ZnPg==')] repeat-x rotate-180" />
             </div>
           </div>
         </div>

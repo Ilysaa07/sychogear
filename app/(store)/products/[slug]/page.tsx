@@ -3,6 +3,7 @@ import { productRepository } from "@/repositories/product.repository";
 import ProductDetailClient from "@/components/store/ProductDetailClient";
 import ProductCard from "@/components/store/ProductCard";
 import Sidebar from "@/components/store/Sidebar";
+import TranslatedText from "@/components/store/TranslatedText";
 import { cache } from "react";
 import type { Metadata } from "next";
 import type { ProductWithRelations } from "@/types";
@@ -134,10 +135,10 @@ export default async function ProductDetailPage({ params }: Props) {
             <section className="mt-32 pt-16 border-t border-salt/5">
               <div className="mb-10 text-center">
                 <p className="text-[10px] tracking-[0.4em] uppercase text-brand-500 mb-2 font-medium">
-                  Explore More
+                  <TranslatedText tKey="product.explore" />
                 </p>
                 <h2 className="text-3xl md:text-5xl font-semibold uppercase tracking-[0.1em] text-white">
-                  You May Also Like
+                  <TranslatedText tKey="product.youMayAlsoLike" />
                 </h2>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">

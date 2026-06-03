@@ -1,0 +1,85 @@
+{
+  "nav": {
+    "shop": "Belanja",
+    "collections": "Koleksi",
+    "about": "Tentang",
+    "cart": "Keranjang"
+  },
+  "hero": {
+    "title": "VIOLENCE IS OUR AESTHETIC",
+    "subtitle": "Perlengkapan tanpa kompromi untuk yang pantang menyerah."
+  },
+  "home": {
+    "featured": "Produk Unggulan",
+    "viewAll": "Lihat Semua",
+    "all": "Semua",
+    "loading": "Memuat Arsip...",
+    "empty": "Subjek tidak ditemukan dalam arsip."
+  },
+  "product": {
+    "addToCart": "Tambah ke Keranjang",
+    "soldOut": "Habis Terjual",
+    "size": "Ukuran",
+    "quantity": "Kuantitas",
+    "description": "Deskripsi",
+    "explore": "Jelajahi Lebih",
+    "youMayAlsoLike": "Anda Mungkin Juga Suka",
+    "selectSize": "Pilih ukuran.",
+    "selectSizeBtn": "Pilih Ukuran",
+    "added": "Ditambahkan.",
+    "onlyLeft": "Sisa {count} untuk ukuran {size}",
+    "care": "Perawatan",
+    "material": "Material",
+    "add": "Tambah",
+    "out": "Habis"
+  },
+  "cart": {
+    "title": "Keranjang Anda",
+    "drawerTitle": "Keranjang",
+    "empty": "Subjek Tidak Ditemukan",
+    "emptySubtitle": "Unit arsip Anda saat ini kosong.",
+    "accessArchive": "Akses Arsip",
+    "unit": "Unit",
+    "addNote": "Tambah Catatan / Instruksi",
+    "subtotal": "Subtotal",
+    "taxesNote": "Pajak & ongkir dihitung saat pembayaran",
+    "checkout": "Lanjut ke Pembayaran",
+    "remove": "Hapus"
+  },
+  "checkout": {
+    "title": "Pembayaran",
+    "step1": "Rincian Kontak",
+    "step2": "Tujuan Pengiriman",
+    "step3": "Instruksi Khusus",
+    "fullName": "Nama Lengkap",
+    "email": "Alamat Email",
+    "phone": "Telepon (WhatsApp)",
+    "country": "Negara",
+    "street": "Alamat Jalan",
+    "apartment": "Apartemen, unit, dll (opsional)",
+    "province": "Provinsi",
+    "city": "Kabupaten / Kota",
+    "district": "Kecamatan",
+    "village": "Desa / Kelurahan",
+    "zip": "Kode Pos",
+    "notes": "Masukkan catatan atau instruksi khusus...",
+    "coupon": "Punya Kupon?",
+    "apply": "Gunakan",
+    "remove": "Hapus",
+    "pay": "Buat Pesanan",
+    "processing": "MEMPROSES...",
+    "terms": "Dengan membuat pesanan ini, Anda menyetujui Syarat dan Kebijakan Privasi kami."
+  },
+  "receipt": {
+    "date": "TANGGAL",
+    "terminal": "TERMINAL",
+    "cashier": "KASIR",
+    "itemDesc": "DESKRIPSI BRG",
+    "amount": "JUMLAH",
+    "subtotal": "Subtotal",
+    "discount": "Diskon",
+    "shipping": "Ongkir (J&T)",
+    "tax": "Pajak",
+    "total": "Total Tagihan"
+  }
+}

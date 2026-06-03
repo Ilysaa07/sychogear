@@ -5,6 +5,7 @@ import { HiOutlineX, HiPlus, HiMinus, HiChevronDown, HiChevronUp } from "react-i
 import { useCartStore } from "@/stores/cart-store";
 import { useUIStore } from "@/stores/ui-store";
 import { useCurrency } from "@/components/store/CurrencyProvider";
+import { useTranslation } from "./LanguageProvider";
 import Link from "next/link";
 
 const FREE_SHIPPING_THRESHOLD = 1000000;
@@ -14,6 +15,7 @@ export default function CartDrawer() {
   const setOpen = useUIStore((s) => s.setCartDrawerOpen);
   const { items, removeItem, updateQuantity, getSubtotal, syncItemPrices, orderNote, setOrderNote, getTotalTax } = useCartStore();
   const { formatPrice } = useCurrency();
+  const { t } = useTranslation();
   const drawerRef = useRef<HTMLDivElement>(null);
   
   const [isNoteOpen, setIsNoteOpen] = useState(false);
@@ -58,7 +60,7 @@ export default function CartDrawer() {
         >
           <div>
             <p className="font-sans font-bold tracking-[0.2em] text-salt uppercase text-xs">
-              Cart {" "}
+              {t("cart.drawerTitle")} {" "}
               <span
                 style={{
                   fontFamily: "var(--font-sans)",
@@ -91,17 +93,17 @@ export default function CartDrawer() {
                 <span style={{ fontFamily: "var(--font-sans)", fontSize: "0.75rem", letterSpacing: "0.1em", fontWeight: "bold" }}>00</span>
               </div>
               <p className="font-sans font-bold tracking-[0.1em] text-salt uppercase text-sm mb-2">
-                Subject Not Found
+                {t("cart.empty")}
               </p>
               <p className="text-ash mb-8 max-w-[200px]" style={{ fontFamily: "var(--font-sans)", fontSize: "0.6875rem", lineHeight: 1.5 }}>
-                Your archive unit is currently empty.
+                {t("cart.emptySubtitle")}
               </p>
               <Link 
                 href="/" 
                 onClick={() => setOpen(false)} 
                 className="btn-ghost"
               >
-                Access Archive
+                {t("cart.accessArchive")}
               </Link>
             </div>
           ) : (
@@ -166,7 +168,7 @@ export default function CartDrawer() {
                           color: "var(--ash)",
                           marginTop: "4px",
                         }}>
-                          Unit / {item.size}
+                          {t("cart.unit")} / {item.size}
                         </p>
                         <div className="flex items-baseline gap-2 mt-2">
                           <p style={{ fontFamily: "var(--font-sans)", fontWeight: "bold", fontSize: "0.8125rem", color: "var(--color-signal)" }}>
@@ -226,7 +228,7 @@ export default function CartDrawer() {
                 className="w-full flex items-center justify-between px-6 py-4 text-ash hover:text-salt transition-colors"
               >
                 <span style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.625rem", letterSpacing: "0.15em", textTransform: "uppercase" }}>
-                  Add Note / Instructions
+                  {t("cart.addNote")}
                 </span>
                 {isNoteOpen ? <HiChevronUp className="w-4 h-4" /> : <HiChevronDown className="w-4 h-4" />}
               </button>
@@ -250,7 +252,7 @@ export default function CartDrawer() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between pt-1">
                   <span style={{ fontFamily: "var(--font-syne), system-ui, sans-serif", fontSize: "0.75rem", fontWeight: 600, letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--salt)" }}>
-                    Subtotal
+                    {t("cart.subtotal")}
                   </span>
                   <span style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "1.125rem", fontWeight: 500, color: "var(--signal)" }}>
                     {formatPrice(subtotal)}
@@ -258,7 +260,7 @@ export default function CartDrawer() {
                 </div>
                 
                 <p style={{ fontFamily: "var(--font-dm-mono), monospace", fontSize: "0.625rem", color: "var(--ash)", textAlign: "center", paddingTop: "0.5rem" }}>
-                  Taxes & shipping calculated at checkout
+                  {t("cart.taxesNote")}
                 </p>
               </div>
 
@@ -269,7 +271,7 @@ export default function CartDrawer() {
                 className="btn-primary w-full text-center block py-4 mt-2"
                 id="cart-checkout-btn"
               >
-                Proceed to Checkout
+                {t("cart.checkout")}
               </Link>
             </div>
           </div>

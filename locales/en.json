@@ -1,0 +1,85 @@
+{
+  "nav": {
+    "shop": "Shop",
+    "collections": "Collections",
+    "about": "About",
+    "cart": "Cart"
+  },
+  "hero": {
+    "title": "VIOLENCE IS OUR AESTHETIC",
+    "subtitle": "Uncompromising gear for the unrelenting."
+  },
+  "home": {
+    "featured": "Featured Gear",
+    "viewAll": "View All",
+    "all": "All",
+    "loading": "Loading Archive...",
+    "empty": "Subject not found in archive."
+  },
+  "product": {
+    "addToCart": "Add to Cart",
+    "soldOut": "Sold Out",
+    "size": "Size",
+    "quantity": "Quantity",
+    "description": "Description",
+    "explore": "Explore More",
+    "youMayAlsoLike": "You May Also Like",
+    "selectSize": "Select a size.",
+    "selectSizeBtn": "Select Size",
+    "added": "Added.",
+    "onlyLeft": "Only {count} left in {size}",
+    "care": "Care",
+    "material": "Material",
+    "add": "Add",
+    "out": "Out"
+  },
+  "cart": {
+    "title": "Your Cart",
+    "drawerTitle": "Cart",
+    "empty": "Subject Not Found",
+    "emptySubtitle": "Your archive unit is currently empty.",
+    "accessArchive": "Access Archive",
+    "unit": "Unit",
+    "addNote": "Add Note / Instructions",
+    "subtotal": "Subtotal",
+    "taxesNote": "Taxes & shipping calculated at checkout",
+    "checkout": "Proceed to Checkout",
+    "remove": "Remove"
+  },
+  "checkout": {
+    "title": "Checkout",
+    "step1": "Contact Details",
+    "step2": "Shipping Destination",
+    "step3": "Special Instructions",
+    "fullName": "Full Name",
+    "email": "Email Address",
+    "phone": "Phone (WhatsApp)",
+    "country": "Country",
+    "street": "Street Address",
+    "apartment": "Apartment, suite, etc. (optional)",
+    "province": "State / Province",
+    "city": "City",
+    "district": "District",
+    "village": "Village",
+    "zip": "Postal Code",
+    "notes": "Enter any notes or special instructions...",
+    "coupon": "Have a Coupon?",
+    "apply": "Apply",
+    "remove": "Remove",
+    "pay": "Place Order",
+    "processing": "PROCESSING...",
+    "terms": "By placing your order you agree to our Terms and Privacy Policy."
+  },
+  "receipt": {
+    "date": "DATE",
+    "terminal": "TERMINAL",
+    "cashier": "CASHIER",
+    "itemDesc": "ITEM DESC",
+    "amount": "AMOUNT",
+    "subtotal": "Subtotal",
+    "discount": "Discount",
+    "shipping": "Shipping (J&T)",
+    "tax": "Tax",
+    "total": "Total Due"
+  }
+}

@@ -7,6 +7,7 @@ import { HiOutlineShoppingBag, HiOutlineLocationMarker } from "react-icons/hi";
 import { useCartStore } from "@/stores/cart-store";
 import { useUIStore } from "@/stores/ui-store";
 import RegionCurrencySelector from "./RegionCurrencySelector";
+import LanguageSwitcher from "./LanguageSwitcher";
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -15,8 +16,22 @@ export default function Navbar() {
   const itemCount = useCartStore((s) => s.getItemCount());
   const setCartDrawerOpen = useUIStore((s) => s.setCartDrawerOpen);
 
+  const [marqueeText, setMarqueeText] = useState("VIOLENCE IS OUR AESTHETIC");
+
   useEffect(() => {
     setMounted(true);
+    // Fetch marquee text
+    const fetchSettings = async () => {
+      try {
+        const { data } = await axios.get("/api/settings");
+        if (data.success && data.data.marqueeText) {
+          setMarqueeText(data.data.marqueeText);
+        }
+      } catch (err) {
+        console.warn("Failed to fetch settings for marquee:", err);
+      }
+    };
+    fetchSettings();
   }, []);
 
   useEffect(() => {
@@ -32,6 +47,13 @@ export default function Navbar() {
 
   const navLinks: { href: string; label: string }[] = [];
 
+  // Marquee text repetition for smooth loop
+  const marqueeContent = Array(8).fill(marqueeText).map((text, i) => (
+    <span key={i} className="font-sans font-bold tracking-[0.3em] uppercase mx-4" style={{ fontSize: "7px", color: "#000000" }}>
+      {text}
+    </span>
+  ));
+
   return (
     <>
       {/* ─── Header ────────────────────────────────────────── */}
@@ -39,18 +61,18 @@ export default function Navbar() {
 
         {/* Slogan Bar */}
         <div
-          className="w-full flex items-center justify-center"
+          className="w-full flex items-center overflow-hidden whitespace-nowrap"
           style={{
             backgroundColor: "#c0392b",
             padding: "4px 0",
           }}
         >
-          <span
-            className="font-sans font-bold tracking-[0.3em] uppercase text-center block"
-            style={{ fontSize: "7px", color: "#000000" }}
-          >
-            VIOLENCE IS OUR AESTHETIC
-          </span>
+          <div className="inline-block animate-marquee whitespace-nowrap flex-shrink-0">
+            {marqueeContent}
+          </div>
+          <div className="inline-block animate-marquee whitespace-nowrap flex-shrink-0" aria-hidden="true">
+            {marqueeContent}
+          </div>
         </div>
 
         <div className="w-full flex justify-center px-4 md:px-8">
@@ -84,10 +106,12 @@ export default function Navbar() {
 
                 {/* Right — Actions */}
                 <div className="flex-1 flex items-center justify-end gap-1 sm:gap-4">
-                  <div className="hidden md:block border-r border-salt/20 pr-4 mr-2">
+                  <div className="hidden md:flex items-center gap-4 border-r border-salt/20 pr-4 mr-2">
+                    <LanguageSwitcher />
                     <RegionCurrencySelector />
                   </div>
-                  <div className="md:hidden scale-90 origin-right">
+                  <div className="md:hidden flex items-center gap-2 scale-90 origin-right">
+                    <LanguageSwitcher />
                     <RegionCurrencySelector />
                   </div>
 

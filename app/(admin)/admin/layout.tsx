@@ -4,6 +4,18 @@ import AdminSidebar from "@/components/admin/AdminSidebar";
 import { useUIStore } from "@/stores/ui-store";
 import { HiMenuAlt2 } from "react-icons/hi";
 import Image from "next/image";
+import { HiOutlineChartSquareBar, HiOutlineClipboardList, HiOutlineCube, HiOutlineTag, HiOutlineTicket, HiOutlineLightningBolt, HiOutlineGlobeAlt, HiOutlineCog } from "react-icons/hi";
+
+const sidebarLinks = [
+  { href: "/admin", label: "Dashboard", icon: HiOutlineChartSquareBar },
+  { href: "/admin/orders", label: "Orders", icon: HiOutlineClipboardList },
+  { href: "/admin/products", label: "Products", icon: HiOutlineCube },
+  { href: "/admin/categories", label: "Categories", icon: HiOutlineTag },
+  { href: "/admin/coupons", label: "Coupons", icon: HiOutlineTicket },
+  { href: "/admin/flash-sales", label: "Flash Sales", icon: HiOutlineLightningBolt },
+  { href: "/admin/shipping", label: "Shipping Rates", icon: HiOutlineGlobeAlt },
+  { href: "/admin/settings", label: "Settings", icon: HiOutlineCog },
+];
 
 export default function AdminLayout({
   children,
