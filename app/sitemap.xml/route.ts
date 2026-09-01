@@ -4,9 +4,7 @@ import { prisma } from "@/lib/prisma";
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
-  const host = request.headers.get('host') || 'sychogear.vercel.app';
-  const protocol = host.includes('localhost') ? 'http' : 'https';
-  const baseUrl = `${protocol}://${host}`;
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://sychogear.com";
 
   try {
     // 1. Static Core Pages

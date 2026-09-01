@@ -11,6 +11,7 @@ const karla = Inter({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://sychogear.com"),
   title: {
     default: "Sychogear — Official Products",
     template: "%s | SYCHOGEAR",
