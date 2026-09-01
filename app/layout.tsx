@@ -78,6 +78,7 @@ export const metadata: Metadata = {
 
 
 import GlobalLoader from "@/components/store/GlobalLoader";
+import { Suspense } from "react";
 
 export default function RootLayout({
   children,
@@ -106,7 +107,9 @@ export default function RootLayout({
           bg-void text-salt min-h-screen relative overflow-x-hidden font-sans
         `}
       >
-        <GlobalLoader />
+        <Suspense fallback={null}>
+          <GlobalLoader />
+        </Suspense>
         
         <script
           type="application/ld+json"

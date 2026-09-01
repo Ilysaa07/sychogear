@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
 import axios from "axios";
@@ -8,7 +8,15 @@ import Link from "next/link";
 
 import { useTranslation } from "./LanguageProvider";
 
-export default function Sidebar() {
+export default function SidebarWrapper() {
+  return (
+    <Suspense fallback={null}>
+      <Sidebar />
+    </Suspense>
+  );
+}
+
+function Sidebar() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
