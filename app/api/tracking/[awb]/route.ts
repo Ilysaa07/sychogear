@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { buildTrackingResult } from "@/lib/biteshipService";
+import { buildTrackingResult } from "@/lib/rajaongkir";
 
 export const dynamic = "force-dynamic";
 

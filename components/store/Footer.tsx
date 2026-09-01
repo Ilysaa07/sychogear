@@ -16,6 +16,7 @@ export default function Footer() {
           <Link href="/order-status" className="hover:text-signal transition-none">Track Order</Link>
           <a href="https://www.instagram.com/sychogear" target="_blank" rel="noopener noreferrer" className="hover:text-signal transition-none">Instagram</a>
           <Link href="/terms" className="hover:text-signal transition-none">Terms</Link>
+          <Link href="/links" className="hover:text-signal transition-none">Links</Link>
         </div>
       </div>
     </footer>

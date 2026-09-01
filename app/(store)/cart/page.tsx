@@ -101,15 +101,19 @@ export default function CartPage() {
                 >
                   {/* Thumbnail */}
                   <div
-                    className="flex-shrink-0 overflow-hidden bg-dim"
+                    className="flex-shrink-0 overflow-hidden bg-dim flex items-center justify-center"
                     style={{ width: "88px", height: "112px" }}
                   >
-                    <img
-                      src={item.image || "/placeholder.svg"}
-                      alt={item.name}
-                      className="w-full h-full object-cover"
-                      style={{ filter: "grayscale(15%) brightness(0.9)" }}
-                    />
+                    {item.image ? (
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="w-full h-full object-cover"
+                        style={{ filter: "grayscale(15%) brightness(0.9)" }}
+                      />
+                    ) : (
+                      <HiOutlineShoppingBag className="w-8 h-8 text-ash" />
+                    )}
                   </div>
 
                   {/* Info */}

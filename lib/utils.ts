@@ -127,3 +127,8 @@ export function parseApiError(error: unknown, fallback = "Terjadi kesalahan"): {
   }
   return { message: fallback, status: 500 };
 }
+
+export function stripHtml(html: string): string {
+  if (!html) return "";
+  return html.replace(/<[^>]*>?/gm, "").replace(/&nbsp;/g, " ").trim();
+}

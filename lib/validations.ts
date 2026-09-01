@@ -8,9 +8,12 @@ export const checkoutSchema = z.object({
   country: z.string().min(2, "Please select a country"),
   streetAddress: z.string().min(5, "Street address must be at least 5 characters"),
   apartment: z.string().optional(),
-  city: z.string().min(2, "City must be at least 2 characters"),
   stateProvince: z.string().min(2, "State / Province must be at least 2 characters"),
+  city: z.string().min(2, "City must be at least 2 characters"),
+  subdistrictId: z.string().optional(),
   zipCode: z.string().min(2, "ZIP / Postal Code must be at least 2 characters"),
+  shippingService: z.string().optional(),
+  shippingCost: z.number().optional(),
   couponCode: z.string().optional(),
   orderNote: z.string().optional(),
 });

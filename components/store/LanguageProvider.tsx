@@ -31,28 +31,9 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     async function initLanguage() {
       try {
-        const cachedLocale = localStorage.getItem("sychogear_locale");
-        if (cachedLocale && (cachedLocale === "en" || cachedLocale === "id")) {
-          setLocaleState(cachedLocale as Locale);
-          setIsReady(true);
-          return;
-        }
-
-        // Try to read from country code already fetched by CurrencyProvider
-        let detectedCountry = sessionStorage.getItem("sychogear_country_code");
-        
-        // If not found, fetch it ourselves
-        if (!detectedCountry) {
-          const geoRes = await fetch("https://get.geojs.io/v1/ip/country.json");
-          if (geoRes.ok) {
-            const geoInfo = await geoRes.json();
-            detectedCountry = geoInfo.country;
-          }
-        }
-
-        const autoLocale = detectedCountry === "ID" ? "id" : "en";
+        const autoLocale = "en";
         setLocaleState(autoLocale);
-        // Don't save to localStorage yet, let it auto-detect again unless manually changed
+        localStorage.setItem("sychogear_locale", autoLocale);
       } catch (error) {
         console.error("[LanguageProvider] Error detecting language:", error);
       } finally {

@@ -4,6 +4,7 @@ import ProductDetailClient from "@/components/store/ProductDetailClient";
 import ProductCard from "@/components/store/ProductCard";
 import Sidebar from "@/components/store/Sidebar";
 import TranslatedText from "@/components/store/TranslatedText";
+import { stripHtml } from "@/lib/utils";
 import { cache } from "react";
 import type { Metadata } from "next";
 import type { ProductWithRelations } from "@/types";
@@ -29,15 +30,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const productUrl = `${baseUrl}/products/${slug}`;
   const imageUrl = product.images[0]?.url || `${baseUrl}/images/og-image.jpg`;
 
+  const cleanDescription = stripHtml(product.description).slice(0, 160);
+
   return {
     title: product.name,
-    description: product.description.slice(0, 160),
+    description: cleanDescription,
     alternates: {
       canonical: productUrl,
     },
     openGraph: {
       title: `${product.name} | SYCHOGEAR`,
-      description: product.description.slice(0, 160),
+      description: cleanDescription,
       url: productUrl,
       images: [{ url: imageUrl }],
       type: "website",
@@ -45,7 +48,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     twitter: {
       card: "summary_large_image",
       title: product.name,
-      description: product.description.slice(0, 160),
+      description: cleanDescription,
       images: [imageUrl],
     },
   };

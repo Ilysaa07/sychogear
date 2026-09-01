@@ -5,10 +5,12 @@ import { useRouter } from "next/navigation";
 
 export default function OrderStatusPoller({ 
   invoiceNumber, 
-  initialStatus 
+  initialStatus,
+  expiredAt
 }: { 
   invoiceNumber: string; 
-  initialStatus: string 
+  initialStatus: string;
+  expiredAt?: Date | string;
 }) {
   const router = useRouter();
   const [currentStatus, setCurrentStatus] = useState(initialStatus);
@@ -49,6 +51,21 @@ export default function OrderStatusPoller({
 
     return () => clearTimeout(timeoutId);
   }, [invoiceNumber, currentStatus, router]);
+
+  useEffect(() => {
+    if (currentStatus !== "UNPAID" || !expiredAt) return;
+    
+    const timeUntilExpiry = new Date(expiredAt).getTime() - Date.now();
+    
+    if (timeUntilExpiry > 0) {
+      const timeout = setTimeout(() => {
+        router.refresh();
+      }, timeUntilExpiry + 1000); // add 1s buffer
+      return () => clearTimeout(timeout);
+    } else {
+      router.refresh();
+    }
+  }, [expiredAt, currentStatus, router]);
 
   return null;
 }

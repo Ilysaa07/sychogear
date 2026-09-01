@@ -17,9 +17,9 @@ interface Settings {
   marqueeText: string;
   // Currency
   idrToUsdRate: string;
-  // International Tax — single global rate for all countries
-  internationalTaxEnabled: boolean;
-  internationalTaxRate: string; // e.g. "11"
+
+  // Shipping
+  shippingProvider: string;
 }
 
 const defaultSettings: Settings = {
@@ -31,8 +31,8 @@ const defaultSettings: Settings = {
   promoLinkText: "Claim",
   marqueeText: "",
   idrToUsdRate: "16000",
-  internationalTaxEnabled: true,
-  internationalTaxRate: "11",
+
+  shippingProvider: "rajaongkir",
 };
 
 export default function AdminSettingsPage() {
@@ -57,8 +57,8 @@ export default function AdminSettingsPage() {
             promoLinkText: data.data.promoLinkText || defaultSettings.promoLinkText,
             marqueeText: data.data.marqueeText || defaultSettings.marqueeText,
             idrToUsdRate: data.data.idrToUsdRate || defaultSettings.idrToUsdRate,
-            internationalTaxEnabled: data.data.internationalTaxEnabled !== "false",
-            internationalTaxRate: data.data.internationalTaxRate || defaultSettings.internationalTaxRate,
+
+            shippingProvider: data.data.shippingProvider || defaultSettings.shippingProvider,
           });
         }
       } catch {
@@ -76,8 +76,8 @@ export default function AdminSettingsPage() {
       const payload = {
         ...settings,
         promoActive: String(settings.promoActive),
-        internationalTaxEnabled: String(settings.internationalTaxEnabled),
-        internationalTaxRate: settings.internationalTaxRate,
+
+        shippingProvider: settings.shippingProvider,
       };
 
       const { data } = await axios.put("/api/settings", payload);
@@ -300,38 +300,30 @@ export default function AdminSettingsPage() {
           <p className="text-xs text-brand-500 mt-2">Harga otomatis tersinkronisasi secara real-time tanpa perlu disimpan.</p>
         </div>
 
-        <div className="h-px bg-white/5 w-full" />
 
-        {/* International Tax */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <label className="block text-xs font-medium text-brand-400 uppercase tracking-wider mb-1">International Tax (PPN)</label>
-              <p className="text-sm text-brand-500 max-w-sm">Enable to apply PPN tax to international orders.</p>
-            </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                className="sr-only peer"
-                checked={settings.internationalTaxEnabled}
-                onChange={(e) => setSettings({ ...settings, internationalTaxEnabled: e.target.checked })}
-              />
-              <div className="w-11 h-6 bg-brand-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-salt after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#0070ba]" />
-            </label>
-          </div>
+      </div>
 
-          {settings.internationalTaxEnabled && (
-            <div className="mt-4">
-              <label className="block text-xs font-medium text-brand-400 uppercase tracking-wider mb-2">PPN Rate — All Countries (%)</label>
-              <div className="flex items-center gap-3 max-w-xs">
-                <input type="number" step="0.1" min="0" max="100" value={settings.internationalTaxRate} onChange={(e) => setSettings({ ...settings, internationalTaxRate: e.target.value })} className="input-field" placeholder="11" />
-                <span className="text-sm text-brand-500 flex-shrink-0">%</span>
-              </div>
-              <p className="text-[10px] text-brand-600 mt-1">Applied uniformly to all international orders.</p>
-            </div>
-          )}
+      {/* ── LOGISTICS & SHIPPING ─────────────────── */}
+      <div className="card p-6 space-y-8">
+        <div className="flex items-center gap-3 border-b border-salt/5 pb-4">
+          <HiOutlineGlobeAlt className="w-5 h-5 text-brand-400" />
+          <h2 className="text-lg font-semibold">Logistics & Shipping API</h2>
         </div>
 
+        <div>
+          <label className="block text-xs font-medium text-brand-400 uppercase tracking-wider mb-2">Active Shipping Provider</label>
+          <select 
+            value={settings.shippingProvider} 
+            onChange={(e) => setSettings({ ...settings, shippingProvider: e.target.value })}
+            className="input-field max-w-xs cursor-pointer appearance-none"
+          >
+            <option value="rajaongkir">RajaOngkir (via Komerce)</option>
+            <option value="biteship">Biteship (Includes International)</option>
+          </select>
+          <p className="text-[10px] text-brand-500 mt-2">
+            Pilih penyedia API Ongkir yang aktif. Untuk opsi Biteship, pastikan Anda telah memasukkan `BITESHIP_API_KEY` ke dalam file konfigurasi server Anda.
+          </p>
+        </div>
       </div>
 
       {/* Save */}

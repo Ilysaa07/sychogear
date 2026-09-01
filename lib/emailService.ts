@@ -84,34 +84,25 @@ export const emailService = {
         <p>Your order <strong>${data.invoiceNumber}</strong> has been created successfully.</p>
         <p>Please complete your payment of <strong>${amountDisplay}</strong> before <strong>${data.expiredAt.toLocaleString("en-US")}</strong>.</p>
         <br />
-        <p><strong>Payment Gateway:</strong> Xendit</p>
-        <p>You can pay via Virtual Account, QRIS, E-Wallet, or Credit Card through the provided payment link.</p>
-        <br />
-        <p>After payment, please confirm via WhatsApp so we can process your order quickly:</p>
-        <p><a href="${waLink}" style="display:inline-block;padding:12px 24px;background-color:#25d366;color:white;text-decoration:none;border-radius:6px;font-weight:bold;">Confirm via WhatsApp</a></p>
-        ${data.paymentUrl ? `<br/><p><a href="${data.paymentUrl}" style="display:inline-block;padding:12px 24px;background-color:#1a1a2e;color:white;text-decoration:none;border-radius:6px;font-weight:bold;">Pay Now via Xendit →</a></p>` : ""}
+        <p><strong>Payment Gateway:</strong> DOKU</p>
+        <p>Please click the button below to complete your payment.</p>
+        ${data.paymentUrl ? `<br/><p><a href="${data.paymentUrl}" style="display:inline-block;padding:12px 24px;background-color:#1a1a2e;color:white;text-decoration:none;border-radius:6px;font-weight:bold;">Pay Now via DOKU →</a></p>` : ""}
         <br />
         <p>If you have any questions, feel free to contact us via WhatsApp or email.</p>
       `;
     } else {
-      // Domestic order — Indonesian, manual transfer
-      const waMessageID = encodeURIComponent(
-        `Halo SychoGear, saya ingin konfirmasi pembayaran untuk invoice ${data.invoiceNumber}.`
-      );
-      const waLinkID = `https://wa.me/${WHATSAPP_NUMBER}?text=${waMessageID}`;
-
-      htmlContent = `
+        htmlContent = `
         <h2>Halo ${data.customerName},</h2>
         <p>Terima kasih telah berbelanja di SychoGear.</p>
         <p>Pesanan Anda dengan nomor <strong>${data.invoiceNumber}</strong> telah berhasil dibuat.</p>
         <p>Silakan lakukan pembayaran sebesar <strong>${formatter.format(data.totalAmount)}</strong> sebelum <strong>${data.expiredAt.toLocaleString("id-ID")}</strong>.</p>
         <br />
-        <p><strong>Payment Gateway:</strong> Xendit</p>
+        <p><strong>Metode Pembayaran:</strong> Otomatis via DOKU Payment Gateway</p>
         <p>Anda dapat membayar melalui Virtual Account, QRIS, E-Wallet, atau Kartu Kredit melalui link pembayaran yang tersedia.</p>
         <br />
-        <p>Setelah transfer, konfirmasi pembayaran via WhatsApp agar pesanan segera diproses:</p>
-        <p><a href="${waLinkID}" style="display:inline-block;padding:12px 24px;background-color:#25d366;color:white;text-decoration:none;border-radius:6px;font-weight:bold;">Konfirmasi via WhatsApp</a></p>
-        ${data.paymentUrl ? `<br/><p><a href="${data.paymentUrl}" style="display:inline-block;padding:12px 24px;background-color:#1a1a2e;color:white;text-decoration:none;border-radius:6px;font-weight:bold;">Bayar Sekarang via Xendit →</a></p>` : ""}
+        ${data.paymentUrl ? `<p><a href="${data.paymentUrl}" style="display:inline-block;padding:12px 24px;background-color:#E2202C;color:white;text-decoration:none;border-radius:6px;font-weight:bold;">Bayar Sekarang via DOKU →</a></p>` : ""}
+        <br />
+        <p><em>*Pembayaran Anda akan diverifikasi secara otomatis oleh sistem kami. Anda tidak perlu melakukan konfirmasi manual.</em></p>
       `;
     }
 
@@ -190,7 +181,7 @@ export const emailService = {
       .join("");
 
     const isIntl = data.country && data.country !== "ID";
-    const paymentBadge = `<span style="background:#00897b;color:white;padding:2px 8px;border-radius:4px;font-size:12px;">Bank Transfer</span>`;
+    const paymentBadge = `<span style="background:#E2202C;color:white;padding:2px 8px;border-radius:4px;font-size:12px;">${data.paymentMethod || "DOKU_CHECKOUT"}</span>`;
 
     const countryInfo = isIntl
       ? `<li>Country: ${data.country} (International)</li>`
@@ -198,7 +189,7 @@ export const emailService = {
 
     const amountInfo = data.amountUSD
       ? `<p><strong>Total: ${formatter.format(data.totalAmount)} (≈ ${usdFormatter.format(data.amountUSD)})</strong></p>`
-      : `<p><strong>Total Bayar (Inc. Kode Unik): ${formatter.format(data.totalAmount)}</strong></p>`;
+      : `<p><strong>Total Bayar: ${formatter.format(data.totalAmount)}</strong></p>`;
 
     const htmlContent = `
       <h2>Pesanan Baru Masuk! ${paymentBadge}</h2>

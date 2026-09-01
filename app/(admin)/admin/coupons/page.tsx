@@ -45,6 +45,9 @@ export default function AdminCouponsPage() {
   const [submitting, setSubmitting] = useState(false);
   const [deleteCouponId, setDeleteCouponId] = useState<string | null>(null);
   const [formData, setFormData] = useState({ ...EMPTY_FORM });
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
 
   useEffect(() => {
     fetchCoupons();
@@ -140,6 +143,31 @@ export default function AdminCouponsPage() {
     }
   };
 
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) setSelectedIds(coupons.map(c => c.id));
+    else setSelectedIds([]);
+  };
+
+  const handleSelectOne = (id: string) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+  };
+
+  const confirmBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    setBulkDeleting(true);
+    try {
+      await axios.post("/api/coupons/bulk-delete", { ids: selectedIds });
+      toast.success(`${selectedIds.length} coupons deleted`);
+      fetchCoupons();
+      setSelectedIds([]);
+    } catch {
+      toast.error("Failed to delete coupons");
+    } finally {
+      setBulkDeleting(false);
+      setShowBulkDeleteConfirm(false);
+    }
+  };
+
   return (
     <div className="space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -154,6 +182,18 @@ export default function AdminCouponsPage() {
           Add Coupon
         </button>
       </div>
+
+      {selectedIds.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-brand-900 border border-salt/10 px-6 py-4 rounded-full shadow-2xl flex items-center gap-6 animate-in slide-in-from-bottom-5">
+          <span className="text-sm font-bold">{selectedIds.length} selected</span>
+          <button
+            onClick={() => setShowBulkDeleteConfirm(true)}
+            className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-white bg-red-600 hover:bg-red-500 rounded-full transition-colors"
+          >
+            Delete Selected
+          </button>
+        </div>
+      )}
 
       {showForm && (
         <form onSubmit={handleSubmit} className="card p-6 space-y-4 fade-in">
@@ -316,6 +356,14 @@ export default function AdminCouponsPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-salt/5">
+                <th className="p-4 w-12 text-left">
+                  <input 
+                    type="checkbox" 
+                    checked={coupons.length > 0 && selectedIds.length === coupons.length}
+                    onChange={handleSelectAll}
+                    className="w-4 h-4 rounded border-salt/20 bg-brand-900 text-red-600 focus:ring-red-600 focus:ring-offset-brand-950 cursor-pointer"
+                  />
+                </th>
                 <th className="text-left text-xs text-brand-500 uppercase tracking-wider p-4">Code</th>
                 <th className="text-left text-xs text-brand-500 uppercase tracking-wider p-4">Discount</th>
                 <th className="text-left text-xs text-brand-500 uppercase tracking-wider p-4">Min Purchase</th>
@@ -329,6 +377,7 @@ export default function AdminCouponsPage() {
               {loading ? (
                 Array.from({ length: 3 }).map((_, i) => (
                   <tr key={i} className="border-b border-salt/5">
+                    <td className="p-4"><div className="h-4 skeleton w-4 rounded" /></td>
                     {Array.from({ length: 7 }).map((_, j) => (
                       <td key={j} className="p-4"><div className="h-4 skeleton w-16 rounded" /></td>
                     ))}
@@ -336,13 +385,21 @@ export default function AdminCouponsPage() {
                 ))
               ) : coupons.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-10 text-brand-500 text-sm">
+                  <td colSpan={8} className="text-center py-10 text-brand-500 text-sm">
                     No coupons yet
                   </td>
                 </tr>
               ) : (
                 coupons.map((coupon) => (
                   <tr key={coupon.id} className="border-b border-salt/5 hover:bg-white/[.02] transition-colors">
+                    <td className="p-4">
+                      <input 
+                        type="checkbox" 
+                        checked={selectedIds.includes(coupon.id)}
+                        onChange={() => handleSelectOne(coupon.id)}
+                        className="w-4 h-4 rounded border-salt/20 bg-brand-900 text-red-600 focus:ring-red-600 focus:ring-offset-brand-950 cursor-pointer"
+                      />
+                    </td>
                     <td className="p-4 font-mono text-sm font-bold">{coupon.code}</td>
                     <td className="p-4 text-sm">
                       {coupon.discountType === "PERCENTAGE"
@@ -392,6 +449,17 @@ export default function AdminCouponsPage() {
           </table>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={showBulkDeleteConfirm}
+        onClose={() => setShowBulkDeleteConfirm(false)}
+        onConfirm={confirmBulkDelete}
+        title="Bulk Delete Coupons"
+        message={`Are you sure you want to permanently delete ${selectedIds.length} selected coupons? This action cannot be undone.`}
+        confirmText={`Delete ${selectedIds.length} Coupons`}
+        isDestructive={true}
+        isLoading={bulkDeleting}
+      />
 
       <ConfirmModal
         isOpen={!!deleteCouponId}

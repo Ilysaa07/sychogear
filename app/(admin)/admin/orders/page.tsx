@@ -65,9 +65,13 @@ export default function AdminOrdersPage() {
     phone: "",
     address: "",
   });
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
 
   useEffect(() => {
     fetchOrders();
+    setSelectedIds([]); // Clear selection on filter change
   }, [statusFilter]);
 
   useEffect(() => {
@@ -152,6 +156,41 @@ export default function AdminOrdersPage() {
     } finally {
       setDeleting(false);
       setDeleteOrderId(null);
+    }
+  };
+
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedIds(orders.map(o => o.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectOne = (id: string) => {
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
+
+  const confirmBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    setBulkDeleting(true);
+    try {
+      const { data } = await axios.post("/api/orders/bulk-delete", { ids: selectedIds });
+      if (data.success) {
+        toast.success(`${selectedIds.length} orders deleted`);
+        setOrders(prev => prev.filter(o => !selectedIds.includes(o.id)));
+        setSelectedIds([]);
+        if (selectedOrder && selectedIds.includes(selectedOrder.id)) {
+          setSelectedOrder(null);
+        }
+      }
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || "Failed to delete orders");
+    } finally {
+      setBulkDeleting(false);
+      setShowBulkDeleteConfirm(false);
     }
   };
 
@@ -254,6 +293,18 @@ export default function AdminOrdersPage() {
         </button>
       </div>
 
+      {selectedIds.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-brand-900 border border-salt/10 px-6 py-4 rounded-full shadow-2xl flex items-center gap-6 animate-in slide-in-from-bottom-5">
+          <span className="text-sm font-bold">{selectedIds.length} selected</span>
+          <button
+            onClick={() => setShowBulkDeleteConfirm(true)}
+            className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-white bg-red-600 hover:bg-red-500 rounded-full transition-colors"
+          >
+            Delete Selected
+          </button>
+        </div>
+      )}
+
       {/* Status Filter */}
       <div className="flex flex-wrap gap-2">
         {STATUS_FILTERS.map((status) => (
@@ -277,6 +328,14 @@ export default function AdminOrdersPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-salt/5">
+                <th className="p-4 w-12 text-left">
+                  <input 
+                    type="checkbox" 
+                    checked={orders.length > 0 && selectedIds.length === orders.length}
+                    onChange={handleSelectAll}
+                    className="w-4 h-4 rounded border-salt/20 bg-brand-900 text-red-600 focus:ring-red-600 focus:ring-offset-brand-950 cursor-pointer"
+                  />
+                </th>
                 <th className="text-left text-xs text-brand-500 uppercase tracking-wider p-4">Invoice</th>
                 <th className="p-4 font-semibold text-left">Customer</th>
                 <th className="p-4 font-semibold text-left">Total (Inc. Code)</th>
@@ -289,14 +348,14 @@ export default function AdminOrdersPage() {
               {loading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} className="border-b border-salt/5">
-                    {Array.from({ length: 6 }).map((_, j) => (
+                    {Array.from({ length: 7 }).map((_, j) => (
                       <td key={j} className="p-4"><div className="h-4 skeleton w-24 rounded" /></td>
                     ))}
                   </tr>
                 ))
               ) : orders.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-10 text-brand-500 text-sm">
+                  <td colSpan={7} className="text-center py-10 text-brand-500 text-sm">
                     No orders found
                   </td>
                 </tr>
@@ -306,6 +365,14 @@ export default function AdminOrdersPage() {
                     key={order.id}
                     className="border-b border-salt/5 hover:bg-white/[.02] transition-colors"
                   >
+                    <td className="p-4">
+                      <input 
+                        type="checkbox" 
+                        checked={selectedIds.includes(order.id)}
+                        onChange={() => handleSelectOne(order.id)}
+                        className="w-4 h-4 rounded border-salt/20 bg-brand-900 text-red-600 focus:ring-red-600 focus:ring-offset-brand-950 cursor-pointer"
+                      />
+                    </td>
                     <td className="p-4">
                       <p className="text-sm font-medium font-mono">
                         {order.invoiceNumber}
@@ -757,6 +824,17 @@ export default function AdminOrdersPage() {
       )}
 
       {/* Confirmation Modals */}
+      <ConfirmModal
+        isOpen={showBulkDeleteConfirm}
+        onClose={() => setShowBulkDeleteConfirm(false)}
+        onConfirm={confirmBulkDelete}
+        title="Bulk Delete Orders"
+        message={`Are you sure you want to permanently delete ${selectedIds.length} selected orders? This action cannot be undone.`}
+        confirmText={`Delete ${selectedIds.length} Orders`}
+        isDestructive={true}
+        isLoading={bulkDeleting}
+      />
+
       <ConfirmModal
         isOpen={!!deleteOrderId}
         onClose={() => setDeleteOrderId(null)}

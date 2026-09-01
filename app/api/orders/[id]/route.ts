@@ -67,86 +67,55 @@ export async function PATCH(
         return NextResponse.json({ success: false, error: "Invalid status" }, { status: 400 });
       }
 
-      const ACTIVE_STATUSES = ["PAID", "PROCESSING", "SHIPPED", "DELIVERED"];
-      
-      if (body.status === "PAID" && body.force) {
-        // Admin override: force-confirm even if order is not UNPAID.
+      const RESTORE_STATUSES = ["CANCELLED", "EXPIRED", "FAILED"];
+      const PREVIOUS_WAS_RESTORED = RESTORE_STATUSES.includes(existingOrder.status);
+      const NEW_IS_RESTORED = RESTORE_STATUSES.includes(body.status);
+
+      if (body.status === "PAID" && existingOrder.status === "UNPAID") {
+        // Use paymentService to also trigger emails
+        const result = await paymentService.confirmPayment(existingOrder.invoiceNumber);
+        order = await prisma.order.update({
+          where: { id },
+          data: { trackingNumber: trackingNumberToSave, courier: courierToSave }
+        });
+      } else {
         order = await prisma.$transaction(async (tx) => {
-          const paid = await tx.order.update({
-            where: { id: existingOrder.id },
-            data: { status: "PAID", trackingNumber: trackingNumberToSave, courier: courierToSave },
+          const result = await tx.order.updateMany({
+            where: { id: existingOrder.id, status: existingOrder.status },
+            data: { status: body.status, trackingNumber: trackingNumberToSave, courier: courierToSave },
           });
-          for (const item of existingOrder.items) {
-            const variant = await tx.productVariant.findUnique({
-              where: { id: item.variantId },
-              select: { stock: true },
-            });
-            if (variant && variant.stock >= item.quantity) {
+
+          if (result.count === 0) throw new Error("Status order telah berubah oleh proses lain");
+
+          // Restore stock if transitioning to cancelled/expired/failed
+          if (!PREVIOUS_WAS_RESTORED && NEW_IS_RESTORED) {
+            for (const item of existingOrder.items) {
               await tx.productVariant.update({
                 where: { id: item.variantId },
-                data: { stock: { decrement: item.quantity } },
+                data: { stock: { increment: item.quantity } },
               });
             }
           }
-          if (existingOrder.payment) {
+          
+          // Re-decrement stock if transitioning FROM cancelled/expired/failed TO active
+          if (PREVIOUS_WAS_RESTORED && !NEW_IS_RESTORED) {
+            for (const item of existingOrder.items) {
+              const vResult = await tx.productVariant.updateMany({
+                where: { id: item.variantId, stock: { gte: item.quantity } },
+                data: { stock: { decrement: item.quantity } }
+              });
+              if (vResult.count === 0) throw new Error(`Stok tidak mencukupi untuk memulihkan pesanan`);
+            }
+          }
+
+          if (body.status === "PAID" && existingOrder.payment && existingOrder.status !== "PAID") {
             await tx.payment.update({
               where: { id: existingOrder.payment.id },
               data: { status: "PAID", paidAt: new Date() },
             });
           }
-          return paid;
-        });
-      } else if (ACTIVE_STATUSES.includes(body.status) && existingOrder.status === "UNPAID") {
-        // If moving from UNPAID to an active status, trigger payment confirmation (stock reduction)
-        if (body.status === "PAID") {
-          const result = await paymentService.confirmPayment(existingOrder.invoiceNumber);
-          // Update tracking number and courier if provided
-          if (body.trackingNumber !== undefined || body.courier !== undefined) {
-             order = await prisma.order.update({
-               where: { id },
-               data: { trackingNumber: trackingNumberToSave, courier: courierToSave }
-             });
-          } else {
-            order = result.order;
-          }
-        } else {
-          // Manually moving to PROCESSING/SHIPPED/etc - must also reduce stock
-          order = await prisma.$transaction(async (tx) => {
-            const updated = await tx.order.update({
-              where: { id: existingOrder.id },
-              data: { status: body.status, trackingNumber: trackingNumberToSave, courier: courierToSave },
-            });
-            for (const item of existingOrder.items) {
-              const variant = await tx.productVariant.findUnique({
-                where: { id: item.variantId },
-                select: { stock: true },
-              });
-              if (!variant || variant.stock < item.quantity) {
-                throw new Error(`Stok tidak mencukupi untuk varian ${item.variantId}`);
-              }
-              await tx.productVariant.update({
-                where: { id: item.variantId },
-                data: { stock: { decrement: item.quantity } },
-              });
-            }
-            if (existingOrder.payment) {
-              await tx.payment.update({
-                where: { id: existingOrder.payment.id },
-                data: { status: "PAID", paidAt: new Date() },
-              });
-            }
-            return updated;
-          });
-        }
-      } else {
-        // Normal status update or just tracking/courier update
-        order = await prisma.order.update({
-          where: { id },
-          data: { 
-            status: body.status,
-            trackingNumber: trackingNumberToSave,
-            courier: courierToSave
-          }
+
+          return { ...existingOrder, status: body.status, trackingNumber: trackingNumberToSave, courier: courierToSave };
         });
       }
     } else if (body.trackingNumber !== undefined || body.courier !== undefined) {
@@ -200,12 +169,10 @@ export async function DELETE(
 
     const { id } = await params;
 
-    await prisma.$transaction(async (tx) => {
-      await tx.payment.deleteMany({ where: { orderId: id } });
-      await tx.order.delete({ where: { id } });
-    });
-
-    return NextResponse.json({ success: true });
+    return NextResponse.json(
+      { success: false, error: "Pesanan tidak dapat dihapus permanen. Ubah status menjadi CANCELLED." },
+      { status: 400 }
+    );
   } catch (error) {
     console.error("Delete order error:", error);
     return NextResponse.json(

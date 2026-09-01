@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// Bug #5 fix: categories rarely change, use ISR cache (1 min) instead of force-dynamic
-export const revalidate = 60;
+// Use dynamic to prevent turbopack 404 caching issues during dev
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {

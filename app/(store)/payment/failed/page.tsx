@@ -39,7 +39,7 @@ export default async function PaymentFailedPage({ searchParams }: Props) {
           >
             Hubungi CS via WhatsApp
           </a>
-          <Link href="/products" className="btn-ghost">
+          <Link href="/" className="btn-ghost">
             Back to Shop
           </Link>
         </div>

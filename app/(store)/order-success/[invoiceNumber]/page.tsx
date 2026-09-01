@@ -7,6 +7,7 @@ import { HiOutlineCheckCircle, HiOutlineClock, HiOutlineInformationCircle } from
 import OrderStatusPoller from "@/components/store/OrderStatusPoller";
 import CopyButton from "@/components/store/CopyButton";
 import TrackingWidget from "@/components/TrackingWidget";
+import ClearCart from "@/components/store/ClearCart";
 
 function formatUSD(amount: number): string {
   return new Intl.NumberFormat("en-US", {
@@ -37,21 +38,25 @@ export default async function OrderSuccessPage({
   const isShipped = ["SHIPPED", "DELIVERED"].includes(order.status);
   const isInternational = order.country && order.country !== "ID";
   const trackingNumber = (order as any).trackingNumber as string | null | undefined;
-  const isXendit = (order as any).paymentMethod === "XENDIT";
-  const xenditInvoiceUrl = order.payment?.invoiceUrl;
+
+  const payment = order.payment as any;
+  const paymentMethod = payment?.method || order.paymentMethod;
+  const paymentCode = payment?.paymentCode;
+  const invoiceUrl = payment?.invoiceUrl;
+  const isDoku = ["BCA_VA", "MANDIRI_VA", "BRI_VA", "BNI_VA", "PERMATA_VA", "DOKU"].includes(paymentMethod || "");
 
   return (
     <div className="container-main pt-32 pb-20 max-w-2xl">
-      <OrderStatusPoller invoiceNumber={invoiceNumber} initialStatus={order.status} />
-      
+      <ClearCart />
+      <OrderStatusPoller invoiceNumber={invoiceNumber} initialStatus={order.status} expiredAt={order.expiredAt} />
+
       <div className="fade-in">
         <div className={`card glass border-salt/5 rounded-3xl overflow-hidden shadow-2xl transition-all duration-500`}>
           {/* Header Status */}
-          <div className={`py-12 px-8 text-center bg-gradient-to-b ${
-            isPaid ? "from-green-500/10 to-transparent" : 
-            isExpired ? "from-red-500/10 to-transparent" : 
-            "from-yellow-500/10 to-transparent"
-          }`}>
+          <div className={`py-12 px-8 text-center bg-gradient-to-b ${isPaid ? "from-green-500/10 to-transparent" :
+              isExpired ? "from-red-500/10 to-transparent" :
+                "from-yellow-500/10 to-transparent"
+            }`}>
             <div className="relative inline-block mb-6">
               {isPaid ? (
                 <HiOutlineCheckCircle className="w-24 h-24 text-green-500 animate-pulse-once" />
@@ -64,15 +69,15 @@ export default async function OrderSuccessPage({
                 </div>
               )}
             </div>
-            
+
             <h1 className="text-4xl font-bold tracking-tight mb-3">
-              {isPaid 
+              {isPaid
                 ? "Payment Successful"
-                : isExpired 
+                : isExpired
                   ? "Order Expired"
                   : "Awaiting Payment"}
             </h1>
-            
+
             <p className="text-brand-400 max-w-md mx-auto">
               Invoice Number: <span className="font-mono text-white tracking-widest bg-white/5 px-2 py-1 rounded">{order.invoiceNumber}</span>
             </p>
@@ -139,21 +144,47 @@ export default async function OrderSuccessPage({
                       </div>
                     </div>
 
-                    {/* ── Xendit: tombol bayar langsung ── */}
-                    {isXendit && xenditInvoiceUrl ? (
+                    {/* ── Payment Code (DOKU VA) ── */}
+                    {isDoku && paymentCode ? (
                       <div className="text-center space-y-4">
                         <p className="font-dm-mono text-xs text-ash">
-                          Klik tombol di bawah untuk melanjutkan pembayaran melalui Xendit.
-                          Tersedia berbagai metode: transfer bank, e-wallet, QRIS, kartu kredit.
+                          Please complete your payment via Virtual Account to the number below.
+                        </p>
+                        <div className="bg-void/40 p-6 border border-salt/5 rounded-xl text-center">
+                          <p className="text-[10px] text-brand-500 uppercase tracking-widest mb-2 font-bold">
+                            {paymentMethod?.replace("_", " ")} VIRTUAL ACCOUNT
+                          </p>
+                          <div className="flex items-center justify-center gap-4 mb-2">
+                            <span className="text-3xl font-mono text-white tracking-widest font-bold">
+                              {paymentCode}
+                            </span>
+                            <CopyButton text={paymentCode} />
+                          </div>
+                          <p className="text-xs text-brand-400 mt-2">
+                            Automatically verified by DOKU
+                          </p>
+                        </div>
+                        <p className="font-dm-mono text-[10px] text-brand-500">
+                          Expires at:{" "}
+                          {new Date(order.expiredAt).toLocaleString("id-ID", {
+                            dateStyle: "medium",
+                            timeStyle: "short",
+                          })}
+                        </p>
+                      </div>
+                    ) : invoiceUrl ? (
+                      <div className="text-center space-y-4">
+                        <p className="font-dm-mono text-xs text-ash">
+                          Click the button below to complete your payment.
                         </p>
                         <a
-                          href={xenditInvoiceUrl}
+                          href={invoiceUrl}
                           className="btn-primary w-full py-4 text-sm uppercase tracking-wider block text-center"
                         >
-                          Bayar Sekarang →
+                          Pay Now →
                         </a>
                         <p className="font-dm-mono text-[10px] text-brand-500">
-                          Batas waktu:{" "}
+                          Expires at:{" "}
                           {new Date(order.expiredAt).toLocaleString("id-ID", {
                             dateStyle: "medium",
                             timeStyle: "short",
@@ -164,11 +195,11 @@ export default async function OrderSuccessPage({
                       /* ── Manual Transfer / Alternate Payment ── */
                       <>
                         <div className="bg-void/40 p-6 border border-salt/5 rounded-xl text-center">
-                          <div className="bg-white inline-block p-2 rounded mb-3">
-                            <img src="/images/xendit.png" alt="Xendit" className="h-6" />
+                          <div className="bg-white inline-block px-3 py-1 rounded mb-3">
+                            <span className="text-black font-black uppercase italic">DOKU</span>
                           </div>
                           <p className="text-[10px] text-brand-500 uppercase tracking-widest mb-1 font-bold">Payment Gateway</p>
-                          <p className="font-bold text-lg">Xendit</p>
+                          <p className="font-bold text-lg">DOKU</p>
                           <p className="text-sm text-brand-400 mt-2">
                             Automatic verification via Virtual Account, QRIS & E-Wallet.
                           </p>
@@ -229,7 +260,7 @@ export default async function OrderSuccessPage({
                     This page will update automatically once your payment is confirmed.
                   </p>
                   <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                    {!isXendit && (
+                    {!isDoku && !invoiceUrl && (
                       <a
                         href={`https://wa.me/6283190138549?text=${encodeURIComponent(`Hello SychoGear, I would like to confirm my payment for invoice ${invoiceNumber}.`)}`}
                         target="_blank"
@@ -250,15 +281,89 @@ export default async function OrderSuccessPage({
               </div>
             )}
 
+            {/* ── Invoice / Order Summary ── */}
+            <div className="mt-12 bg-void/40 border border-salt/5 rounded-2xl p-6 md:p-8">
+              <h2 className="text-lg font-bold mb-6 flex items-center gap-2">
+                <span className="w-1 h-1 bg-brand-500 rounded-full" />
+                Order Summary
+              </h2>
+
+              <div className="space-y-4 mb-8">
+                {order.items?.map((item: any) => (
+                  <div key={item.id} className="flex gap-4 p-4 bg-abyss rounded-xl border border-salt/5">
+                    {item.product.images?.[0] ? (
+                      <img src={item.product.images[0].url || item.product.images[0]} alt={item.product.name} className="w-16 h-16 object-cover rounded-lg bg-void" />
+                    ) : (
+                      <div className="w-16 h-16 rounded-lg bg-void" />
+                    )}
+                    <div className="flex-1">
+                      <p className="font-bold text-sm text-salt">{item.product.name}</p>
+                      <p className="text-xs text-ash mt-1">Size: {item.size} | Qty: {item.quantity}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-dm-mono text-sm text-salt">{formatCurrency(item.price * item.quantity)}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Price Breakdown */}
+              <div className="pt-6 border-t border-salt/5 space-y-3">
+                <div className="flex justify-between text-sm text-ash">
+                  <span>Subtotal</span>
+                  <span className="font-dm-mono text-salt">{formatCurrency(order.subtotal)}</span>
+                </div>
+                {order.shippingCost > 0 && (
+                  <div className="flex justify-between text-sm text-ash">
+                    <span>Shipping</span>
+                    <span className="font-dm-mono text-salt">{formatCurrency(order.shippingCost)}</span>
+                  </div>
+                )}
+                {order.totalDiscount > 0 && (
+                  <div className="flex justify-between text-sm text-green-400">
+                    <span>Product Discount</span>
+                    <span className="font-dm-mono">-{formatCurrency(order.totalDiscount)}</span>
+                  </div>
+                )}
+                {order.discount > 0 && (
+                  <div className="flex justify-between text-sm text-green-400">
+                    <span>Coupon Discount</span>
+                    <span className="font-dm-mono">-{formatCurrency(order.discount)}</span>
+                  </div>
+                )}
+                {order.taxPpn > 0 && (
+                  <div className="flex justify-between text-sm text-ash">
+                    <span>Tax (PPN)</span>
+                    <span className="font-dm-mono text-salt">+{formatCurrency(order.taxPpn)}</span>
+                  </div>
+                )}
+                {!isInternational && order.uniqueCode > 0 && (
+                  <div className="flex justify-between text-sm text-yellow-500">
+                    <span>Unique Code</span>
+                    <span className="font-dm-mono">+{order.uniqueCode}</span>
+                  </div>
+                )}
+
+                <div className="pt-4 mt-4 border-t border-salt/10 flex justify-between items-center">
+                  <span className="font-bold text-salt uppercase tracking-widest text-sm">Total</span>
+                  <span className="font-dm-mono text-2xl font-bold text-brand-500">
+                    {isInternational && order.payment?.currencyAmount
+                      ? formatUSD(order.payment.currencyAmount)
+                      : formatCurrency(order.totalWithCode)}
+                  </span>
+                </div>
+              </div>
+            </div>
+
             {isPaid && (
-               <div className="flex flex-col sm:flex-row justify-center gap-3 mt-8">
-                 <Link href={`/receipt/${invoiceNumber}`} target="_blank" className="btn-primary px-8 py-4 text-sm uppercase tracking-wider text-center">
-                   Print Receipt
-                 </Link>
-                 <Link href="/" className="btn-secondary px-8 py-4 text-sm uppercase tracking-wider text-center">
-                   Continue Shopping
-                 </Link>
-               </div>
+              <div className="flex flex-col sm:flex-row justify-center gap-4 mt-8">
+                <Link href={`/receipt/${invoiceNumber}`} target="_blank" className="btn-primary px-8 py-4 text-sm uppercase tracking-wider text-center flex items-center justify-center gap-2">
+                  Download Invoice
+                </Link>
+                <Link href="/" className="btn-secondary px-8 py-4 text-sm uppercase tracking-wider text-center">
+                  Continue Shopping
+                </Link>
+              </div>
             )}
 
             {/* Tracking widget — shown when AWB is available (order SHIPPED or DELIVERED) */}
@@ -288,12 +393,12 @@ export default async function OrderSuccessPage({
               </div>
             )}
 
-             {isExpired && (
-               <div className="flex justify-center">
-                 <Link href="/products" className="btn-primary px-12">
-                   Back to Store
-                 </Link>
-               </div>
+            {isExpired && (
+              <div className="flex justify-center">
+                <Link href="/" className="btn-primary px-12">
+                  Back to Store
+                </Link>
+              </div>
             )}
           </div>
         </div>

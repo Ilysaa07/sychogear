@@ -36,6 +36,7 @@ model Product {
   description String
   price       Float
   salePrice   Float?
+  weight      Float            @default(300)
   categoryId  String
   featured    Boolean          @default(false)
   isNew       Boolean          @default(false)
@@ -118,12 +119,15 @@ model Order {
   couponId       String?
   country        String      @default("ID")
   paymentMethod  String      @default("MANUAL_TRANSFER")
-  shippingCost   Float       @default(0)
-  trackingNumber String?     // AWB/Resi
-  courier        String?     // Courier name (JNT, JNE, etc.)
-  expiredAt      DateTime
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+  shippingCost      Float       @default(0)
+  trackingNumber    String?     // AWB/Resi
+  trackingUrl       String?     // Biteship tracking URL
+  courier           String?     // Courier name (JNT, JNE, etc.)
+  shippingOrderId   String?     // External Order ID for Shipping
+  subdistrictId     String?     // Rajaongkir Subdistrict ID
+  expiredAt         DateTime
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
   items          OrderItem[]
   coupon         Coupon?     @relation(fields: [couponId], references: [id])
   customer       Customer    @relation(fields: [customerId], references: [id])
@@ -157,14 +161,15 @@ model Payment {
   id             String        @id @default(cuid())
   orderId        String        @unique
   externalId     String        @unique
-  invoiceUrl     String
+  invoiceUrl     String?
+  paymentCode    String?
   amount         Float
   currency       String        @default("IDR")
   currencyAmount Float?        // Amount in display currency (e.g. USD)
   status         PaymentStatus @default(PENDING)
   method         String?
   paidAt         DateTime?
-  xenditId       String?
+  paymentGatewayId String?
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
   order          Order         @relation(fields: [orderId], references: [id])
@@ -238,17 +243,6 @@ model SiteSettings {
   value String
 
   @@map("site_settings")
-}
-
-model InternationalShippingRate {
-  id          String   @id @default(cuid())
-  countryCode String   @unique // e.g. "MY", "SG", "US"
-  baseRate    Float    // Rate for the first kg
-  nextKgRate  Float    // Rate for every subsequent kg
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@map("international_shipping_rates")
 }
 
 enum Role {

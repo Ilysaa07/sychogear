@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { HiOutlineShoppingBag, HiOutlineLocationMarker } from "react-icons/hi";
 import { useCartStore } from "@/stores/cart-store";
@@ -10,6 +11,7 @@ import RegionCurrencySelector from "./RegionCurrencySelector";
 import LanguageSwitcher from "./LanguageSwitcher";
 
 export default function Navbar() {
+  const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -83,17 +85,18 @@ export default function Navbar() {
             <div className={`px-4 md:px-8`}>
               <div className="relative flex items-center justify-between" style={{ height: "50px" }}>
 
-                {/* Left — Desktop Nav & Mobile Hamburger */}
+                {/* Left — Desktop Nav, Mobile Hamburger, & Logo */}
                 <div className="flex-1 flex items-center">
                   <nav className="hidden md:flex items-center gap-8" aria-label="Primary navigation">
                     {/* Navigation removed */}
                   </nav>
-
-                  {/* Removed mobile hamburger as per request */}
+                  
+                  {pathname !== "/" && !pathname?.startsWith("/products/") && (
+                    <Link href="/" className="z-10">
+                      <img src="/images/logo-sychogear.webp" alt="SYCHOGEAR" className="h-7 md:h-8 object-contain opacity-90 hover:opacity-100 transition-opacity" />
+                    </Link>
+                  )}
                 </div>
-
-                {/* Center — Logo Removed (Moved to Sidebar) */}
-                <div className="absolute left-1/2 -translate-x-1/2 flex items-center z-10" />
 
                 {/* Right — Actions */}
                 <div className="flex-1 flex items-center justify-end gap-1 sm:gap-4">

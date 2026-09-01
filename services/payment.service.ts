@@ -5,6 +5,7 @@ import { generateOrderNumber, convertIDRtoUSD } from "@/lib/utils";
 import { getPaymentProvider } from "@/lib/paymentProvider";
 import { emailService } from "@/lib/emailService";
 import { isInternationalOrder } from "@/lib/countries";
+import { getShippingCosts } from "@/lib/shipping";
 import type { CartItem } from "@/types";
 
 export const paymentService = {
@@ -15,7 +16,10 @@ export const paymentService = {
     country?: string;
     orderNote?: string;
     shippingCost?: number;
+    paymentMethod?: string;
     appUrl?: string;
+    subdistrictId?: string;
+    shippingService?: string;
   }) {
     const country = data.country || "ID";
     const isInternational = isInternationalOrder(country);
@@ -50,11 +54,11 @@ export const paymentService = {
     const [variantsFromDb, productsFromDb] = await Promise.all([
       prisma.productVariant.findMany({
         where: { id: { in: variantIds } },
-        select: { id: true, stock: true },
+        select: { id: true, stock: true, productId: true },
       }),
       prisma.product.findMany({
         where: { id: { in: productIds } },
-        select: { id: true, ppnRate: true, pph23Rate: true, discountRate: true } as any,
+        select: { id: true, ppnRate: true, pph23Rate: true, discountRate: true, weight: true, flashSale: true } as any,
       }),
     ]);
 
@@ -69,7 +73,10 @@ export const paymentService = {
 
     const itemsWithDetails = data.items.map((item) => {
       const product = productMap.get(item.productId);
-      const price = item.salePrice ?? item.price;
+      const now = new Date();
+      const fs = (product as any)?.flashSale;
+      const isFlashSaleActive = fs && fs.isActive && now >= fs.startDate && now <= fs.endDate;
+      const price = isFlashSaleActive ? fs.salePrice : ((product as any)?.salePrice ?? (product as any)?.price ?? 0);
       const discountRate = product ? (product as any).discountRate : 0;
       const discountedPrice = price * (1 - discountRate / 100);
       const discountedTotal = discountedPrice * item.quantity;
@@ -96,10 +103,25 @@ export const paymentService = {
     });
 
     // ── 5. Validate stock + coupon + create order — all in one transaction ──
-    // FIX CRITICAL-1: stok divalidasi di dalam $transaction untuk cegah race condition
     const subtotalAfterProductDiscount = subtotal - totalProductDiscount;
-    const uniqueCode = isInternational ? 0 : Math.floor(100 + Math.random() * 900);
-    const shippingCost = data.shippingCost || 0;
+    const uniqueCode = 0; // Removed random unique code since we use DOKU (automated payment gateway)
+    let shippingCost = 0;
+    if (data.subdistrictId && data.shippingService) {
+      const originAreaId = process.env.RAJAONGKIR_ORIGIN_ID;
+      if (!originAreaId) throw new Error("Server configuration error: RAJAONGKIR_ORIGIN_ID is missing");
+      let totalWeight = 0;
+      for (const item of data.items) {
+        const product = productMap.get(item.productId);
+        totalWeight += item.quantity * ((product as any)?.weight || 300);
+      }
+      const ratesResponse = await getShippingCosts(originAreaId, data.subdistrictId, totalWeight);
+      const selectedRate = ratesResponse.find((r: any) => 
+        r.service_code === data.shippingService || r.service_name === data.shippingService
+      );
+      if (!selectedRate) throw new Error(`Invalid shipping service selected: ${data.shippingService}`);
+      shippingCost = selectedRate.price;
+    }
+
     const total =
       subtotalAfterProductDiscount + totalTaxPpn + totalTaxPph23 + uniqueCode + shippingCost;
     const totalWithCode = total;
@@ -147,17 +169,26 @@ export const paymentService = {
     const finalTotalWithCode = finalTotal;
 
     // ── Atomic: validate stock + create order ───────────────────────────────
-    // FIX CRITICAL-1: Validasi stok dan pembuatan order dalam 1 transaksi
-    // untuk cegah overselling saat concurrent checkout
+    const aggregatedMap = data.items.reduce((acc, item) => {
+      if (!acc[item.variantId]) acc[item.variantId] = { ...item, quantity: 0 };
+      acc[item.variantId].quantity += item.quantity;
+      return acc;
+    }, {} as Record<string, any>);
+    const aggregatedItems = Object.values(aggregatedMap);
+
     const order = await prisma.$transaction(async (tx) => {
       // Re-validate stock inside transaction (prevents race condition)
-      for (const item of data.items) {
-        const variant = await tx.productVariant.findUnique({
-          where: { id: item.variantId },
-          select: { stock: true },
+      for (const item of aggregatedItems) {
+        const variantData = variantMap.get(item.variantId);
+        if (!variantData || (variantData as any).productId !== item.productId) {
+           throw new Error(`Invalid variant data for product ${item.name}`);
+        }
+        const result = await tx.productVariant.updateMany({
+          where: { id: item.variantId, stock: { gte: item.quantity } },
+          data: { stock: { decrement: item.quantity } }
         });
-        if (!variant || variant.stock < item.quantity) {
-          throw new Error(`Stok tidak mencukupi untuk produk ${item.name} (ukuran ${item.size})`);
+        if (result.count === 0) {
+          throw new Error(`Stok tidak mencukupi untuk produk ${item.name}`);
         }
       }
 
@@ -179,8 +210,10 @@ export const paymentService = {
           couponId,
           country,
           notes: data.orderNote,
-          paymentMethod: "PENDING", // akan diupdate setelah provider dipilih
+          paymentMethod: data.paymentMethod || "PENDING",
           shippingCost: shippingCost,
+          subdistrictId: data.subdistrictId,
+          courier: data.shippingService,
           expiredAt,
           items: {
             create: itemsWithDetails,
@@ -199,14 +232,28 @@ export const paymentService = {
     // FIX MEDIUM-1: Jika Xendit gagal, tandai order sebagai FAILED (bukan orphan)
     let paymentResult: {
       externalId: string;
-      xenditId: string;
-      invoiceUrl: string;
+      paymentGatewayId: string;
+      invoiceUrl?: string;
+      paymentCode?: string;
       status: string;
       paymentMethod: string;
     };
 
     try {
       const provider = getPaymentProvider();
+
+      // Build line items for payment provider (DOKU summary breakdown)
+      const providerLineItems = itemsWithDetails.map(item => ({
+        id: item.productId,
+        name: `${data.items.find(i => i.variantId === item.variantId)?.name || 'Item'} (${item.size})`,
+        price: item.price - (item.discountAmount / item.quantity),
+        quantity: item.quantity
+      }));
+      if (shippingCost > 0) providerLineItems.push({ id: "SHIPPING", name: "Shipping Cost", price: shippingCost, quantity: 1 });
+      if (totalTaxPpn > 0) providerLineItems.push({ id: "TAX_PPN", name: "Tax (PPN)", price: totalTaxPpn, quantity: 1 });
+      if (totalTaxPph23 > 0) providerLineItems.push({ id: "TAX_PPH23", name: "Tax (PPh23)", price: totalTaxPph23, quantity: 1 });
+      if (couponDiscount > 0) providerLineItems.push({ id: "DISCOUNT", name: `Discount (${data.couponCode})`, price: -couponDiscount, quantity: 1 });
+
       paymentResult = await provider.createPayment({
         invoiceNumber,
         amount: finalTotalWithCode,
@@ -215,18 +262,29 @@ export const paymentService = {
         expiredAt,
         description: `SychoGear Order ${invoiceNumber}`,
         currency: "IDR",
+        paymentMethod: data.paymentMethod,
+        lineItems: providerLineItems,
       });
     } catch (providerErr) {
-      // Xendit atau provider gagal — tandai order sebagai FAILED agar tidak orphan
-      await prisma.order.update({
-        where: { id: order.id },
-        data: { status: "FAILED", paymentMethod: "UNKNOWN" },
+      await prisma.$transaction(async (tx) => {
+        const result = await tx.order.updateMany({
+          where: { id: order.id, status: "UNPAID" },
+          data: { status: "FAILED", paymentMethod: "UNKNOWN" }
+        });
+        if (result.count === 1) {
+          for (const item of aggregatedItems) {
+            await tx.productVariant.update({
+              where: { id: item.variantId },
+              data: { stock: { increment: item.quantity } }
+            });
+          }
+        }
       });
       console.error("[PaymentService] Provider createPayment failed:", providerErr);
       throw new Error("Gagal menghubungi payment gateway. Silakan coba lagi.");
     }
 
-    const isXendit = paymentResult.paymentMethod === "XENDIT";
+    const isDoku = paymentResult.paymentMethod === "DOKU";
 
     // ── 7. Update order paymentMethod + save payment record ─────────────────
     await prisma.$transaction([
@@ -238,9 +296,8 @@ export const paymentService = {
         data: {
           orderId: order.id,
           externalId: paymentResult.externalId,
-          invoiceUrl: isXendit
-            ? paymentResult.invoiceUrl
-            : `/order-success/${invoiceNumber}`,
+          invoiceUrl: paymentResult.invoiceUrl || null,
+          paymentCode: paymentResult.paymentCode || null,
           amount: finalTotalWithCode,
           currency: isInternational ? "USD" : "IDR",
           currencyAmount: isInternational
@@ -248,7 +305,7 @@ export const paymentService = {
             : null,
           status: "PENDING",
           method: paymentResult.paymentMethod,
-          xenditId: paymentResult.xenditId || null,
+          paymentGatewayId: paymentResult.paymentGatewayId || null,
         },
       }),
     ]);
@@ -266,7 +323,7 @@ export const paymentService = {
           ? convertIDRtoUSD(finalTotalWithCode, exchangeRate)
           : undefined,
         country,
-        paymentUrl: isXendit ? paymentResult.invoiceUrl : undefined,
+        paymentUrl: isDoku ? paymentResult.invoiceUrl : undefined,
       })
       .catch((err) => console.error("[PaymentService] Failed sending invoice email:", err));
 
@@ -292,9 +349,8 @@ export const paymentService = {
 
     return {
       order,
-      invoiceUrl: isXendit
-        ? paymentResult.invoiceUrl
-        : `/order-success/${invoiceNumber}`,
+      invoiceUrl: paymentResult.invoiceUrl,
+      paymentCode: paymentResult.paymentCode,
       invoiceNumber,
       paymentMethod: paymentResult.paymentMethod,
     };
@@ -303,28 +359,19 @@ export const paymentService = {
   async confirmPayment(invoiceNumber: string) {
     const order = (await orderRepository.findByInvoiceNumber(invoiceNumber)) as any;
     if (!order) throw new Error("Order not found");
-    if (order.status !== "UNPAID") throw new Error("Order is not UNPAID");
+    if (order.status === "PAID") return { success: true, already_processed: true, order };
+    if (order.status !== "UNPAID") throw new Error(`Invalid state transition: ${order.status} -> PAID`);
 
-    const updatedOrder = await prisma.$transaction(async (tx) => {
-      // Update status ke PAID
-      const paid = await tx.order.update({
-        where: { id: order.id },
+    const txResult = await prisma.$transaction(async (tx) => {
+      const result = await tx.order.updateMany({
+        where: { id: order.id, status: "UNPAID" },
         data: { status: "PAID" },
       });
 
-      // Kurangi stok setiap item
-      for (const item of order.items) {
-        const variant = await tx.productVariant.findUnique({
-          where: { id: item.variantId },
-          select: { stock: true },
-        });
-        if (!variant || variant.stock < item.quantity) {
-          throw new Error(`Stok tidak mencukupi untuk varian ${item.variantId}`);
-        }
-        await tx.productVariant.update({
-          where: { id: item.variantId },
-          data: { stock: { decrement: item.quantity } },
-        });
+      if (result.count === 0) {
+        const latest = await tx.order.findUnique({ where: { id: order.id } });
+        if (latest?.status === "PAID") return { already_processed: true, order: latest };
+        throw new Error(`Invalid state transition: ${latest?.status} -> PAID`);
       }
 
       if (order.payment) {
@@ -334,8 +381,11 @@ export const paymentService = {
         });
       }
 
-      return paid;
+      return { updated: true };
     });
+
+    if (txResult.already_processed) return { success: true, already_processed: true, order: txResult.order };
+    const updatedOrder = await orderRepository.findByInvoiceNumber(invoiceNumber) as any;
 
     await emailService
       .sendConfirmationEmail({
@@ -345,22 +395,49 @@ export const paymentService = {
       })
       .catch((err) => console.error("[PaymentService] Failed sending confirmation email:", err));
 
+    // If this is a domestic order with a subdistrictId, we could create an order in Komerce here if needed.
+    // However, since we are moving away from automatic biteship order creation,
+    // admins will handle shipping orders outside of the system, or via a separate process.
+    if (updatedOrder.subdistrictId && updatedOrder.courier) {
+      // Optional: Add logic to process shipping if using an integrated 3PL
+      console.log(`Order ${updatedOrder.id} ready for shipping to subdistrict ${updatedOrder.subdistrictId} via ${updatedOrder.courier}`);
+    }
+
     return { success: true, order: updatedOrder };
   },
 
   async expireOrder(invoiceNumber: string) {
     const order = (await orderRepository.findByInvoiceNumber(invoiceNumber)) as any;
     if (!order) throw new Error("Order not found");
-    if (order.status !== "UNPAID") throw new Error("Order cannot be expired");
+    if (order.status === "EXPIRED" || order.status === "CANCELLED") return { success: true, already_processed: true, order };
+    if (order.status !== "UNPAID") throw new Error(`Cannot expire order in status: ${order.status}`);
 
-    await orderRepository.updateStatus(order.id, "EXPIRED");
-
-    if (order.payment) {
-      await prisma.payment.update({
-        where: { id: order.payment.id },
-        data: { status: "EXPIRED" },
+    const txResult = await prisma.$transaction(async (tx) => {
+      const result = await tx.order.updateMany({
+        where: { id: order.id, status: "UNPAID" },
+        data: { status: "EXPIRED" }
       });
-    }
+      
+      if (result.count === 1) {
+        for (const item of order.items) {
+          await tx.productVariant.update({
+            where: { id: item.variantId },
+            data: { stock: { increment: item.quantity } },
+          });
+        }
+
+        if (order.payment) {
+          await tx.payment.update({
+            where: { id: order.payment.id },
+            data: { status: "EXPIRED" },
+          });
+        }
+        return { updated: true };
+      }
+      return { already_processed: true };
+    });
+
+    if (txResult.already_processed) return { success: true, already_processed: true, order };
 
     await emailService
       .sendExpiredEmail({

@@ -24,7 +24,6 @@ const navItems = [
   { href: "/admin/customers", label: "Customers", icon: HiOutlineUsers },
   { href: "/admin/coupons", label: "Coupons", icon: HiOutlineTag },
   { href: "/admin/visitors", label: "Visitors", icon: HiOutlineEye },
-  { href: "/admin/shipping", label: "Shipping Rates", icon: HiOutlineGlobeAlt },
   { href: "/admin/settings", label: "Settings", icon: HiOutlineCog },
 ];
 

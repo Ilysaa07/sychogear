@@ -73,6 +73,9 @@ export async function POST(request: Request) {
       country: validation.data.country || "ID",
       orderNote: validation.data.orderNote,
       shippingCost: typeof shippingCost === "number" ? shippingCost : 0,
+      paymentMethod: "DOKU_CHECKOUT",
+      subdistrictId: validation.data.subdistrictId,
+      shippingService: validation.data.shippingService,
     });
 
     return NextResponse.json({

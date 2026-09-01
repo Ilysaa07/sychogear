@@ -28,7 +28,17 @@ export default function ProductDetailClient({ product }: Props) {
   const displayPrice = isOnSale ? product.flashSale!.salePrice : product.salePrice || product.price;
   const finalPrice   = product.discountRate > 0 ? displayPrice * (1 - product.discountRate / 100) : displayPrice;
 
-  const selectedVariantData = product.variants.find((v) => v.id === selectedVariant);
+  const sizeOrder = ["XS", "S", "M", "L", "XL", "XXL", "2XL", "3XL", "4XL", "ALL SIZE", "ONE SIZE"];
+  const sortedVariants = [...product.variants].sort((a, b) => {
+    const indexA = sizeOrder.indexOf(a.size.toUpperCase());
+    const indexB = sizeOrder.indexOf(b.size.toUpperCase());
+    if (indexA === -1 && indexB === -1) return a.size.localeCompare(b.size);
+    if (indexA === -1) return 1;
+    if (indexB === -1) return -1;
+    return indexA - indexB;
+  });
+
+  const selectedVariantData = sortedVariants.find((v) => v.id === selectedVariant);
   const inStock = selectedVariantData ? selectedVariantData.stock > 0 : true;
 
   useEffect(() => {
@@ -118,7 +128,7 @@ export default function ProductDetailClient({ product }: Props) {
           {/* Size Grid */}
           <div className="mb-6">
             <div className="grid grid-cols-4 sm:grid-cols-5 gap-1">
-              {product.variants.map((variant) => {
+              {sortedVariants.map((variant) => {
                 const isSelected = selectedVariant === variant.id;
                 const oos = variant.stock === 0;
                 return (
@@ -190,7 +200,7 @@ export default function ProductDetailClient({ product }: Props) {
       {showStickyATC && (
         <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-void border-t-2 border-salt p-4 flex items-center gap-3">
           <div className="flex-1 flex gap-1 overflow-x-auto hide-scrollbar">
-            {product.variants.map((v) => {
+            {sortedVariants.map((v) => {
               const isSelected = selectedVariant === v.id;
               const oos = v.stock === 0;
               return (

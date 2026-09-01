@@ -47,6 +47,9 @@ export default function AdminProductsPage() {
   const [categories, setCategories] = useState<
     Array<{ id: string; name: string; slug: string }>
   >([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
 
   useEffect(() => {
     fetchProducts();
@@ -169,6 +172,31 @@ export default function AdminProductsPage() {
     }
   };
 
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) setSelectedIds(products.map(p => p.id));
+    else setSelectedIds([]);
+  };
+
+  const handleSelectOne = (id: string) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+  };
+
+  const confirmBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    setBulkDeleting(true);
+    try {
+      await axios.post("/api/products/bulk-delete", { ids: selectedIds });
+      toast.success(`${selectedIds.length} products deleted`);
+      fetchProducts();
+      setSelectedIds([]);
+    } catch {
+      toast.error("Failed to delete products");
+    } finally {
+      setBulkDeleting(false);
+      setShowBulkDeleteConfirm(false);
+    }
+  };
+
   const addVariant = () => {
     setFormData({
       ...formData,
@@ -271,6 +299,18 @@ export default function AdminProductsPage() {
           Add Product
         </button>
       </div>
+
+      {selectedIds.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-brand-900 border border-salt/10 px-6 py-4 rounded-full shadow-2xl flex items-center gap-6 animate-in slide-in-from-bottom-5">
+          <span className="text-sm font-bold">{selectedIds.length} selected</span>
+          <button
+            onClick={() => setShowBulkDeleteConfirm(true)}
+            className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-white bg-red-600 hover:bg-red-500 rounded-full transition-colors"
+          >
+            Delete Selected
+          </button>
+        </div>
+      )}
 
       {/* Create / Edit Form */}
       {showForm && (
@@ -622,6 +662,14 @@ export default function AdminProductsPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-salt/5">
+                <th className="p-4 w-12 text-left">
+                  <input 
+                    type="checkbox" 
+                    checked={products.length > 0 && selectedIds.length === products.length}
+                    onChange={handleSelectAll}
+                    className="w-4 h-4 rounded border-salt/20 bg-brand-900 text-red-600 focus:ring-red-600 focus:ring-offset-brand-950 cursor-pointer"
+                  />
+                </th>
                 <th className="text-left text-xs text-brand-500 uppercase tracking-wider p-4">
                   Product
                 </th>
@@ -643,6 +691,7 @@ export default function AdminProductsPage() {
               {loading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} className="border-b border-salt/5">
+                    <td className="p-4"><div className="h-4 skeleton w-4 rounded" /></td>
                     <td className="p-4"><div className="h-4 skeleton w-40 rounded" /></td>
                     <td className="p-4"><div className="h-4 skeleton w-20 rounded" /></td>
                     <td className="p-4"><div className="h-4 skeleton w-12 rounded" /></td>
@@ -652,7 +701,7 @@ export default function AdminProductsPage() {
                 ))
               ) : products.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-10 text-brand-500 text-sm">
+                  <td colSpan={6} className="text-center py-10 text-brand-500 text-sm">
                     No products yet. Create your first product!
                   </td>
                 </tr>
@@ -667,6 +716,14 @@ export default function AdminProductsPage() {
                       key={product.id}
                       className="border-b border-salt/5 hover:bg-white/[.02] transition-colors"
                     >
+                      <td className="p-4">
+                        <input 
+                          type="checkbox" 
+                          checked={selectedIds.includes(product.id)}
+                          onChange={() => handleSelectOne(product.id)}
+                          className="w-4 h-4 rounded border-salt/20 bg-brand-900 text-red-600 focus:ring-red-600 focus:ring-offset-brand-950 cursor-pointer"
+                        />
+                      </td>
                       <td className="p-4">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-12 bg-brand-900 flex-shrink-0 overflow-hidden">
@@ -742,6 +799,17 @@ export default function AdminProductsPage() {
           </table>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={showBulkDeleteConfirm}
+        onClose={() => setShowBulkDeleteConfirm(false)}
+        onConfirm={confirmBulkDelete}
+        title="Bulk Delete Products"
+        message={`Are you sure you want to permanently delete ${selectedIds.length} selected products? All variants and sizes will be lost. This action cannot be undone.`}
+        confirmText={`Delete ${selectedIds.length} Products`}
+        isDestructive={true}
+        isLoading={bulkDeleting}
+      />
 
       <ConfirmModal
         isOpen={!!deleteProductId}

@@ -1,4 +1,4 @@
-import { xenditInvoice } from "@/lib/xendit";
+import { createVirtualAccount, createCheckoutSession } from "@/lib/doku";
 
 export interface PaymentProvider {
   createPayment(data: {
@@ -9,10 +9,13 @@ export interface PaymentProvider {
     expiredAt?: Date;
     description?: string;
     currency?: string;
+    paymentMethod?: string;
+    lineItems?: { name: string; price: number; quantity: number }[];
   }): Promise<{
     externalId: string;
-    xenditId: string;
-    invoiceUrl: string;
+    paymentGatewayId: string;
+    invoiceUrl?: string;
+    paymentCode?: string;
     status: string;
     paymentMethod: string;
   }>;
@@ -31,7 +34,7 @@ export class ManualTransferProvider implements PaymentProvider {
   }) {
     return {
       externalId: data.invoiceNumber,
-      xenditId: "",
+      paymentGatewayId: "",
       invoiceUrl: `/order-success/${data.invoiceNumber}`,
       status: "UNPAID",
       paymentMethod: "MANUAL_TRANSFER",
@@ -47,9 +50,9 @@ export class ManualTransferProvider implements PaymentProvider {
   }
 }
 
-// ─── Xendit Invoice Provider ─────────────────────────────────────────────────
+// ─── DOKU Provider (Non-SNAP Direct API) ─────────────────────────────────────
 
-export class XenditProvider implements PaymentProvider {
+export class DokuProvider implements PaymentProvider {
   async createPayment(data: {
     invoiceNumber: string;
     amount: number;
@@ -58,67 +61,63 @@ export class XenditProvider implements PaymentProvider {
     expiredAt?: Date;
     description?: string;
     currency?: string;
+    paymentMethod?: string;
+    lineItems?: { id?: string; name: string; price: number; quantity: number }[];
   }) {
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://sychogear.vercel.app";
+    // Calculate expired time in minutes from now
+    let expiredMinutes = 60; // default 1 hour
+    if (data.expiredAt) {
+      const diffMs = data.expiredAt.getTime() - Date.now();
+      expiredMinutes = Math.max(15, Math.floor(diffMs / 60000));
+    }
 
-    const invoice = await xenditInvoice.createInvoice({
-      data: {
+    try {
+      const isDev = process.env.NODE_ENV !== "production";
+      const baseUrl = isDev ? "http://localhost:3000" : (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000");
+      const callbackUrl = `${baseUrl}/order-success/${data.invoiceNumber}`;
+      
+      const response = await createCheckoutSession({
+        invoiceNumber: data.invoiceNumber,
+        amount: Math.round(data.amount),
+        customerName: data.customerName,
+        customerEmail: data.customerEmail,
+        callbackUrl,
+        expiredMinutes,
+        lineItems: data.lineItems,
+      });
+
+      return {
         externalId: data.invoiceNumber,
-        amount: data.amount,
-        payerEmail: data.customerEmail,
-        description: data.description || `Payment for order ${data.invoiceNumber}`,
-        currency: (data.currency as "IDR" | "PHP" | "USD" | "THB" | "VND" | "MYR") || "IDR",
-        // Redirect URLs — Xendit appends ?external_id=... and ?invoice_id=... automatically
-        successRedirectUrl: `${appUrl}/payment/success`,
-        failureRedirectUrl: `${appUrl}/payment/failed`,
-        // Pass customer name through items description since Xendit v2 has no direct payer name field
-        items: [
-          {
-            name: `Order ${data.invoiceNumber}`,
-            quantity: 1,
-            price: data.amount,
-            category: "Apparel",
-          },
-        ],
-        // Xendit Invoice expiry
-        ...(data.expiredAt && {
-          invoiceDuration: String(Math.max(
-            60,
-            Math.floor((data.expiredAt.getTime() - Date.now()) / 1000)
-          )),
-        }),
-      },
-    });
-
-    return {
-      externalId: data.invoiceNumber,
-      xenditId: (invoice as any).id || (invoice as any).invoiceId || "",
-      invoiceUrl: (invoice as any).invoiceUrl || (invoice as any).invoice_url || "",
-      status: "PENDING",
-      paymentMethod: "XENDIT",
-    };
+        paymentGatewayId: response.response?.order?.invoice_number || data.invoiceNumber,
+        invoiceUrl: response.response?.payment?.url,
+        status: "PENDING",
+        paymentMethod: "DOKU_CHECKOUT",
+      };
+    } catch (error: any) {
+      const errMsg = error.response?.data
+        ? JSON.stringify(error.response.data)
+        : error.message;
+      console.error("[DOKU] Create Payment Error:", errMsg);
+      throw new Error("Failed to create DOKU Payment: " + errMsg);
+    }
   }
 
-  async verifyPayment(externalId: string) {
-    // Xendit sends webhooks automatically — direct verification is rarely needed
-    const invoices = await xenditInvoice.getInvoices({ externalId });
-    return (invoices as any)?.[0] ?? null;
+  async verifyPayment(_externalId: string) {
+    // Verified via DOKU Webhooks / Notification
+    return null;
   }
 
   async cancelPayment(_externalId: string) {
-    // Xendit invoices expire automatically; no explicit cancel API for invoices
     return { success: true, externalId: _externalId, status: "CANCELLED" };
   }
 }
 
 // ─── Active provider ─────────────────────────────────────────────────────────
-// Switch by setting PAYMENT_PROVIDER env var:
-//   PAYMENT_PROVIDER=xendit   → use Xendit (default when key is set)
-//   PAYMENT_PROVIDER=manual   → use manual bank transfer
 export function getPaymentProvider(): PaymentProvider {
-  const useXendit =
-    process.env.XENDIT_SECRET_KEY &&
+  const useDoku =
+    process.env.DOKU_CLIENT_ID &&
+    process.env.DOKU_SECRET_KEY &&
     process.env.PAYMENT_PROVIDER !== "manual";
 
-  return useXendit ? new XenditProvider() : new ManualTransferProvider();
+  return useDoku ? new DokuProvider() : new ManualTransferProvider();
 }

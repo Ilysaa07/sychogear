@@ -57,10 +57,10 @@ export default function LinktreeClient({ heroImages = [] }: { heroImages?: strin
         {/* Header */}
         <header className="w-full mb-12">
           {/* Animated GIF Logo */}
-          <div className="mb-8 flex justify-center">
+          <div className="flex justify-center">
             <div className="p-4 w-28 h-28 flex items-center justify-center">
               <img
-                src="/images/logo.gif"
+                src="/images/logo-sychogear.webp"
                 alt="SYCHOGEAR"
                 className="w-full h-full object-contain"
               />
@@ -89,11 +89,10 @@ export default function LinktreeClient({ heroImages = [] }: { heroImages?: strin
               href={link.url}
               target={link.url.startsWith("/") ? "_self" : "_blank"}
               rel={link.url.startsWith("/") ? "" : "noopener noreferrer"}
-              className={`group flex items-center w-full px-5 py-4 border-2 border-t-0 first:border-t-2 ${
-                link.primary
-                  ? "bg-salt text-void border-salt hover:bg-signal hover:border-signal"
-                  : "bg-void text-salt border-salt hover:bg-salt hover:text-void"
-              }`}
+              className={`group flex items-center w-full p-4 border transition-all mb-3 ${link.primary
+                ? "bg-salt border-salt text-void hover:bg-signal hover:border-signal hover:text-salt"
+                : "bg-void border-salt/20 text-salt hover:border-salt/40 hover:bg-white/[0.02]"
+                }`}
             >
               {/* Icon */}
               <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center mr-4">
@@ -105,11 +104,10 @@ export default function LinktreeClient({ heroImages = [] }: { heroImages?: strin
                       fill
                       sizes="20px"
                       priority={i === 0}
-                      className={`object-contain ${
-                        link.primary
-                          ? "filter brightness-0 group-hover:brightness-0 group-hover:invert"
-                          : "filter grayscale brightness-150 group-hover:brightness-0"
-                      }`}
+                      className={`object-contain transition-transform duration-300 ${link.primary
+                        ? "group-hover:scale-110"
+                        : "group-hover:scale-110"
+                        }`}
                     />
                   </div>
                 )}
@@ -121,16 +119,15 @@ export default function LinktreeClient({ heroImages = [] }: { heroImages?: strin
                   {link.title}
                 </span>
                 {link.description && (
-                  <span className={`font-sans font-bold text-[8px] uppercase tracking-widest leading-none ${
-                    link.primary ? "opacity-60" : "text-ash group-hover:text-void"
-                  }`}>
+                  <span className={`font-sans font-bold text-[8px] uppercase tracking-widest leading-none ${link.primary ? "opacity-60 group-hover:text-salt group-hover:opacity-80" : "text-ash group-hover:text-salt"
+                    }`}>
                     {link.description}
                   </span>
                 )}
               </div>
 
               {/* Index number */}
-              <span className={`font-sans font-black text-[10px] tabular-nums opacity-30`}>
+              <span className={`font-mono text-[10px] tabular-nums ${link.primary ? "opacity-100" : "opacity-30 group-hover:opacity-100"} transition-opacity`}>
                 {String(i + 1).padStart(2, "0")}
               </span>
             </Link>

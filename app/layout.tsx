@@ -30,11 +30,20 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "id_ID",
+    alternateLocale: ["en_US"],
     url: process.env.NEXT_PUBLIC_APP_URL,
     siteName: "SYCHOGEAR",
-    title: "SYCHOGEAR — Official Products",
+    title: "SYCHOGEAR — Official Store",
     description:
       "A curated collection of premium streetwear. Designed for those who move in silence.",
+    images: [
+      {
+        url: "/images/og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "SYCHOGEAR Official Store",
+      },
+    ],
   },
   icons: {
     icon: [
@@ -57,7 +66,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "SYCHOGEAR — Official Products",
+    title: "SYCHOGEAR — Official Store",
     description: "A curated collection of premium streetwear. Designed for those who move in silence.",
     images: ["/images/og-image.jpg"],
   },
@@ -67,6 +76,8 @@ export const metadata: Metadata = {
 };
 
 
+
+import GlobalLoader from "@/components/store/GlobalLoader";
 
 export default function RootLayout({
   children,
@@ -95,6 +106,8 @@ export default function RootLayout({
           bg-void text-salt min-h-screen relative overflow-x-hidden font-sans
         `}
       >
+        <GlobalLoader />
+        
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

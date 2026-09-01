@@ -18,7 +18,6 @@ export default function StoreLayout({
   return (
     <CurrencyProvider>
       <LanguageProvider>
-        <Preloader />
         <VisitorTracker />
 
         <Navbar />
