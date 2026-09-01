@@ -1,9 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 
-export default function GlobalLoader() {
+export default function GlobalLoaderWrapper() {
+  return (
+    <Suspense fallback={null}>
+      <GlobalLoader />
+    </Suspense>
+  );
+}
+
+function GlobalLoader() {
   const [loading, setLoading] = useState(true);
   const [isExiting, setIsExiting] = useState(false);
   const [isHidden, setIsHidden] = useState(false);
