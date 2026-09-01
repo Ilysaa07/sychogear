@@ -21,6 +21,14 @@ function GlobalLoader() {
 
   // Handle initial load
   useEffect(() => {
+    // SEO Bot detection to prevent Soft 404
+    const isBot = /bot|googlebot|crawler|spider|robot|crawling/i.test(navigator.userAgent);
+    if (isBot) {
+      setLoading(false);
+      setIsHidden(true);
+      return;
+    }
+
     const isInitial = !sessionStorage.getItem("sg_global_preloader_shown");
     const duration = isInitial ? 2000 : 500;
     
