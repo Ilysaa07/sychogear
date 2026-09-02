@@ -84,7 +84,7 @@ export async function PUT(req: Request) {
     // Bug #4 fix: revalidatePath with route groups like "/(store)" does not work.
     // Must use actual public URL paths that browsers navigate to.
     revalidatePath("/", "layout"); // cascades to all child routes
-    revalidatePath("/products");
+    revalidatePath("/");
 
     return NextResponse.json({ success: true });
   } catch (error) {

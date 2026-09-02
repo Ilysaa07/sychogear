@@ -273,7 +273,7 @@ export default async function OrderSuccessPage({
                     <Link href={`/receipt/${invoiceNumber}`} target="_blank" className="btn-secondary w-full sm:w-auto px-6 py-4 text-sm uppercase tracking-wider">
                       Print Receipt
                     </Link>
-                    <Link href="/products" className="btn-secondary w-full sm:w-auto px-6 py-4 text-sm uppercase tracking-wider">
+                    <Link href="/" className="btn-secondary w-full sm:w-auto px-6 py-4 text-sm uppercase tracking-wider">
                       Shop More
                     </Link>
                   </div>
