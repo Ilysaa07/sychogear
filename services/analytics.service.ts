@@ -22,6 +22,8 @@ export const analyticsService = {
       paidOrders,
       totalCustomers,
       yearOrders,
+      totalProducts,
+      recentOrders,
     ] = await Promise.all([
       prisma.order.aggregate({
         where: { status: "PAID" },
@@ -49,6 +51,20 @@ export const analyticsService = {
         },
         select: { createdAt: true, total: true, status: true },
         take: 2000,
+      }),
+      prisma.product.count(),
+      prisma.order.findMany({
+        take: 5,
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          invoiceNumber: true,
+          customerName: true,
+          customerEmail: true,
+          createdAt: true,
+          status: true,
+          total: true,
+        },
       }),
     ]);
 
@@ -95,6 +111,12 @@ export const analyticsService = {
       unpaidOrders,
       paidOrders,
       totalCustomers,
+      totalProducts,
+      recentOrders: recentOrders.map(o => ({
+        ...o,
+        email: o.customerEmail, // Mapping for frontend
+        totalAmount: o.total // Mapping for frontend
+      })),
       revenueByMonth,
       ordersByMonth,
     };

@@ -118,6 +118,8 @@ export interface DashboardStats {
   unpaidOrders: number;
   paidOrders: number;
   totalCustomers: number;
+  totalProducts: number;
+  recentOrders: any[];
   revenueByMonth: Array<{ month: string; revenue: number }>;
   ordersByMonth: Array<{ month: string; orders: number }>;
 }
