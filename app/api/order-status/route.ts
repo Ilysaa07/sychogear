@@ -1,13 +1,24 @@
 import { NextResponse } from "next/server";
 import { orderRepository } from "@/repositories/order.repository";
 import { orderStatusSchema } from "@/lib/validations";
+import { verifyTurnstileToken } from "@/lib/turnstile";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const validation = orderStatusSchema.safeParse(body);
+    const { email, invoiceNumber, turnstileToken } = body;
+
+    const turnstileCheck = await verifyTurnstileToken(turnstileToken);
+    if (!turnstileCheck.success) {
+      return NextResponse.json(
+        { success: false, error: turnstileCheck.error },
+        { status: 403 }
+      );
+    }
+
+    const validation = orderStatusSchema.safeParse({ email, invoiceNumber });
 
     if (!validation.success) {
       return NextResponse.json(

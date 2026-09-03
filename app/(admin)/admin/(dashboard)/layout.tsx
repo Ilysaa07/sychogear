@@ -5,6 +5,7 @@ import { useUIStore } from "@/stores/ui-store";
 import { HiMenuAlt2 } from "react-icons/hi";
 import Image from "next/image";
 import { HiOutlineChartSquareBar, HiOutlineClipboardList, HiOutlineCube, HiOutlineTag, HiOutlineTicket, HiOutlineLightningBolt, HiOutlineGlobeAlt, HiOutlineCog } from "react-icons/hi";
+import { usePathname } from "next/navigation";
 
 const sidebarLinks = [
   { href: "/admin", label: "Dashboard", icon: HiOutlineChartSquareBar },
@@ -23,18 +24,28 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const setOpen = useUIStore((s) => s.setAdminSidebarOpen);
+  const pathname = usePathname();
+
+  // If the user is on the login page, render only the children without the dashboard wrapper.
+  if (pathname?.includes("/admin/login")) {
+    return (
+      <div className="admin-panel font-sans bg-[var(--admin-bg)] text-[var(--admin-text)] min-h-screen">
+        {children}
+      </div>
+    );
+  }
 
   return (
-    <div className="flex min-h-screen bg-brand-950 text-white admin-panel">
+    <div className="flex min-h-screen admin-panel font-sans">
       <AdminSidebar />
       
       <div className="flex-1 flex flex-col min-w-0">
         {/* Mobile Header */}
-        <header className="h-16 border-b border-salt/5 bg-brand-950 flex items-center justify-between px-4 md:hidden sticky top-0 z-30">
+        <header className="h-16 border-b border-[var(--admin-border)] bg-[var(--admin-bg)] flex items-center justify-between px-4 md:hidden sticky top-0 z-30">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setOpen(true)}
-              className="p-2 text-brand-400 hover:text-white transition-colors"
+              className="p-2 text-[var(--admin-muted)] hover:text-white transition-colors rounded-lg hover:bg-white/5"
             >
               <HiMenuAlt2 className="w-6 h-6" />
             </button>

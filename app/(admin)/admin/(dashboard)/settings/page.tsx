@@ -225,7 +225,7 @@ export default function AdminSettingsPage() {
                 <p className="text-xs text-brand-500 text-center px-4">No image</p>
               </div>
             )}
-            <label className="btn-secondary text-xs cursor-pointer inline-flex items-center gap-2">
+            <label className="admin-btn-secondary text-xs cursor-pointer inline-flex items-center gap-2">
               <HiOutlineUpload className="w-4 h-4" />
               Upload New
               <input
@@ -327,9 +327,9 @@ export default function AdminSettingsPage() {
       </div>
 
       {/* Save */}
-      <button onClick={handleSave} disabled={saving || uploading} className="btn-primary flex items-center gap-2">
+      <button onClick={handleSave} disabled={saving || uploading} className="admin-btn-primary flex items-center gap-2">
         <HiOutlineSave className="w-4 h-4" />
-        {saving ? "Saving..." : "Save Settings"}
+        {saving ? "Saving..." : "Save Configuration"}
       </button>
     </div>
   );

@@ -10,9 +10,35 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
+        turnstileToken: { label: "Turnstile Token", type: "text" },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
+          return null;
+        }
+
+        const turnstileToken = credentials.turnstileToken as string;
+        if (!turnstileToken || !process.env.TURNSTILE_SECRET) {
+          return null;
+        }
+
+        // Verify Turnstile token
+        try {
+          const res = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({
+              secret: process.env.TURNSTILE_SECRET,
+              response: turnstileToken,
+            }),
+          });
+          const outcome = await res.json();
+          if (!outcome.success) {
+            console.error("Turnstile verification failed:", outcome);
+            return null;
+          }
+        } catch (error) {
+          console.error("Turnstile verification error:", error);
           return null;
         }
 

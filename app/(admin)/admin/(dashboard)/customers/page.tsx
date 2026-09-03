@@ -1,34 +1,22 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import axios from "axios";
+import useSWR from "swr";
 import { formatCurrency } from "@/lib/utils";
 import type { CustomerWithStats } from "@/types";
 import toast from "react-hot-toast";
 import { HiOutlinePencil, HiOutlineTrash, HiOutlineX } from "react-icons/hi";
 import ConfirmModal from "@/components/admin/ConfirmModal";
 
+const fetcher = (url: string) => axios.get(url).then((res) => res.data.data);
+
 export default function AdminCustomersPage() {
-  const [customers, setCustomers] = useState<CustomerWithStats[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: customers = [], isLoading: loading, mutate: mutateCustomers } = useSWR<CustomerWithStats[]>("/api/customers", fetcher);
   const [editingCustomer, setEditingCustomer] = useState<CustomerWithStats | null>(null);
   const [deleteCustomerId, setDeleteCustomerId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({ name: "", email: "", phone: "", address: "" });
-
-  useEffect(() => {
-    const fetchCustomers = async () => {
-      try {
-        const { data } = await axios.get("/api/customers");
-        if (data.success) setCustomers(data.data);
-      } catch {
-        toast.error("Failed to fetch customers");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchCustomers();
-  }, []);
 
   const openEditForm = (c: CustomerWithStats) => {
     setEditingCustomer(c);
@@ -43,7 +31,7 @@ export default function AdminCustomersPage() {
       const { data } = await axios.put(`/api/customers/${editingCustomer.id}`, formData);
       if (data.success) {
         toast.success("Customer updated");
-        setCustomers(prev => prev.map(c => c.id === editingCustomer.id ? { ...c, ...formData } : c));
+        mutateCustomers();
         setEditingCustomer(null);
       }
     } catch (err: any) {
@@ -60,7 +48,7 @@ export default function AdminCustomersPage() {
       const { data } = await axios.delete(`/api/customers/${deleteCustomerId}`);
       if (data.success) {
         toast.success("Customer deleted");
-        setCustomers(prev => prev.filter(c => c.id !== deleteCustomerId));
+        mutateCustomers();
       }
     } catch (err: any) {
       toast.error(err?.response?.data?.error || "Failed to delete customer");
@@ -136,7 +124,7 @@ export default function AdminCustomersPage() {
             <button
               type="button"
               onClick={() => setEditingCustomer(null)}
-              className="btn-secondary text-sm"
+              className="admin-btn-secondary"
               disabled={submitting}
             >
               Cancel
@@ -144,7 +132,7 @@ export default function AdminCustomersPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="btn-primary text-sm"
+              className="admin-btn-primary"
             >
               {submitting ? "Saving..." : "Save Changes"}
             </button>

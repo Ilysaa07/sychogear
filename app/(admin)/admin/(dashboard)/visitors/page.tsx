@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
+import useSWR from "swr";
 import {
   HiOutlineGlobeAlt,
   HiOutlineDesktopComputer,
@@ -77,45 +78,24 @@ function timeAgo(dateStr: string): string {
   return `${days} hari lalu`;
 }
 
+const fetcher = (url: string) => fetch(url).then(res => res.json()).then(json => {
+  if (json.success) return json.data;
+  throw new Error("Failed to fetch");
+});
+
 export default function AdminVisitorsPage() {
-  const [data, setData] = useState<VisitorData | null>(null);
-  const [loading, setLoading] = useState(true);
   const [days, setDays] = useState(1);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
-  const fetchData = useCallback(
-    async (showSpinner = false) => {
-      if (showSpinner) setIsRefreshing(true);
-      try {
-        const res = await fetch(`/api/visitors?days=${days}&limit=200`);
-        const json = await res.json();
-        if (json.success) {
-          setData(json.data);
-          setLastRefresh(new Date());
-        }
-      } catch {
-        // silent
-      } finally {
-        setLoading(false);
-        setIsRefreshing(false);
-      }
-    },
-    [days]
+  
+  const { data, isLoading: loading, mutate, isValidating: isRefreshing } = useSWR<VisitorData>(
+    `/api/visitors?days=${days}&limit=200`,
+    fetcher,
+    { refreshInterval: 60000 }
   );
 
-  // Initial + on days change
   useEffect(() => {
-    setLoading(true);
-    fetchData();
-  }, [fetchData]);
-
-  // Auto-refresh every 60 seconds — sebelumnya 10 detik menyebabkan 6 DB query
-  // setiap 10 detik selama halaman ini terbuka
-  useEffect(() => {
-    const interval = setInterval(() => fetchData(), 60000);
-    return () => clearInterval(interval);
-  }, [fetchData]);
+    if (data) setLastRefresh(new Date());
+  }, [data]);
 
   // ── Loading skeleton ───────────────────────────────────────
   if (loading) {
@@ -201,7 +181,7 @@ export default function AdminVisitorsPage() {
 
           {/* Manual refresh */}
           <button
-            onClick={() => fetchData(true)}
+            onClick={() => mutate()}
             disabled={isRefreshing}
             className="p-2 rounded-lg border border-salt/10 text-brand-400 hover:text-white hover:bg-white/5 transition-colors disabled:opacity-50"
             title="Refresh"

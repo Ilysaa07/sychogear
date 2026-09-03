@@ -45,6 +45,9 @@ function GlobalLoader() {
 
   // Handle route changes
   useEffect(() => {
+    // Skip route change loader for admin panel for instant navigation
+    if (pathname?.startsWith("/admin")) return;
+
     // Only trigger route change loader if it's not the initial mount
     // to avoid conflicting with the initial load useEffect
     if (!loading && isHidden) {

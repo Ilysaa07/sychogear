@@ -32,6 +32,15 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async redirects() {
+    return [
+      {
+        source: "/pre-order-check",
+        destination: "/order-status",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

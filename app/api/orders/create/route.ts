@@ -1,13 +1,22 @@
 import { NextResponse } from "next/server";
 import { paymentService } from "@/services/payment.service";
 import { checkoutSchema } from "@/lib/validations";
+import { verifyTurnstileToken } from "@/lib/turnstile";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { customer, items, couponCode, shippingCost } = body;
+    const { customer, items, couponCode, shippingCost, turnstileToken } = body;
+
+    const turnstileCheck = await verifyTurnstileToken(turnstileToken);
+    if (!turnstileCheck.success) {
+      return NextResponse.json(
+        { success: false, error: turnstileCheck.error },
+        { status: 403 }
+      );
+    }
 
     // Validate customer data
     const validation = checkoutSchema.safeParse(customer);

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import axios from "axios";
+import useSWR from "swr";
 import { formatCurrency } from "@/lib/utils";
 import toast from "react-hot-toast";
 import {
@@ -37,9 +38,11 @@ const EMPTY_FORM = {
   expiresAt: "",
 };
 
+const fetcher = (url: string) => axios.get(url).then((res) => res.data.data);
+
 export default function AdminCouponsPage() {
-  const [coupons, setCoupons] = useState<Coupon[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: coupons = [], isLoading: loading, mutate: mutateCoupons } = useSWR<Coupon[]>("/api/coupons", fetcher);
+  
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -48,21 +51,6 @@ export default function AdminCouponsPage() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
-
-  useEffect(() => {
-    fetchCoupons();
-  }, []);
-
-  const fetchCoupons = async () => {
-    try {
-      const { data } = await axios.get("/api/coupons");
-      if (data.success) setCoupons(data.data);
-    } catch {
-      toast.error("Failed to fetch coupons");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const openCreateForm = () => {
     setEditingId(null);
@@ -113,14 +101,14 @@ export default function AdminCouponsPage() {
         if (data.success) {
           toast.success("Coupon updated!");
           closeForm();
-          fetchCoupons();
+          mutateCoupons();
         }
       } else {
         const { data } = await axios.post("/api/coupons", payload);
         if (data.success) {
           toast.success("Coupon created!");
           closeForm();
-          fetchCoupons();
+          mutateCoupons();
         }
       }
     } catch {
@@ -135,7 +123,7 @@ export default function AdminCouponsPage() {
     try {
       await axios.delete(`/api/coupons/${deleteCouponId}`);
       toast.success("Coupon deleted");
-      fetchCoupons();
+      mutateCoupons();
     } catch {
       toast.error("Failed to delete");
     } finally {
@@ -158,7 +146,7 @@ export default function AdminCouponsPage() {
     try {
       await axios.post("/api/coupons/bulk-delete", { ids: selectedIds });
       toast.success(`${selectedIds.length} coupons deleted`);
-      fetchCoupons();
+      mutateCoupons();
       setSelectedIds([]);
     } catch {
       toast.error("Failed to delete coupons");
@@ -177,18 +165,18 @@ export default function AdminCouponsPage() {
             {coupons.length} coupons total
           </p>
         </div>
-        <button onClick={openCreateForm} className="btn-primary text-sm self-start sm:self-auto">
+        <button onClick={openCreateForm} className="admin-btn-primary self-start sm:self-auto">
           <HiOutlinePlus className="w-4 h-4 mr-2" />
           Add Coupon
         </button>
       </div>
 
       {selectedIds.length > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-brand-900 border border-salt/10 px-6 py-4 rounded-full shadow-2xl flex items-center gap-6 animate-in slide-in-from-bottom-5">
-          <span className="text-sm font-bold">{selectedIds.length} selected</span>
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-[var(--admin-card)] border border-[var(--admin-border)] px-6 py-4 rounded-full shadow-2xl flex items-center gap-6 animate-in slide-in-from-bottom-5">
+          <span className="text-sm font-bold text-white">{selectedIds.length} selected</span>
           <button
             onClick={() => setShowBulkDeleteConfirm(true)}
-            className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-white bg-red-600 hover:bg-red-500 rounded-full transition-colors"
+            className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-white bg-red-600 hover:bg-red-700 rounded-full transition-colors shadow-md"
           >
             Delete Selected
           </button>
@@ -332,7 +320,7 @@ export default function AdminCouponsPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="btn-primary text-sm"
+              className="admin-btn-primary"
             >
               {submitting
                 ? "Saving..."
@@ -343,7 +331,7 @@ export default function AdminCouponsPage() {
             <button
               type="button"
               onClick={closeForm}
-              className="btn-secondary text-sm"
+              className="admin-btn-secondary"
             >
               Cancel
             </button>

@@ -30,9 +30,6 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    border-radius: 0 !important;
-    /* Brutalism: No soft transitions */
-    transition-duration: 0ms;
   }
 
   html {
@@ -399,5 +396,148 @@
   /* Clear grain and atmosphere */
   .atmospheric-grain, .hero-atmosphere, .detail-atmosphere {
     display: none !important;
+  }
+
+  /* =========================================
+     ADMIN PANEL REDESIGN (MODERN DARK MODE)
+     ========================================= */
+  
+  .admin-panel {
+    --admin-bg: #000000; /* Void */
+    --admin-card: #111111; /* Dim */
+    --admin-border: #333333; /* Fog */
+    --admin-accent: #ff0000; /* Signal Red */
+    --admin-accent-hover: #cc0000; /* Darker Red */
+    --admin-text: #ffffff; /* Salt */
+    --admin-muted: #888888; /* Ash */
+    
+    background-color: var(--admin-bg);
+    color: var(--admin-text);
+    font-family: var(--font-sans); /* Relax typography constraints */
+  }
+
+  .admin-panel h1, .admin-panel h2, .admin-panel h3, .admin-panel h4, .admin-panel h5, .admin-panel h6 {
+    text-transform: none;
+    letter-spacing: normal;
+  }
+
+  .admin-card {
+    background-color: var(--admin-card);
+    border: 1px solid var(--admin-border);
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    transition: all 0.2s ease-in-out;
+  }
+
+  .admin-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background-color: rgba(15, 23, 42, 0.5); /* Semi-transparent Slate 900 */
+    border: 1px solid var(--admin-border);
+    border-radius: 8px;
+    color: var(--admin-text);
+    font-family: var(--font-sans);
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-transform: none;
+    transition: all 0.2s;
+    outline: none;
+  }
+
+  .admin-input:focus {
+    border-color: var(--admin-accent);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  }
+
+  .admin-input::placeholder {
+    color: var(--admin-muted);
+  }
+
+  .admin-btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    background-color: var(--admin-accent);
+    color: white;
+    font-family: var(--font-sans);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: none;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  }
+
+  .admin-btn-primary:hover:not(:disabled) {
+    background-color: var(--admin-accent-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
+  }
+
+  .admin-btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .admin-btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    background-color: transparent;
+    color: var(--admin-text);
+    font-family: var(--font-sans);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: none;
+    border: 1px solid var(--admin-border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .admin-btn-secondary:hover:not(:disabled) {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-color: var(--admin-muted);
+  }
+
+  .admin-btn-secondary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .admin-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-radius: 9999px; /* Pill shape */
+    border: none;
+  }
+
+  .admin-badge-success {
+    background-color: rgba(16, 185, 129, 0.15); /* Emerald */
+    color: #34d399;
+  }
+
+  .admin-badge-warning {
+    background-color: rgba(245, 158, 11, 0.15); /* Amber */
+    color: #fbbf24;
+  }
+
+  .admin-badge-danger {
+    background-color: rgba(239, 68, 68, 0.15); /* Red */
+    color: #f87171;
+  }
+
+  .admin-badge-neutral {
+    background-color: rgba(148, 163, 184, 0.15); /* Slate */
+    color: #cbd5e1;
   }
 }

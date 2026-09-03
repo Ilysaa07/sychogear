@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import axios from "axios";
+import useSWR from "swr";
 import { formatCurrency, getStatusColor } from "@/lib/utils";
 import type { OrderWithRelations } from "@/types";
 import ConfirmModal from "@/components/admin/ConfirmModal";
@@ -46,10 +47,13 @@ const STATUS_OPTIONS = [
   "CANCELLED",
 ];
 
+const fetcher = (url: string) => axios.get(url).then((res) => res.data.data);
+
 export default function AdminOrdersPage() {
-  const [orders, setOrders] = useState<OrderWithRelations[]>([]);
-  const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const params = statusFilter !== "ALL" ? `?status=${statusFilter}` : "";
+  const { data: orders = [], isLoading: loading, mutate: mutateOrders } = useSWR<OrderWithRelations[]>(`/api/orders${params}`, fetcher);
+
   const [selectedOrder, setSelectedOrder] = useState<OrderWithRelations | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -70,7 +74,6 @@ export default function AdminOrdersPage() {
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
 
   useEffect(() => {
-    fetchOrders();
     setSelectedIds([]); // Clear selection on filter change
   }, [statusFilter]);
 
@@ -90,19 +93,6 @@ export default function AdminOrdersPage() {
 
   const COURIER_OPTIONS = ["J&T", "JNE", "SHOPEE EXPRESS (SPX)", "SiCepat", "Lion Parcel", "Others"];
 
-  const fetchOrders = async () => {
-    setLoading(true);
-    try {
-      const params = statusFilter !== "ALL" ? `?status=${statusFilter}` : "";
-      const { data } = await axios.get(`/api/orders${params}`);
-      if (data.success) setOrders(data.data);
-    } catch {
-      toast.error("Failed to fetch orders");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleUpdateStatus = async (orderId: string, newStatus: string, force = false) => {
     setUpdatingStatus(true);
     try {
@@ -115,9 +105,7 @@ export default function AdminOrdersPage() {
         if (selectedOrder && selectedOrder.id === orderId) {
           setSelectedOrder({ ...selectedOrder, status: newStatus });
         }
-        setOrders((prev) =>
-          prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o))
-        );
+        mutateOrders();
       }
     } catch (err: any) {
       const msg = err?.response?.data?.error || "Failed to update status";
@@ -146,7 +134,7 @@ export default function AdminOrdersPage() {
       const { data } = await axios.delete(`/api/orders/${deleteOrderId}`);
       if (data.success) {
         toast.success("Order deleted successfully");
-        setOrders((prev) => prev.filter((o) => o.id !== deleteOrderId));
+        mutateOrders();
         if (selectedOrder?.id === deleteOrderId) {
           setSelectedOrder(null);
         }
@@ -180,7 +168,7 @@ export default function AdminOrdersPage() {
       const { data } = await axios.post("/api/orders/bulk-delete", { ids: selectedIds });
       if (data.success) {
         toast.success(`${selectedIds.length} orders deleted`);
-        setOrders(prev => prev.filter(o => !selectedIds.includes(o.id)));
+        mutateOrders();
         setSelectedIds([]);
         if (selectedOrder && selectedIds.includes(selectedOrder.id)) {
           setSelectedOrder(null);
@@ -205,7 +193,7 @@ export default function AdminOrdersPage() {
         toast.success(`Customer details updated`);
         const updatedOrder = { ...selectedOrder, customer: { ...selectedOrder.customer, ...customerForm } };
         setSelectedOrder(updatedOrder);
-        setOrders((prev) => prev.map((o) => (o.id === selectedOrder.id ? updatedOrder : o)));
+        mutateOrders();
         setEditingCustomer(false);
       }
     } catch (err: any) {
@@ -232,12 +220,7 @@ export default function AdminOrdersPage() {
           status: data.data?.status || selectedOrder.status 
         } as any;
         setSelectedOrder(updatedOrder);
-        setOrders((prev) => prev.map((o) => (o.id === selectedOrder.id ? { 
-          ...o, 
-          status: updatedOrder.status, 
-          trackingNumber: trackingInput,
-          courier: courierInput
-        } as any : o)));
+        mutateOrders();
       }
     } catch (err: any) {
       toast.error(err?.response?.data?.error || "Failed to save tracking number");
@@ -287,18 +270,18 @@ export default function AdminOrdersPage() {
             {orders.length} orders found
           </p>
         </div>
-        <button onClick={exportCSV} className="btn-secondary text-sm self-start sm:self-auto">
+        <button onClick={exportCSV} className="admin-btn-secondary self-start sm:self-auto">
           <HiOutlineDownload className="w-4 h-4 mr-2" />
           Export CSV
         </button>
       </div>
 
       {selectedIds.length > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-brand-900 border border-salt/10 px-6 py-4 rounded-full shadow-2xl flex items-center gap-6 animate-in slide-in-from-bottom-5">
-          <span className="text-sm font-bold">{selectedIds.length} selected</span>
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-[var(--admin-card)] border border-[var(--admin-border)] px-6 py-4 rounded-full shadow-2xl flex items-center gap-6 animate-in slide-in-from-bottom-5">
+          <span className="text-sm font-bold text-white">{selectedIds.length} selected</span>
           <button
             onClick={() => setShowBulkDeleteConfirm(true)}
-            className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-white bg-red-600 hover:bg-red-500 rounded-full transition-colors"
+            className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-white bg-red-600 hover:bg-red-700 rounded-full transition-colors shadow-md"
           >
             Delete Selected
           </button>
@@ -441,19 +424,19 @@ export default function AdminOrdersPage() {
       {selectedOrder && (
         <>
           <div
-            className="fixed inset-0 bg-void/60 z-50"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
             onClick={() => setSelectedOrder(null)}
           />
-          <div className="fixed right-0 top-0 h-screen w-full max-w-md bg-brand-950 border-l border-salt/5 z-50 flex flex-col shadow-2xl fade-in">
+          <div className="fixed right-0 top-0 h-screen w-full max-w-md bg-[var(--admin-bg)] border-l border-[var(--admin-border)] z-50 flex flex-col shadow-2xl fade-in">
             {/* Drawer Header - Fixed at Top */}
-            <div className="p-6 border-b border-salt/5 flex items-center justify-between bg-brand-950/80 backdrop-blur-md z-10">
+            <div className="p-6 border-b border-[var(--admin-border)] flex items-center justify-between bg-[var(--admin-card)] z-10 shadow-sm">
               <h3 className="text-lg font-bold tracking-tight text-white">{selectedOrder.invoiceNumber}</h3>
               <div className="flex items-center gap-2">
                 <a
                   href={`/receipt/${selectedOrder.invoiceNumber}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-brand-200 border border-brand-500/20 hover:bg-brand-500/10 transition-colors flex items-center gap-1.5"
+                  className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-[var(--admin-text)] border border-[var(--admin-border)] hover:bg-white/5 rounded transition-colors flex items-center gap-1.5"
                   title="Print Receipt"
                 >
                   Print

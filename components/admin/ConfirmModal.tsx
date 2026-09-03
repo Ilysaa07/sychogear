@@ -27,26 +27,26 @@ export default function ConfirmModal({
 
   return (
     <>
-      <div className="fixed inset-0 bg-void/60 z-[60]" onClick={!isLoading ? onClose : undefined} />
-      <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm bg-brand-950 border border-salt/10 p-6 z-[60] shadow-xl fade-in rounded-lg">
-        <h3 className="text-lg font-bold mb-2">{title}</h3>
-        <div className="text-sm text-brand-400 mb-6 space-y-2 whitespace-pre-wrap">{message}</div>
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60]" onClick={!isLoading ? onClose : undefined} />
+      <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm admin-card p-6 z-[60] shadow-2xl fade-in">
+        <h3 className="text-lg font-bold mb-2 text-white">{title}</h3>
+        <div className="text-sm text-[var(--admin-muted)] mb-6 space-y-2 whitespace-pre-wrap">{message}</div>
         
         <div className="flex justify-end gap-3">
           <button
             onClick={onClose}
             disabled={isLoading}
-            className="px-4 py-2 text-sm text-brand-400 hover:text-white disabled:opacity-50 transition-colors bg-transparent"
+            className="admin-btn-secondary"
           >
             {cancelText}
           </button>
           <button
             onClick={onConfirm}
             disabled={isLoading}
-            className={`px-4 py-2 text-sm font-medium rounded disabled:opacity-50 transition-colors ${
+            className={`admin-btn-primary ${
               isDestructive 
-                ? "bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/30" 
-                : "btn-primary"
+                ? "!bg-red-600 hover:!bg-red-700 !text-white" 
+                : ""
             }`}
           >
             {isLoading ? "Processing..." : confirmText}

@@ -25,7 +25,7 @@ import {
 } from "react-icons/hi";
 import CopyButton from "@/components/store/CopyButton";
 import Image from "next/image";
-
+import Script from "next/script";
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -42,6 +42,7 @@ export default function CheckoutPage() {
   const [countrySearch, setCountrySearch] = useState("");
   const [countryDropdownOpen, setCountryDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const turnstileRef = useRef<HTMLDivElement>(null);
   const [showOrderSummaryMobile, setShowOrderSummaryMobile] = useState(false);
 
   // Address Selector States - Indonesia (Rajaongkir)
@@ -281,11 +282,19 @@ export default function CheckoutPage() {
         subdistrictId: selSubdistrict?.id || undefined,
       };
 
+      const turnstileToken = (document.querySelector('[name="cf-turnstile-response"]') as HTMLInputElement)?.value;
+      if (!turnstileToken) {
+        toast.error("Please complete the security check.");
+        setLoading(false);
+        return;
+      }
+
       const { data } = await axios.post("/api/orders/create", {
         customer: payloadData,
         items,
         couponCode: couponCode || undefined,
         shippingCost: shippingCost > 0 ? shippingCost : 0,
+        turnstileToken,
       });
 
       if (data.success) {
@@ -353,7 +362,20 @@ export default function CheckoutPage() {
 
   return (
     <div className="min-h-screen bg-void flex flex-col-reverse lg:flex-row font-sans selection:bg-salt selection:text-void">
-      
+      <Script 
+        src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" 
+        strategy="afterInteractive" 
+        onLoad={() => {
+          const turnstile = (window as any).turnstile;
+          if (turnstile && turnstileRef.current) {
+            turnstile.render(turnstileRef.current, {
+              sitekey: "0x4AAAAAAElyQyM0Ru1Qj7kv",
+              action: "checkout",
+              theme: "dark"
+            });
+          }
+        }}
+      />
       {/* ─── Left Column (Form) ─── */}
       <div className="w-full lg:w-[55%] xl:w-[60%] bg-void pt-8 pb-24 px-4 sm:px-8 lg:px-16 xl:px-24">
         
@@ -821,6 +843,11 @@ export default function CheckoutPage() {
                   )}
                 </button>
               </div>
+
+              {/* ── Turnstile ── */}
+              <section className="flex justify-center my-6">
+                <div ref={turnstileRef} className="min-h-[65px]"></div>
+              </section>
 
         </form>
       </div>

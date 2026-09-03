@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import axios from "axios";
+import useSWR from "swr";
 import { uploadFileAction, deleteFileAction, getSignedUploadUrlAction } from "@/app/actions/upload";
 import { formatCurrency } from "@/lib/utils";
 import type { ProductWithRelations } from "@/types";
@@ -35,50 +36,21 @@ const EMPTY_FORM = {
   showTaxDetails: false,
 };
 
+const fetcher = (url: string) => axios.get(url).then((res) => res.data.data);
+
 export default function AdminProductsPage() {
-  const [products, setProducts] = useState<ProductWithRelations[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: products = [], isLoading: loading, mutate: mutateProducts } = useSWR<ProductWithRelations[]>("/api/products?limit=100", fetcher);
+  const { data: categories = [] } = useSWR<Array<{ id: string; name: string; slug: string }>>("/api/categories", fetcher);
+
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [deleteProductId, setDeleteProductId] = useState<string | null>(null);
   const [uploadingImageIndices, setUploadingImageIndices] = useState<number[]>([]);
   const [formData, setFormData] = useState({ ...EMPTY_FORM });
-  const [categories, setCategories] = useState<
-    Array<{ id: string; name: string; slug: string }>
-  >([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
-
-  useEffect(() => {
-    fetchProducts();
-    fetchCategories();
-  }, []);
-
-  const fetchCategories = async () => {
-    try {
-      const { data } = await axios.get("/api/categories");
-      if (data.success) {
-        setCategories(data.data);
-      }
-    } catch {
-      toast.error("Failed to fetch categories");
-    }
-  };
-
-  const fetchProducts = async () => {
-    try {
-      const { data } = await axios.get("/api/products?limit=100");
-      if (data.success) {
-        setProducts(data.data);
-      }
-    } catch {
-      toast.error("Failed to fetch products");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const openCreateForm = () => {
     setEditingId(null);
@@ -142,14 +114,14 @@ export default function AdminProductsPage() {
         if (data.success) {
           toast.success("Product updated!");
           closeForm();
-          fetchProducts();
+          mutateProducts();
         }
       } else {
         const { data } = await axios.post("/api/products", payload);
         if (data.success) {
           toast.success("Product created!");
           closeForm();
-          fetchProducts();
+          mutateProducts();
         }
       }
     } catch {
@@ -164,7 +136,7 @@ export default function AdminProductsPage() {
     try {
       await axios.delete(`/api/products/${deleteProductId}`);
       toast.success("Product deleted");
-      fetchProducts();
+      mutateProducts();
     } catch {
       toast.error("Failed to delete");
     } finally {
@@ -187,7 +159,7 @@ export default function AdminProductsPage() {
     try {
       await axios.post("/api/products/bulk-delete", { ids: selectedIds });
       toast.success(`${selectedIds.length} products deleted`);
-      fetchProducts();
+      mutateProducts();
       setSelectedIds([]);
     } catch {
       toast.error("Failed to delete products");
@@ -293,7 +265,7 @@ export default function AdminProductsPage() {
         </div>
         <button
           onClick={openCreateForm}
-          className="btn-primary text-sm self-start sm:self-auto"
+          className="admin-btn-primary self-start sm:self-auto"
         >
           <HiOutlinePlus className="w-4 h-4 mr-2" />
           Add Product
@@ -301,11 +273,11 @@ export default function AdminProductsPage() {
       </div>
 
       {selectedIds.length > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-brand-900 border border-salt/10 px-6 py-4 rounded-full shadow-2xl flex items-center gap-6 animate-in slide-in-from-bottom-5">
-          <span className="text-sm font-bold">{selectedIds.length} selected</span>
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-[var(--admin-card)] border border-[var(--admin-border)] px-6 py-4 rounded-full shadow-2xl flex items-center gap-6 animate-in slide-in-from-bottom-5">
+          <span className="text-sm font-bold text-white">{selectedIds.length} selected</span>
           <button
             onClick={() => setShowBulkDeleteConfirm(true)}
-            className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-white bg-red-600 hover:bg-red-500 rounded-full transition-colors"
+            className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-white bg-red-600 hover:bg-red-700 rounded-full transition-colors shadow-md"
           >
             Delete Selected
           </button>
@@ -637,7 +609,7 @@ export default function AdminProductsPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="btn-primary text-sm"
+              className="admin-btn-primary"
             >
               {submitting
                 ? "Saving..."
@@ -648,7 +620,7 @@ export default function AdminProductsPage() {
             <button
               type="button"
               onClick={closeForm}
-              className="btn-secondary text-sm"
+              className="admin-btn-secondary"
             >
               Cancel
             </button>
