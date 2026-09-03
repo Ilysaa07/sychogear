@@ -98,7 +98,7 @@ export default function PreOrderForm({ initialData, campaignId }: { initialData?
     
     try {
       const cleanFilename = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
-      const signResult = await getSignedUploadUrlAction(cleanFilename);
+      const signResult = await getSignedUploadUrlAction(cleanFilename, file.type);
       
       if (!signResult.success || !signResult.uploadUrl) {
         throw new Error(signResult.error || "Failed to get upload permission");
