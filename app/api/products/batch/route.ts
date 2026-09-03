@@ -2,9 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import type { NextRequest } from "next/server";
 
-// Cache 30 detik — cukup fresh untuk validasi stok di cart,
-// tidak perlu force-dynamic karena ini bukan data real-time kritis.
-export const revalidate = 30;
+// Menggunakan force-dynamic karena membaca nextUrl.searchParams
+export const dynamic = "force-dynamic";
 
 /**
  * GET /api/products/batch?ids=id1&ids=id2&ids=id3
