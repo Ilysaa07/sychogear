@@ -122,33 +122,12 @@ export async function POST(req: NextRequest) {
       const preOrderNumber = `PO-${no.padStart(4, "0")}`;
       const sanitizedWa = sanitizeWhatsapp(noWa);
       
-      // Upsert the PreOrder
-      const po = await prisma.preOrder.upsert({
-        where: { preOrderNumber },
-        update: {
-          customerName: nama,
-          whatsapp: sanitizedWa,
-          address: alamat,
-          orderDate: parseDate(tglOrder),
-          notes: catatan,
-          bankName: bank,
-          bankAccountName: atasNama,
-          totalAmount: totalBiaya,
-          dpAmount: sudahDibayar,
-          isPaid: status === "FULL_PAID",
-          status,
-          receiptNumber: noResi,
-          dpProofUrl: buktiDp,
-          fullProofUrl: buktiFull
-        },
-        create: {
-          preOrderNumber,
-          customerName: nama,
-          whatsapp: sanitizedWa,
-          address: alamat,
-          orderDate: parseDate(tglOrder),
-          notes: catatan,
-          bankName: bank,
+      const itemsToCreate = [];
+      if (qtyS > 0) itemsToCreate.push({ size: "S", quantity: qtyS, price: 0 });
+      if (qtyM > 0) itemsToCreate.push({ size: "M", quantity: qtyM, price: 0 });
+      if (qtyL > 0) itemsToCreate.push({ size: "L", quantity: qtyL, price: 0 });
+      if (qtyXL > 0) itemsToCreate.push({ size: "XL", quantity: qtyXL, price: 0 });
+      if (qtyXXL > 0) itemsToCreate.push({ size: "XXL", quantity: qtyXXL, price: 0 });
       const existingPO = await prisma.preOrder.findUnique({
         where: { preOrderNumber }
       });
