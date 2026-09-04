@@ -71,7 +71,8 @@ export default async function ProductDetailPage({ params }: Props) {
     "sku": product.id,
     "brand": {
       "@type": "Brand",
-      "name": "SYCHOGEAR"
+      "name": "SYCHOGEAR",
+      "url": baseUrl
     },
     "offers": {
       "@type": "Offer",

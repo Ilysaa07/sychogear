@@ -13,7 +13,7 @@ const karla = Inter({
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://sychogear.com"),
   title: {
-    default: "Sychogear — Official Products",
+    default: "SYCHOGEAR | Violence Is Our Aesthetic",
     template: "%s | SYCHOGEAR",
   },
   description:
@@ -90,12 +90,18 @@ export default function RootLayout({
     "@context": "https://schema.org",
     "@type": "Organization",
     "name": "SYCHOGEAR",
+    "alternateName": ["Sycho Gear", "Sychogear Streetwear", "Sychogear Official"],
+    "description": "SYCHOGEAR is a premium streetwear brand offering a curated collection of avant-garde fashion and clothing.",
     "url": process.env.NEXT_PUBLIC_APP_URL || "https://sychogear.com",
     "logo": `${process.env.NEXT_PUBLIC_APP_URL || "https://sychogear.com"}/images/logo.png`,
     "sameAs": [
       "https://instagram.com/sychogear",
       "https://tiktok.com/@sychogear",
     ],
+    "brand": {
+      "@type": "Brand",
+      "name": "SYCHOGEAR"
+    }
   };
 
   return (
@@ -111,7 +117,7 @@ export default function RootLayout({
         <Suspense fallback={null}>
           <GlobalLoader />
         </Suspense>
-        
+
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

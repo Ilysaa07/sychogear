@@ -1,7 +1,19 @@
 import ProductsClient from "@/components/store/ProductsClient";
 import { productRepository } from "@/repositories/product.repository";
+import type { Metadata } from "next";
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: "SYCHOGEAR | Premium Streetwear Brand",
+  description: "SYCHOGEAR is a premium streetwear brand offering a curated collection of avant-garde fashion and clothing. Explore the official store.",
+  openGraph: {
+    title: "SYCHOGEAR | Premium Streetwear Brand",
+    description: "SYCHOGEAR is a premium streetwear brand offering a curated collection of avant-garde fashion and clothing. Explore the official store.",
+    url: process.env.NEXT_PUBLIC_APP_URL || "https://sychogear.com",
+    images: [{ url: "/images/og-image.jpg" }],
+  }
+};
 
 export default async function HomePage({
   searchParams,
@@ -24,14 +36,26 @@ export default async function HomePage({
   
   const breadcrumbJsonLd = {
     "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Home", item: baseUrl },
-    ],
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": `${baseUrl}/#website`,
+        "url": baseUrl,
+        "name": "SYCHOGEAR",
+        "description": "SYCHOGEAR is a premium streetwear brand.",
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", position: 1, name: "Home", item: baseUrl },
+        ],
+      }
+    ]
   };
 
   return (
     <>
+      <h1 className="sr-only">SYCHOGEAR - Premium Streetwear Brand</h1>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}

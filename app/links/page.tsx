@@ -6,10 +6,10 @@ import { prisma } from "@/lib/prisma";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Official Links, Shopee & Tiktok | SYCHOGEAR",
+  title: "Official Links, Shopee & Tiktok | SYCHOGEAR Streetwear",
   description: "Explore SYCHOGEAR official links. Connect on WhatsApp, follow our Instagram & TikTok, and shop premium streetwear on our Shopee Mall & Tiktok Official stores.",
   openGraph: {
-    title: "Official Links, Shopee & Tiktok | SYCHOGEAR",
+    title: "Official Links, Shopee & Tiktok | SYCHOGEAR Streetwear",
     description: "Connect on WhatsApp, follow our social media, and shop premium streetwear on our Shopee & Tiktok Official stores.",
     images: ["/images/logo-sychogear.webp"], 
   },
@@ -45,6 +45,8 @@ export default async function LinksPage() {
           "@type": "Organization",
           "@id": "https://sychogear.com/#organization",
           "name": "SYCHOGEAR",
+          "alternateName": ["Sycho Gear", "Sychogear Streetwear", "Sychogear Official"],
+          "description": "SYCHOGEAR is a premium streetwear brand offering a curated collection of avant-garde fashion and clothing.",
           "url": "https://sychogear.com/",
           "logo": {
             "@type": "ImageObject",
